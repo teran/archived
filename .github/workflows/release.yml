@@ -7,13 +7,21 @@ on:
       - 'v*'
 
 jobs:
-  hadolint:
+  hadolint-access:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: Dockerfile
+          dockerfile: Dockerfile.access
+  
+  hadolint-manage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile.manage
 
   markdownlint:
     runs-on: ubuntu-latest
