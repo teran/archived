@@ -1,0 +1,74 @@
+---
+version: 2
+builds:
+  - id: archived-access
+    main: ./cmd/access
+    binary: archived-access
+    ldflags:
+      - -s -w -X main.appVersion={{.Version}} -X main.buildTimestamp={{.Date}}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    goamd64: ["v1", "v2", "v3"]
+    goarm: ["7"]
+    mod_timestamp: "{{ .CommitTimestamp }}"
+  - id: archived-cli
+    main: ./cmd/cli
+    binary: archived-cli
+    ldflags:
+      - -s -w -X main.appVersion={{.Version}} -X main.buildTimestamp={{.Date}}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - dragonfly
+      - freebsd
+      - linux
+      - netbsd
+      - openbsd
+      - solaris
+      - windows
+    goarch:
+      # x86
+      - amd64
+      - "386"
+
+      # ARM
+      - arm64
+      - arm
+
+      # MIPS
+      - mips64
+      - mips64le
+      - mips
+      - mipsle
+    goamd64: ["v1", "v2", "v3"]
+    goarm: ["6", "7"]
+    gomips: ["hardfloat", "softfloat"]
+    mod_timestamp: "{{ .CommitTimestamp }}"
+  - id: archived-manage
+    main: ./cmd/manage
+    binary: archived-manage
+    ldflags:
+      - -s -w -X main.appVersion={{.Version}} -X main.buildTimestamp={{.Date}}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    goamd64: ["v1", "v2", "v3"]
+    goarm: ["7"]
+    mod_timestamp: "{{ .CommitTimestamp }}"
+archives:
+  - format: binary
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha256
+  split: false
+  disable: false
