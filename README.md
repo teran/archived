@@ -13,9 +13,9 @@ To do so archived relies on two storages: metadata and CAS.
 
 Metadata is a some kind of database to store all of the things:
 
-- containers - some kind of directories
-- versions - immutable version of the data in container
-- objects - named data BLOBs with some additional metadata
+* containers - some kind of directories
+* versions - immutable version of the data in container
+* objects - named data BLOBs with some additional metadata
 
 Good example of metadata storage is a PostgreSQL database.
 
@@ -34,6 +34,6 @@ if storing copies.
 archived is built with microservice architecture containing the following
 components:
 
-- access - HTTP server to allow data listing and fetching
-- manage - gRPC API to manage containers, versions and objects
-- CLI - CLI application to interact with manage component
+* access - HTTP server to allow data listing and fetching
+* manage - gRPC API to manage containers, versions and objects
+* CLI - CLI application to interact with manage component
