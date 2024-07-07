@@ -5,13 +5,16 @@ go 1.22.5
 require (
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/golang-migrate/migrate/v4 v4.17.1
+	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/lib/pq v1.10.9
 	github.com/pkg/errors v0.9.1
+	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.9.0
 	github.com/teran/go-docker-testsuite v0.0.6
 	github.com/teran/go-ptr v1.1.0
 	github.com/teran/go-time v0.0.2
+	golang.org/x/sync v0.7.0
 )
 
 require (
@@ -53,7 +56,6 @@ require (
 	github.com/opencontainers/image-spec v1.1.0 // indirect
 	github.com/opencontainers/runtime-spec v1.1.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/teran/go-random v0.0.1 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
