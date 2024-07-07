@@ -6,7 +6,7 @@ RUN apk add --update --no-cache \
 FROM scratch
 
 COPY --from=certificates /etc/ssl/cert.pem /etc/ssl/cert.pem
-COPY --chmod=0755 --chown=root:root dist/archived-access_linux_arm64/archived-access /archived-access
+COPY --chmod=0755 --chown=root:root dist/archived-access_linux_amd64_v3/archived-access /archived-access
 COPY --chmod=0644 --chown=root:root presenter/access/html/templates /templates
 
 ENV HTML_TEMPLATE_DIR=/templates
