@@ -2,6 +2,19 @@
 
 Cloud native service to store versioned data in space-efficient manner
 
+## Project status & roadmap
+
+archived is under active development and almost everything is a subject
+to change. MVP will be available on first release v0.0.1
+
+The following things are going to be implemented in further releases:
+
+* authentication for manage API
+* authentication for access API
+* garbage collector
+* additional metadata repositories (like MongoDB, CockroachDB, etc.)
+* additional version creators for CLI (like RPM repo, APR repo, etc.)
+
 ## How it works
 
 archived is inspired by `rsync --link-dest` which allowed to store package
