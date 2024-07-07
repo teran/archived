@@ -6,6 +6,6 @@ import (
 )
 
 type Repository interface {
-	PutBlob(ctx context.Context, key string, rd io.Reader) error
+	PutBlob(ctx context.Context, key string, rd io.ReadSeeker) error
 	GetBlobURL(ctx context.Context, key string) (string, error)
 }
