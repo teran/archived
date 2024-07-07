@@ -1,0 +1,12 @@
+<html>
+    <head>
+        <title>Container Index</title>
+    </head>
+    <body>
+        <h1>Container index</h1>
+        <hr>
+        <a href="/test-container-1/">test-container-1</a><br>
+        <hr>
+        Powered by <a href="https://github.com/teran/archived" target="_blank">archived</a>
+    </body>
+</html>
