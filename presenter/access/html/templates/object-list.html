@@ -1,0 +1,17 @@
+{{ $container := .Container }}
+{{ $version := .Version }}
+<html>
+    <head>
+        <title>Object Index ({{ $container }}/{{ $version }})</title>
+    </head>
+    <body>
+        <h1>Object Index ({{ $container }}/{{ $version }})</h1>
+        <hr>
+        <a href="..">..</a><br>
+        {{- range $object := .Objects }}
+        <a href="/{{ $container }}/{{ $version }}/{{ $object }}">{{ $object }}</a><br>
+        {{- end }}
+        <hr>
+        Powered by <a href="https://github.com/teran/archived" target="_blank">archived</a>
+    </body>
+</html>
