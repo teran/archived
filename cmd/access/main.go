@@ -4,7 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"net/http"
+	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/kelseyhightower/envconfig"
 	echo "github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -13,6 +18,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	htmlPresenter "github.com/teran/archived/presenter/access/html"
+	awsBlobRepo "github.com/teran/archived/repositories/blob/aws"
 	"github.com/teran/archived/repositories/metadata/postgresql"
 	"github.com/teran/archived/service"
 )
@@ -29,6 +35,15 @@ type config struct {
 	LogLevel log.Level `envconfig:"LOG_LEVEL" default:"info"`
 
 	MetadataDSN string `envconfig:"METADATA_DSN" required:"true"`
+
+	BLOBS3Endpoint         string        `envconfig:"BLOB_S3_ENDPOINT" required:"true"`
+	BLOBS3Bucket           string        `envconfig:"BLOB_S3_BUCKET" required:"true"`
+	BLOBS3PresignedLinkTTL time.Duration `envconfig:"BLOB_S3_PRESIGNED_LINK_TTL" default:"5m"`
+	BLOBS3AccessKeyID      string        `envconfig:"BLOB_S3_ACCESS_KEY_ID" required:"true"`
+	BLOBS3SecretKey        string        `envconfig:"BLOB_S3_SECRET_KEY" required:"true"`
+	BLOBS3Region           string        `envconfig:"BLOB_S3_REGION" default:"default"`
+	BLOBS3DisableSSL       bool          `envconfig:"BLOB_S3_DISABLE_SSL" default:"false"`
+	BLOBS3ForcePathStyle   bool          `envconfig:"BLOB_S3_FORCE_PATH_STYLE" default:"true"`
 
 	HTMLTemplateDir string `envconfig:"HTML_TEMPLATE_DIR" required:"true"`
 }
@@ -62,8 +77,19 @@ func main() {
 
 	postgresqlRepo := postgresql.New(db)
 
-	// FIXME: Add BLOB repo initialization
-	AccessSvc := service.NewAccessService(postgresqlRepo, nil)
+	awsSession, err := session.NewSession(&aws.Config{
+		Endpoint:         aws.String(cfg.BLOBS3Endpoint),
+		Region:           aws.String(cfg.BLOBS3Region),
+		DisableSSL:       aws.Bool(cfg.BLOBS3DisableSSL),
+		S3ForcePathStyle: aws.Bool(cfg.BLOBS3ForcePathStyle),
+		Credentials: credentials.NewStaticCredentials(
+			cfg.BLOBS3AccessKeyID, cfg.BLOBS3SecretKey, "",
+		),
+	})
+
+	blobRepo := awsBlobRepo.New(s3.New(awsSession), cfg.BLOBS3Bucket, cfg.BLOBS3PresignedLinkTTL)
+
+	AccessSvc := service.NewAccessService(postgresqlRepo, blobRepo)
 
 	p := htmlPresenter.New(AccessSvc, cfg.HTMLTemplateDir)
 	p.Register(e)

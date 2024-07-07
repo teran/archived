@@ -19,7 +19,7 @@ func New() *Mock {
 	return &Mock{}
 }
 
-func (m *Mock) PutBlob(_ context.Context, key string, rd io.Reader) error {
+func (m *Mock) PutBlob(_ context.Context, key string, rd io.ReadSeeker) error {
 	data, err := io.ReadAll(rd)
 	if err != nil {
 		return err
