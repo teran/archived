@@ -28,7 +28,7 @@ func (r *repository) CreateObject(ctx context.Context, container, version, key, 
 
 	var versionID uint
 	if err := row.Scan(&versionID); err != nil {
-		return errors.Wrap(err, "error looking up version")
+		return errors.Wrap(mapSQLErrors(err), "error looking up version")
 	}
 
 	row = psql.
@@ -40,7 +40,7 @@ func (r *repository) CreateObject(ctx context.Context, container, version, key, 
 
 	var blobID uint
 	if err := row.Scan(&blobID); err != nil {
-		return errors.Wrap(err, "error looking up blob")
+		return errors.Wrap(mapSQLErrors(err), "error looking up blob")
 	}
 
 	_, err = psql.

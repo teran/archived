@@ -80,7 +80,7 @@ func (r *repository) listVersionsByContainer(ctx context.Context, container stri
 		RunWith(r.db).
 		QueryContext(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "error executing SQL query")
+		return nil, errors.Wrap(mapSQLErrors(err), "error executing SQL query")
 	}
 	defer rows.Close()
 
