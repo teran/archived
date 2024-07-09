@@ -6,7 +6,9 @@
         <h1>Container index</h1>
         <hr>
 {{- range $container := . }}
-        <a href="/{{ $container }}/">{{ $container }}</a><br>
+        <a href="/{{ $container }}/">{{ $container }}/</a><br>
+{{- else }}
+        <p>No containers found</p>
 {{- end }}
         <hr>
         Powered by <a href="https://github.com/teran/archived" target="_blank">archived</a>

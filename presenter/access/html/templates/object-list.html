@@ -8,9 +8,11 @@
         <h1>Object Index ({{ $container }}/{{ $version }})</h1>
         <hr>
         <a href="..">..</a><br>
-        {{- range $object := .Objects }}
+{{- range $object := .Objects }}
         <a href="/{{ $container }}/{{ $version }}/{{ $object }}">{{ $object }}</a><br>
-        {{- end }}
+{{- else }}
+        <p>No objects found</p>
+{{- end }}
         <hr>
         Powered by <a href="https://github.com/teran/archived" target="_blank">archived</a>
     </body>
