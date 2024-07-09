@@ -4,9 +4,13 @@ import (
 	"context"
 	"io"
 
+	"github.com/pkg/errors"
+
 	"github.com/teran/archived/repositories/blob"
 	"github.com/teran/archived/repositories/metadata"
 )
+
+var ErrNotFound = errors.New("entity not found")
 
 type ManageService interface {
 	AccessService

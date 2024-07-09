@@ -50,6 +50,17 @@ func (s *handlersTestSuite) TestGetObject() {
 	s.Require().Equal("https://example.com/some-addr", v)
 }
 
+func (s *handlersTestSuite) TestErrNotFound() {
+	s.serviceMock.On("ListVersions", "test-container-1").Return([]string(nil), service.ErrNotFound).Once()
+	s.compareHTMLResponse(s.srv.URL+"/test-container-1/", "testdata/404.html.sample")
+
+	s.serviceMock.On("ListObjects", "test-container-1", "20240101010101").Return([]string(nil), service.ErrNotFound).Once()
+	s.compareHTMLResponse(s.srv.URL+"/test-container-1/20240101010101/", "testdata/404.html.sample")
+
+	s.serviceMock.On("GetObjectURL", "test-container-1", "20240101010101", "test-object.txt").Return("", service.ErrNotFound).Once()
+	s.compareHTMLResponse(s.srv.URL+"/test-container-1/20240101010101/test-object.txt", "testdata/404.html.sample")
+}
+
 // Definitions ...
 type handlersTestSuite struct {
 	suite.Suite
