@@ -23,6 +23,14 @@ jobs:
         with:
           dockerfile: Dockerfile.manage
 
+  hadolint-migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile.migrate
+
   markdownlint:
     runs-on: ubuntu-latest
     steps:
@@ -50,7 +58,9 @@ jobs:
       contents: write
       packages: write
     needs:
-      - hadolint
+      - hadolint-access
+      - hadolint-manage
+      - hadolint-migrate
       - markdownlint
       - unittests
     steps:
@@ -105,3 +115,15 @@ jobs:
             ghcr.io/${{ github.repository }}/manage:${{ github.ref_name }}
             ghcr.io/${{ github.repository }}/manage:${{ github.ref_name }}-${{ steps.timestamp.outputs.now }}
           outputs: type=image,name=ghcr.io/${{ github.repository }}/manage,annotation-index.org.opencontainers.image.description=${{ github.repository }}
+      - name: Build and push migrate container image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.migrate
+          platforms: amd64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/migrate:latest
+            ghcr.io/${{ github.repository }}/migrate:${{ github.ref_name }}
+            ghcr.io/${{ github.repository }}/migrate:${{ github.ref_name }}-${{ steps.timestamp.outputs.now }}
+          outputs: type=image,name=ghcr.io/${{ github.repository }}/migrate,annotation-index.org.opencontainers.image.description=${{ github.repository }}
