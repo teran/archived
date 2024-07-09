@@ -24,3 +24,6 @@ go.work.sum
 # Build binaries
 /archived
 /dist/
+
+# Protobuf compiled files
+*.pb.go
