@@ -18,4 +18,5 @@ type Repository interface {
 	RemapObject(ctx context.Context, container, version, key, newCASKey string) error
 
 	CreateBLOB(ctx context.Context, checksum string, size uint64, mimeType string) error
+	GetBlobKeyByObject(ctx context.Context, container, version, key string) (string, error)
 }
