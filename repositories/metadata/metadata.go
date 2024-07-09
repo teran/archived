@@ -1,6 +1,12 @@
 package metadata
 
-import "context"
+import (
+	"context"
+
+	"github.com/pkg/errors"
+)
+
+var ErrNotFound = errors.New("not found")
 
 type Repository interface {
 	CreateContainer(ctx context.Context, name string) error

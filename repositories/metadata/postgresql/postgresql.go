@@ -26,3 +26,12 @@ func newWithTimeProvider(db *sql.DB, tp func() time.Time) metadata.Repository {
 		tp: tp,
 	}
 }
+
+func mapSQLErrors(err error) error {
+	switch err {
+	case sql.ErrNoRows:
+		return metadata.ErrNotFound
+	default:
+		return err
+	}
+}

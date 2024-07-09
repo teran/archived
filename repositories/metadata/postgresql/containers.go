@@ -30,7 +30,7 @@ func (r *repository) ListContainers(ctx context.Context) ([]string, error) {
 		RunWith(r.db).
 		QueryContext(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "error executing SQL query")
+		return nil, errors.Wrap(mapSQLErrors(err), "error executing SQL query")
 	}
 	defer rows.Close()
 
