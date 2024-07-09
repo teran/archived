@@ -42,6 +42,9 @@ func (h *handlers) VersionIndex(c echo.Context) error {
 	container := c.Param("container")
 	versions, err := h.svc.ListVersions(c.Request().Context(), container)
 	if err != nil {
+		if err == service.ErrNotFound {
+			return c.Render(http.StatusNotFound, "404.html", nil)
+		}
 		return err
 	}
 
@@ -62,6 +65,9 @@ func (h *handlers) ObjectIndex(c echo.Context) error {
 
 	objects, err := h.svc.ListObjects(c.Request().Context(), container, version)
 	if err != nil {
+		if err == service.ErrNotFound {
+			return c.Render(http.StatusNotFound, "404.html", nil)
+		}
 		return err
 	}
 
@@ -84,6 +90,9 @@ func (h *handlers) GetObject(c echo.Context) error {
 
 	url, err := h.svc.GetObjectURL(c.Request().Context(), container, version, object)
 	if err != nil {
+		if err == service.ErrNotFound {
+			return c.Render(http.StatusNotFound, "404.html", nil)
+		}
 		return err
 	}
 
