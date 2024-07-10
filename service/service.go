@@ -41,23 +41,36 @@ type service struct {
 }
 
 func NewManageService(mdRepo metadata.Repository, blobRepo blob.Repository) ManageService {
-	return &service{}
+	return newSvc(mdRepo, blobRepo)
 }
 
 func NewAccessService(mdRepo metadata.Repository, blobRepo blob.Repository) AccessService {
-	return &service{}
+	return newSvc(mdRepo, blobRepo)
+}
+
+func newSvc(mdRepo metadata.Repository, blobRepo blob.Repository) *service {
+	return &service{
+		mdRepo:   mdRepo,
+		blobRepo: blobRepo,
+	}
 }
 
 func (s *service) CreateContainer(ctx context.Context, name string) error {
-	return s.mdRepo.CreateContainer(ctx, name)
+	err := s.mdRepo.CreateContainer(ctx, name)
+	if err != nil {
+		return errors.Wrap(err, "error creating container")
+	}
+	return err
 }
 
 func (s *service) ListContainers(ctx context.Context) ([]string, error) {
-	return s.mdRepo.ListContainers(ctx)
+	containers, err := s.mdRepo.ListContainers(ctx)
+	return containers, mapMetadataErrors(err)
 }
 
 func (s *service) DeleteContainer(ctx context.Context, name string) error {
-	return s.mdRepo.DeleteContainer(ctx, name)
+	err := s.mdRepo.DeleteContainer(ctx, name)
+	return mapMetadataErrors(err)
 }
 
 func (s *service) CreateVersion(ctx context.Context, container string) (id string, err error) {
@@ -65,7 +78,8 @@ func (s *service) CreateVersion(ctx context.Context, container string) (id strin
 }
 
 func (s *service) ListVersions(ctx context.Context, container string) ([]string, error) {
-	panic("not implemented")
+	versions, err := s.mdRepo.ListPublishedVersionsByContainer(ctx, container)
+	return versions, mapMetadataErrors(err)
 }
 
 func (s *service) PublishVersion(ctx context.Context, container, id string) error {
@@ -81,13 +95,28 @@ func (s *service) AddObject(ctx context.Context, container, versionID, key strin
 }
 
 func (s *service) ListObjects(ctx context.Context, container, versionID string) ([]string, error) {
-	panic("not implemented")
+	objects, err := s.mdRepo.ListObjects(ctx, container, versionID, 0, 1000)
+	return objects, mapMetadataErrors(err)
 }
 
 func (s *service) GetObjectURL(ctx context.Context, container, versionID, key string) (string, error) {
-	panic("not implemented")
+	key, err := s.mdRepo.GetBlobKeyByObject(ctx, container, versionID, key)
+	if err != nil {
+		return "", mapMetadataErrors(err)
+	}
+
+	return s.blobRepo.GetBlobURL(ctx, key)
 }
 
 func (s *service) DeleteObject(ctx context.Context, container, versionID, key string) error {
 	panic("not implemented")
+}
+
+func mapMetadataErrors(err error) error {
+	switch err {
+	case metadata.ErrNotFound:
+		return ErrNotFound
+	default:
+		return err
+	}
 }
