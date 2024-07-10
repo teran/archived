@@ -4,7 +4,10 @@ import (
 	"context"
 
 	"github.com/stretchr/testify/mock"
+	"github.com/teran/archived/repositories/metadata"
 )
+
+var _ metadata.Repository = (*Mock)(nil)
 
 type Mock struct {
 	mock.Mock
@@ -72,4 +75,9 @@ func (m *Mock) RemapObject(_ context.Context, container, version, key, newCASKey
 func (m *Mock) CreateBLOB(_ context.Context, checksum string, size uint64, mimeType string) error {
 	args := m.Called(checksum, size, mimeType)
 	return args.Error(0)
+}
+
+func (m *Mock) GetBlobKeyByObject(_ context.Context, container, version, key string) (string, error) {
+	args := m.Called(container, version, key)
+	return args.String(0), args.Error(1)
 }
