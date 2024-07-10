@@ -53,3 +53,55 @@ components:
 * access - HTTP server to allow data listing and fetching
 * manage - gRPC API to manage containers, versions and objects
 * CLI - CLI application to interact with manage component
+
+## How build the project manually
+
+archived requires the following dependencies to build:
+
+* Go v1.22+ (prior versions not tested)
+* goreleaser v2.0+ (prior versions not tested)
+* protoc-gen-go v1.34+ (prior versions not tested)
+* protoc-gen-go-grpc v1.4 (prior versions not test)
+* docker (to build container images, run some tests)
+
+To build the project just:
+
+```shell
+go generate ./...
+goreleaser build --snapshot --clean
+```
+
+To build container images:
+
+```shell
+docker-compose build
+```
+
+or build them manually by running:
+
+```shell
+docker build -f Dockerfile.component .
+```
+
+Where component is one of access, manage, migrate, etc.
+
+## Local development
+
+In some cases it's nice and clean to run the while stack locally.
+archived has `docker-compose` way to do that from prebuilt images:
+
+```shell
+docker-compose up
+```
+
+or by running custom build:
+
+```shell
+go generate -v ./... && \
+goreleaser build --snapshot --clean && \
+docker-compose build && \
+docker-compose up || docker-compose down
+```
+
+Please note `docker-compose down` at the will automatically remove
+containers on stop. Please remove it if you don't need such behavior.
