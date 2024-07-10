@@ -122,9 +122,6 @@ func (r *repository) MarkVersionPublished(ctx context.Context, container, versio
 		Where(sq.Eq{"name": container}).
 		RunWith(tx).
 		QueryRowContext(ctx)
-	if err != nil {
-		return errors.Wrap(err, "error generating SQL query")
-	}
 
 	if err := row.Scan(&containerID); err != nil {
 		return errors.Wrap(err, "error looking up container")
