@@ -2,6 +2,9 @@
 
 Cloud native service to store versioned data in space-efficient manner
 
+archived is applicable if you have amount of low-cardinality data to share
+with amount of users/systems. Good example of that task: APT/RPM repository.
+
 ## Project status & roadmap
 
 archived is under active development and almost everything is a subject
