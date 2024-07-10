@@ -1,5 +1,7 @@
 package postgresql
 
+import "github.com/teran/archived/repositories/metadata"
+
 func (s *postgreSQLRepositoryTestSuite) TestObjects() {
 	const containerName = "test-container-1"
 
@@ -33,4 +35,19 @@ func (s *postgreSQLRepositoryTestSuite) TestObjects() {
 	objects, err = s.repo.ListObjects(s.ctx, containerName, versionID, 0, 100)
 	s.Require().NoError(err)
 	s.Require().Equal([]string{}, objects)
+}
+
+func (s *postgreSQLRepositoryTestSuite) TestListObjectsErrors() {
+	// Nothing exists: container and version
+	_, err := s.repo.ListObjects(s.ctx, "container", "version", 0, 1000)
+	s.Require().Error(err)
+	s.Require().Equal(metadata.ErrNotFound, err)
+
+	// version doesn't exist
+	err = s.repo.CreateContainer(s.ctx, "container")
+	s.Require().NoError(err)
+
+	_, err = s.repo.ListObjects(s.ctx, "container", "version", 0, 1000)
+	s.Require().Error(err)
+	s.Require().Equal(metadata.ErrNotFound, err)
 }
