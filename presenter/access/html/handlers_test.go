@@ -59,6 +59,14 @@ func (s *handlersTestSuite) TestErrNotFound() {
 
 	s.serviceMock.On("GetObjectURL", "test-container-1", "20240101010101", "test-object.txt").Return("", service.ErrNotFound).Once()
 	s.compareHTMLResponse(s.srv.URL+"/test-container-1/20240101010101/test-object.txt", "testdata/404.html.sample")
+
+	s.compareHTMLResponse(s.srv.URL+"/test-container-1/20240101010101", "testdata/404.html.sample")
+	s.compareHTMLResponse(s.srv.URL+"/test-container-1", "testdata/404.html.sample")
+}
+
+func (s *handlersTestSuite) TestErr5xx() {
+	s.serviceMock.On("ListVersions", "test-container-1").Panic("blah").Once()
+	s.compareHTMLResponse(s.srv.URL+"/test-container-1/", "testdata/5xx.html.sample")
 }
 
 // Definitions ...
