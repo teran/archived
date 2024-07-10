@@ -4,6 +4,7 @@ go 1.22.5
 
 require (
 	github.com/Masterminds/squirrel v1.5.4
+	github.com/alecthomas/kingpin/v2 v2.4.0
 	github.com/aws/aws-sdk-go v1.54.15
 	github.com/golang-migrate/migrate/v4 v4.17.1
 	github.com/kelseyhightower/envconfig v1.4.0
@@ -18,10 +19,12 @@ require (
 	github.com/teran/go-time v0.0.2
 	golang.org/x/sync v0.7.0
 	google.golang.org/grpc v1.64.1
+	google.golang.org/protobuf v1.34.1
 )
 
 require (
 	github.com/Microsoft/go-winio v0.6.1 // indirect
+	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/cilium/ebpf v0.11.0 // indirect
@@ -69,6 +72,7 @@ require (
 	github.com/teran/go-random v0.0.1 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
+	github.com/xhit/go-str2duration/v2 v2.1.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.51.0 // indirect
 	go.opentelemetry.io/otel v1.26.0 // indirect
 	go.opentelemetry.io/otel/metric v1.26.0 // indirect
@@ -83,6 +87,5 @@ require (
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240509183442-62759503f434 // indirect
-	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
