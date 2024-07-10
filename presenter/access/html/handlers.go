@@ -99,10 +99,40 @@ func (h *handlers) GetObject(c echo.Context) error {
 	return c.Redirect(http.StatusFound, url)
 }
 
+func (h *handlers) ErrorHandler(err error, c echo.Context) {
+	code := 500
+	templateFilename := "5xx.html"
+
+	v, ok := err.(*echo.HTTPError)
+	if ok {
+		code = v.Code
+
+		switch v.Code {
+		case http.StatusNotFound:
+			code = http.StatusNotFound
+			templateFilename = "404.html"
+		}
+	}
+
+	type data struct {
+		Code    int
+		Message string
+	}
+
+	if err := c.Render(code, templateFilename, &data{
+		Code:    code,
+		Message: http.StatusText(code),
+	}); err != nil {
+		c.Logger().Error(err)
+	}
+}
+
 func (h *handlers) Register(e *echo.Echo) {
 	e.Renderer = &renderer{
 		templates: template.Must(template.ParseGlob(path.Join(h.templateDir, "*.html"))),
 	}
+
+	e.HTTPErrorHandler = h.ErrorHandler
 
 	e.GET("/", h.ContainerIndex)
 	e.GET("/:container/", h.VersionIndex)
