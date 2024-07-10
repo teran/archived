@@ -1,5 +1,7 @@
 package postgresql
 
+import "github.com/teran/archived/repositories/metadata"
+
 func (s *postgreSQLRepositoryTestSuite) TestVersionsOperations() {
 	err := s.repo.CreateContainer(s.ctx, "container1")
 	s.Require().NoError(err)
@@ -54,4 +56,25 @@ func (s *postgreSQLRepositoryTestSuite) TestPublishVersion() {
 	list, err = s.repo.ListPublishedVersionsByContainer(s.ctx, "container1")
 	s.Require().NoError(err)
 	s.Require().Equal([]string{"20240707101112"}, list)
+}
+
+func (s *postgreSQLRepositoryTestSuite) TestListAllVersionsByContainerErrors() {
+	_, err := s.repo.ListAllVersionsByContainer(s.ctx, "test-container")
+	s.Require().Error(err)
+	s.Require().Equal(metadata.ErrNotFound, err)
+}
+
+func (s *postgreSQLRepositoryTestSuite) TestListObjectsErrorsNotExistentContainer() {
+	_, err := s.repo.ListObjects(s.ctx, "test-container", "2024-01-02T03:04:05Z", 0, 100)
+	s.Require().Error(err)
+	s.Require().Equal(metadata.ErrNotFound, err)
+}
+
+func (s *postgreSQLRepositoryTestSuite) TestListObjectsErrorsNotExistentVersion() {
+	err := s.repo.CreateContainer(s.ctx, "test-container")
+	s.Require().NoError(err)
+
+	_, err = s.repo.ListObjects(s.ctx, "test-container", "2024-01-02T03:04:05Z", 0, 100)
+	s.Require().Error(err)
+	s.Require().Equal(metadata.ErrNotFound, err)
 }

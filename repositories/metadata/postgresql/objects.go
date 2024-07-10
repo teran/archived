@@ -69,19 +69,31 @@ func (r *repository) CreateObject(ctx context.Context, container, version, key, 
 
 func (r *repository) ListObjects(ctx context.Context, container, version string, offset, limit uint64) ([]string, error) {
 	row := psql.
-		Select("v.id").
-		From("versions v").
-		Join("containers c ON v.container_id = c.id").
+		Select("id").
+		From("containers").
 		Where(sq.Eq{
-			"c.name": container,
-			"v.name": version,
+			"name": container,
+		}).
+		RunWith(r.db).
+		QueryRowContext(ctx)
+
+	var containerID uint
+	if err := row.Scan(&containerID); err != nil {
+		return nil, mapSQLErrors(err)
+	}
+
+	row = psql.
+		Select("id").
+		From("versions").
+		Where(sq.Eq{
+			"container_id": containerID,
 		}).
 		RunWith(r.db).
 		QueryRowContext(ctx)
 
 	var versionID uint
 	if err := row.Scan(&versionID); err != nil {
-		return nil, errors.Wrap(err, "error looking up version")
+		return nil, mapSQLErrors(err)
 	}
 
 	rows, err := psql.

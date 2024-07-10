@@ -44,7 +44,7 @@ func (r *repository) GetBlobKeyByObject(ctx context.Context, container, version,
 
 	var checksum string
 	if err := row.Scan(&checksum); err != nil {
-		return "", errors.Wrap(mapSQLErrors(err), "error looking up BLOB")
+		return "", mapSQLErrors(err)
 	}
 
 	return checksum, nil
