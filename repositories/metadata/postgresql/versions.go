@@ -63,24 +63,35 @@ func (r *repository) ListAllVersionsByContainer(ctx context.Context, container s
 }
 
 func (r *repository) listVersionsByContainer(ctx context.Context, container string, isPublished *bool) ([]string, error) {
+	row := psql.
+		Select("id").
+		From("containers").
+		Where(sq.Eq{"name": container}).
+		RunWith(r.db).
+		QueryRowContext(ctx)
+
+	var containerID uint64
+	if err := row.Scan(&containerID); err != nil {
+		return nil, mapSQLErrors(err)
+	}
+
 	condition := sq.Eq{
-		"c.name": container,
+		"container_id": containerID,
 	}
 
 	if isPublished != nil {
-		condition["v.is_published"] = *isPublished
+		condition["is_published"] = *isPublished
 	}
 
 	rows, err := psql.
-		Select("v.name").
-		From("versions v").
-		Join("containers c ON c.id = v.container_id").
+		Select("name").
+		From("versions").
 		Where(condition).
-		OrderBy("v.id").
+		OrderBy("id").
 		RunWith(r.db).
 		QueryContext(ctx)
 	if err != nil {
-		return nil, errors.Wrap(mapSQLErrors(err), "error executing SQL query")
+		return nil, errors.Wrap(err, "error executing SQL query")
 	}
 	defer rows.Close()
 
