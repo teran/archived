@@ -45,8 +45,18 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.22.x'
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "23.x"
       - name: Install dependencies
         run: go mod download
+      - name: Install protoc-gen-go
+        run: go install github.com/golang/protobuf/protoc-gen-go@latest
+      - name: Install protoc-gen-go-grpc
+        run: go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+      - name: Generate the code
+        run: go generate -v ./...
       - name: Test with the Go CLI
         run: go test ./...
       - name: Build
@@ -75,8 +85,18 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.22.x'
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "23.x"
       - name: Install dependencies
         run: go mod download
+      - name: Install protoc-gen-go
+        run: go install github.com/golang/protobuf/protoc-gen-go@latest
+      - name: Install protoc-gen-go-grpc
+        run: go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+      - name: Generate the code
+        run: go generate -v ./...
       - name: Build & Publish release release
         uses: goreleaser/goreleaser-action@v6
         with:
