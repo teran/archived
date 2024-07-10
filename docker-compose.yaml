@@ -24,6 +24,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.migrate
+    image: ghcr.io/teran/archived/migrate:latest
     environment:
       METADATA_DSN: postgres://postgres:password@postgresql?sslmode=disable
     depends_on:
@@ -33,6 +34,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.access
+    image: ghcr.io/teran/archived/access:latest
     environment:
       METADATA_DSN: postgres://postgres:password@postgresql?sslmode=disable
       BLOB_S3_ENDPOINT: http://minio:9000
@@ -48,6 +50,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.manage
+    image: ghcr.io/teran/archived/manage:latest
     environment:
       METADATA_DSN: postgres://postgres:password@postgresql?sslmode=disable
       BLOB_S3_ENDPOINT: http://minio:9000
