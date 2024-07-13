@@ -12,6 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: bufbuild/buf-setup-action@v1
+      - run: buf lint .
 
   hadolint-access:
     runs-on: ubuntu-latest
