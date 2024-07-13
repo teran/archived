@@ -2,7 +2,6 @@ package aws
 
 import (
 	"context"
-	"io"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -28,13 +27,17 @@ func New(cli *s3.S3, bucket string, ttl time.Duration) blob.Repository {
 	}
 }
 
-func (s *s3driver) PutBlob(ctx context.Context, key string, rd io.ReadSeeker) error {
-	_, err := s.cli.PutObject(&s3.PutObjectInput{
-		Body:   rd,
+func (s *s3driver) PutBlobURL(ctx context.Context, key string) (string, error) {
+	req, _ := s.cli.PutObjectRequest(&s3.PutObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(key),
 	})
-	return errors.Wrap(err, "error putting object")
+
+	url, err := req.Presign(s.ttl)
+	if err != nil {
+		return "", errors.Wrap(err, "error signing URL")
+	}
+	return url, nil
 }
 
 func (s *s3driver) GetBlobURL(ctx context.Context, key string) (string, error) {
