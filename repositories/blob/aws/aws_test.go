@@ -1,10 +1,10 @@
 package aws
 
 import (
+	"bytes"
 	"context"
 	"io"
 	"net/http"
-	"strings"
 	"testing"
 	"time"
 
@@ -12,16 +12,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/suite"
 	"github.com/teran/archived/repositories/blob"
 	"github.com/teran/go-docker-testsuite/applications/minio"
 )
 
 func (s *repoTestSuite) TestAll() {
-	err := s.driver.PutBlob(s.ctx, "blah/test/key.txt", strings.NewReader("test data"))
+	url, err := s.driver.PutBlobURL(s.ctx, "blah/test/key.txt")
 	s.Require().NoError(err)
 
-	url, err := s.driver.GetBlobURL(s.ctx, "blah/test/key.txt")
+	err = uploadToURL(s.ctx, url, []byte("test data"))
+	s.Require().NoError(err)
+
+	url, err = s.driver.GetBlobURL(s.ctx, "blah/test/key.txt")
 	s.Require().NoError(err)
 
 	data, err := fetchURL(s.ctx, url)
@@ -115,4 +119,23 @@ func fetchURL(ctx context.Context, url string) ([]byte, error) {
 	defer resp.Body.Close()
 
 	return io.ReadAll(resp.Body)
+}
+
+func uploadToURL(ctx context.Context, url string, payload []byte) error {
+	req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(payload))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Content-Type", "multipart/form-data")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != 200 {
+		return errors.Errorf("status code 200 != %d", resp.StatusCode)
+	}
+	return nil
 }
