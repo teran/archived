@@ -3,6 +3,7 @@ package html
 import (
 	"html/template"
 	"net/http"
+	"net/url"
 	"path"
 
 	echo "github.com/labstack/echo/v4"
@@ -86,9 +87,14 @@ func (h *handlers) ObjectIndex(c echo.Context) error {
 func (h *handlers) GetObject(c echo.Context) error {
 	container := c.Param("container")
 	version := c.Param("version")
-	object := c.Param("object")
 
-	url, err := h.svc.GetObjectURL(c.Request().Context(), container, version, object)
+	objectParam := c.Param("object")
+	key, err := url.PathUnescape(objectParam)
+	if err != nil {
+		return err
+	}
+
+	url, err := h.svc.GetObjectURL(c.Request().Context(), container, version, key)
 	if err != nil {
 		if err == service.ErrNotFound {
 			return c.Render(http.StatusNotFound, "404.html", nil)
