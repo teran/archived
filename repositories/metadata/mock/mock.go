@@ -81,3 +81,8 @@ func (m *Mock) GetBlobKeyByObject(_ context.Context, container, version, key str
 	args := m.Called(container, version, key)
 	return args.String(0), args.Error(1)
 }
+
+func (m *Mock) EnsureBlobKey(_ context.Context, key string, size uint64) error {
+	args := m.Called(key, size)
+	return args.Error(0)
+}

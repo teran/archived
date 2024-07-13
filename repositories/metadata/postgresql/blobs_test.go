@@ -62,3 +62,15 @@ func (s *postgreSQLRepositoryTestSuite) TestGetBlobKeyByObjectErrors() {
 	s.Require().Error(err)
 	s.Require().Equal(metadata.ErrNotFound, err)
 }
+
+func (s *postgreSQLRepositoryTestSuite) TestEnsureBlobKey() {
+	err := s.repo.EnsureBlobKey(s.ctx, "deadbeef", 1234)
+	s.Require().Error(err)
+	s.Require().Equal(metadata.ErrNotFound, err)
+
+	err = s.repo.CreateBLOB(s.ctx, "deadbeef", 1234, "application/octet-stream")
+	s.Require().NoError(err)
+
+	err = s.repo.EnsureBlobKey(s.ctx, "deadbeef", 1234)
+	s.Require().NoError(err)
+}
