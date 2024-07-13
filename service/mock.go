@@ -2,12 +2,14 @@ package service
 
 import (
 	"context"
-	"io"
 
 	"github.com/stretchr/testify/mock"
 )
 
-var _ ManageService = (*Mock)(nil)
+var (
+	_ ManageService = (*Mock)(nil)
+	_ AccessService = (*Mock)(nil)
+)
 
 type Mock struct {
 	mock.Mock
@@ -37,7 +39,12 @@ func (m *Mock) CreateVersion(_ context.Context, container string) (id string, er
 	return args.Get(0).(string), args.Error(1)
 }
 
-func (m *Mock) ListVersions(_ context.Context, container string) ([]string, error) {
+func (m *Mock) ListAllVersions(_ context.Context, container string) ([]string, error) {
+	args := m.Called(container)
+	return args.Get(0).([]string), args.Error(1)
+}
+
+func (m *Mock) ListPublishedVersions(_ context.Context, container string) ([]string, error) {
 	args := m.Called(container)
 	return args.Get(0).([]string), args.Error(1)
 }
@@ -52,14 +59,14 @@ func (m *Mock) DeleteVersion(_ context.Context, container, id string) error {
 	return args.Error(0)
 }
 
-func (m *Mock) AddObject(_ context.Context, container, versionID, key string, objReader io.Reader) error {
-	data, err := io.ReadAll(objReader)
-	if err != nil {
-		return err
-	}
-
-	args := m.Called(container, versionID, key, data)
+func (m *Mock) AddObject(_ context.Context, container, versionID, key, casKey string) error {
+	args := m.Called(container, versionID, key, casKey)
 	return args.Error(0)
+}
+
+func (m *Mock) EnsureBLOBPresenceOrGetUploadURL(ctx context.Context, checksum string, size int64) (string, error) {
+	args := m.Called(checksum, size)
+	return args.String(0), args.Error(1)
 }
 
 func (m *Mock) ListObjects(_ context.Context, container, versionID string) ([]string, error) {

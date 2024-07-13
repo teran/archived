@@ -20,7 +20,7 @@ func (s *handlersTestSuite) TestContainerIndex() {
 }
 
 func (s *handlersTestSuite) TestVersionIndex() {
-	s.serviceMock.On("ListVersions", "test-container-1").Return([]string{"20241011121314"}, nil).Once()
+	s.serviceMock.On("ListPublishedVersions", "test-container-1").Return([]string{"20241011121314"}, nil).Once()
 
 	s.compareHTMLResponse(s.srv.URL+"/test-container-1/", "testdata/versions.html.sample")
 }
@@ -51,7 +51,7 @@ func (s *handlersTestSuite) TestGetObject() {
 }
 
 func (s *handlersTestSuite) TestErrNotFound() {
-	s.serviceMock.On("ListVersions", "test-container-1").Return([]string(nil), service.ErrNotFound).Once()
+	s.serviceMock.On("ListPublishedVersions", "test-container-1").Return([]string(nil), service.ErrNotFound).Once()
 	s.compareHTMLResponse(s.srv.URL+"/test-container-1/", "testdata/404.html.sample")
 
 	s.serviceMock.On("ListObjects", "test-container-1", "20240101010101").Return([]string(nil), service.ErrNotFound).Once()
@@ -65,7 +65,7 @@ func (s *handlersTestSuite) TestErrNotFound() {
 }
 
 func (s *handlersTestSuite) TestErr5xx() {
-	s.serviceMock.On("ListVersions", "test-container-1").Panic("blah").Once()
+	s.serviceMock.On("ListPublishedVersions", "test-container-1").Panic("blah").Once()
 	s.compareHTMLResponse(s.srv.URL+"/test-container-1/", "testdata/5xx.html.sample")
 }
 

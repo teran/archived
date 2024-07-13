@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	blobRepoMock "github.com/teran/archived/repositories/blob/mock"
+	"github.com/teran/archived/repositories/metadata"
 	mdRepoMock "github.com/teran/archived/repositories/metadata/mock"
 )
 
@@ -34,15 +35,18 @@ func (s *serviceTestSuite) TestDeleteContainer() {
 }
 
 func (s *serviceTestSuite) TestCreateVersion() {
-	s.Require().PanicsWithValue("not implemented", func() {
-		s.svc.CreateVersion(s.ctx, "container")
-	})
+	s.mdRepoMock.On("CreateVersion", "container").Return("versionID", nil).Once()
+
+	id, err := s.svc.CreateVersion(s.ctx, "container")
+	s.Require().NoError(err)
+	s.Require().Equal("versionID", id)
 }
 
 func (s *serviceTestSuite) TestPublishVersion() {
-	s.Require().PanicsWithValue("not implemented", func() {
-		s.svc.PublishVersion(s.ctx, "container", "version")
-	})
+	s.mdRepoMock.On("MarkVersionPublished", "container", "version").Return(nil).Once()
+
+	err := s.svc.PublishVersion(s.ctx, "container", "version")
+	s.Require().NoError(err)
 }
 
 func (s *serviceTestSuite) TestDeleteVersion() {
@@ -52,9 +56,10 @@ func (s *serviceTestSuite) TestDeleteVersion() {
 }
 
 func (s *serviceTestSuite) TestAddObject() {
-	s.Require().PanicsWithValue("not implemented", func() {
-		s.svc.AddObject(s.ctx, "container", "versionID", "key", nil)
-	})
+	s.mdRepoMock.On("CreateObject", "container", "versionID", "key", "cas_key").Return(nil).Once()
+
+	err := s.svc.AddObject(s.ctx, "container", "versionID", "key", "cas_key")
+	s.Require().NoError(err)
 }
 
 func (s *serviceTestSuite) TestDeleteObject() {
@@ -88,7 +93,7 @@ func (s *serviceTestSuite) TestListVersions() {
 		"version1", "version2",
 	}, nil).Once()
 
-	versions, err := s.svc.ListVersions(s.ctx, "container")
+	versions, err := s.svc.ListPublishedVersions(s.ctx, "container")
 	s.Require().NoError(err)
 	s.Require().Equal([]string{
 		"version1", "version2",
@@ -123,6 +128,24 @@ func (s *serviceTestSuite) TestGetObjectURL() {
 	url, err := s.svc.GetObjectURL(s.ctx, "container", "versionID", "key")
 	s.Require().NoError(err)
 	s.Require().Equal("url", url)
+}
+
+func (s *serviceTestSuite) TestEnsureBLOBPresenceOrGetUploadURL() {
+	// Blob exists
+	s.mdRepoMock.On("EnsureBlobKey", "checksum", uint64(1234)).Return(nil).Once()
+
+	url, err := s.svc.EnsureBLOBPresenceOrGetUploadURL(s.ctx, "checksum", 1234)
+	s.Require().NoError(err)
+	s.Require().Equal("", url)
+
+	// Blob doesn't exist
+	s.mdRepoMock.On("EnsureBlobKey", "checksum", uint64(1234)).Return(metadata.ErrNotFound).Once()
+	s.blobRepoMock.On("PutBlobURL", "checksum").Return("https://example.com", nil).Once()
+	s.mdRepoMock.On("CreateBLOB", "checksum", uint64(1234), "application/octet-stream").Return(nil).Once()
+
+	url, err = s.svc.EnsureBLOBPresenceOrGetUploadURL(s.ctx, "checksum", 1234)
+	s.Require().NoError(err)
+	s.Require().Equal("https://example.com", url)
 }
 
 // Definitions

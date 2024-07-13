@@ -40,7 +40,7 @@ func (h *handlers) ContainerIndex(c echo.Context) error {
 
 func (h *handlers) VersionIndex(c echo.Context) error {
 	container := c.Param("container")
-	versions, err := h.svc.ListVersions(c.Request().Context(), container)
+	versions, err := h.svc.ListPublishedVersions(c.Request().Context(), container)
 	if err != nil {
 		if err == service.ErrNotFound {
 			return c.Render(http.StatusNotFound, "404.html", nil)
