@@ -49,3 +49,22 @@ func (r *repository) GetBlobKeyByObject(ctx context.Context, container, version,
 
 	return checksum, nil
 }
+
+func (r *repository) EnsureBlobKey(ctx context.Context, key string, size uint64) error {
+	row := psql.
+		Select("id").
+		From("blobs").
+		Where(sq.Eq{
+			"checksum": key,
+			"size":     size,
+		}).
+		RunWith(r.db).
+		QueryRowContext(ctx)
+
+	var blobID uint
+	if err := row.Scan(&blobID); err != nil {
+		return mapSQLErrors(err)
+	}
+
+	return nil
+}

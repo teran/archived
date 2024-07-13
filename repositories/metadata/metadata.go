@@ -25,4 +25,5 @@ type Repository interface {
 
 	CreateBLOB(ctx context.Context, checksum string, size uint64, mimeType string) error
 	GetBlobKeyByObject(ctx context.Context, container, version, key string) (string, error)
+	EnsureBlobKey(ctx context.Context, key string, size uint64) error
 }
