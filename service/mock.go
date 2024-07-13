@@ -36,7 +36,7 @@ func (m *Mock) DeleteContainer(_ context.Context, name string) error {
 
 func (m *Mock) CreateVersion(_ context.Context, container string) (id string, err error) {
 	args := m.Called(container)
-	return args.Get(0).(string), args.Error(1)
+	return args.String(0), args.Error(1)
 }
 
 func (m *Mock) ListAllVersions(_ context.Context, container string) ([]string, error) {

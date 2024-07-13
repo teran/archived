@@ -9,7 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 
-	"github.com/teran/archived/presenter/manage/grpc/proto"
+	v1pb "github.com/teran/archived/presenter/manage/grpc/proto/v1"
 )
 
 var (
@@ -99,11 +99,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	cli := proto.NewManageClient(dial)
+	cli := v1pb.NewManageServiceClient(dial)
 
 	switch appCmd {
 	case containerCreate.FullCommand():
-		_, err := cli.CreateContainer(ctx, &proto.CreateContainerRequest{
+		_, err := cli.CreateContainer(ctx, &v1pb.CreateContainerRequest{
 			Name: *containerCreateName,
 		})
 		if err != nil {
