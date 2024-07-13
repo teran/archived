@@ -69,6 +69,25 @@ func (s *handlersTestSuite) TestErr5xx() {
 	s.compareHTMLResponse(s.srv.URL+"/test-container-1/", "testdata/5xx.html.sample")
 }
 
+func (s *handlersTestSuite) TestEscapedPath() {
+	s.serviceMock.On("GetObjectURL", "test-container-1", "20240101010101", "test object.txt").Return("https://example.com/some-addr", nil).Once()
+
+	req, err := http.NewRequest(http.MethodGet, s.srv.URL+"/test-container-1/20240101010101/test%20object.txt", nil)
+	s.Require().NoError(err)
+
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
+	resp, err := client.Do(req)
+	s.Require().NoError(err)
+
+	v := resp.Header.Get("Location")
+	s.Require().Equal("https://example.com/some-addr", v)
+}
+
 // Definitions ...
 type handlersTestSuite struct {
 	suite.Suite
