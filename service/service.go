@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"io"
 
 	"github.com/pkg/errors"
 
@@ -19,17 +18,20 @@ type ManageService interface {
 	DeleteContainer(ctx context.Context, name string) error
 
 	CreateVersion(ctx context.Context, container string) (id string, err error)
+	ListAllVersions(ctx context.Context, container string) ([]string, error)
 	PublishVersion(ctx context.Context, container, id string) error
 	DeleteVersion(ctx context.Context, container, id string) error
 
-	AddObject(ctx context.Context, container, versionID, key string, objReader io.Reader) error
+	AddObject(ctx context.Context, container, versionID, key string, casKey string) error
 	DeleteObject(ctx context.Context, container, versionID, key string) error
+
+	EnsureBLOBPresenceOrGetUploadURL(ctx context.Context, checksum string, size int64) (string, error)
 }
 
 type AccessService interface {
 	ListContainers(ctx context.Context) ([]string, error)
 
-	ListVersions(ctx context.Context, container string) ([]string, error)
+	ListPublishedVersions(ctx context.Context, container string) ([]string, error)
 
 	ListObjects(ctx context.Context, container, versionID string) ([]string, error)
 	GetObjectURL(ctx context.Context, container, versionID, key string) (string, error)
@@ -74,24 +76,31 @@ func (s *service) DeleteContainer(ctx context.Context, name string) error {
 }
 
 func (s *service) CreateVersion(ctx context.Context, container string) (id string, err error) {
-	panic("not implemented")
+	version, err := s.mdRepo.CreateVersion(ctx, container)
+	return version, mapMetadataErrors(err)
 }
 
-func (s *service) ListVersions(ctx context.Context, container string) ([]string, error) {
+func (s *service) ListPublishedVersions(ctx context.Context, container string) ([]string, error) {
 	versions, err := s.mdRepo.ListPublishedVersionsByContainer(ctx, container)
 	return versions, mapMetadataErrors(err)
 }
 
+func (s *service) ListAllVersions(ctx context.Context, container string) ([]string, error) {
+	versions, err := s.mdRepo.ListAllVersionsByContainer(ctx, container)
+	return versions, mapMetadataErrors(err)
+}
+
 func (s *service) PublishVersion(ctx context.Context, container, id string) error {
-	panic("not implemented")
+	err := s.mdRepo.MarkVersionPublished(ctx, container, id)
+	return mapMetadataErrors(err)
 }
 
 func (s *service) DeleteVersion(ctx context.Context, container, id string) error {
 	panic("not implemented")
 }
 
-func (s *service) AddObject(ctx context.Context, container, versionID, key string, objReader io.Reader) error {
-	panic("not implemented")
+func (s *service) AddObject(ctx context.Context, container, versionID, key, casKey string) error {
+	return s.mdRepo.CreateObject(ctx, container, versionID, key, casKey)
 }
 
 func (s *service) ListObjects(ctx context.Context, container, versionID string) ([]string, error) {
@@ -106,6 +115,23 @@ func (s *service) GetObjectURL(ctx context.Context, container, versionID, key st
 	}
 
 	return s.blobRepo.GetBlobURL(ctx, key)
+}
+
+func (s *service) EnsureBLOBPresenceOrGetUploadURL(ctx context.Context, checksum string, size int64) (string, error) {
+	err := s.mdRepo.EnsureBlobKey(ctx, checksum, uint64(size))
+	if err == nil {
+		return "", nil
+	}
+
+	if err == metadata.ErrNotFound {
+		url, err := s.blobRepo.PutBlobURL(ctx, checksum)
+		if err != nil {
+			return "", err
+		}
+		return url, s.mdRepo.CreateBLOB(ctx, checksum, uint64(size), "application/octet-stream")
+	}
+
+	return "", err
 }
 
 func (s *service) DeleteObject(ctx context.Context, container, versionID, key string) error {
