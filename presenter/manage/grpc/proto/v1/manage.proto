@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package proto;
+package presenter.manage.grpc.proto.v1;
 
-option go_package = "github.com/teran/archived/presenter/manage/grpc/proto";
+option go_package = "github.com/teran/archived/presenter/manage/grpc/proto/v1";
 
 message CreateContainerRequest {
   string name = 1;
@@ -17,6 +17,13 @@ message DeleteContainerResponse {}
 message ListContainersRequest {}
 message ListContainersResponse {
   repeated string name = 1;
+}
+
+message CreateVersionRequest {
+  string container = 1;
+}
+message CreateVersionResponse {
+  string version = 1;
 }
 
 message ListVersionsRequest {
@@ -40,6 +47,17 @@ message PublishVersionRequest {
 }
 
 message PublishVersionResponse {}
+
+message CreateObjectRequest {
+  string container = 1;
+  string version = 2;
+  string key = 3;
+  string checksum = 4;
+  int64 size = 5;
+}
+message CreateObjectResponse {
+  optional string upload_url = 1;
+}
 
 message ListObjectsRequest {
   string container = 1;
@@ -68,16 +86,17 @@ message DeleteObjectRequest {
 
 message DeleteObjectResponse {}
 
-service Manage {
+service ManageService {
     rpc CreateContainer(CreateContainerRequest) returns (CreateContainerResponse);
     rpc DeleteContainer(DeleteContainerRequest) returns (DeleteContainerResponse);
     rpc ListContainers(ListContainersRequest) returns (ListContainersResponse);
 
-    // rpc VersionCreate()
+    rpc CreateVersion(CreateVersionRequest) returns (CreateVersionResponse);
     rpc ListVersions(ListVersionsRequest) returns (ListVersionsResponse);
     rpc DeleteVersion(DeleteVersionRequest) returns (DeleteVersionResponse);
     rpc PublishVersion(PublishVersionRequest) returns (PublishVersionResponse);
 
+    rpc CreateObject(CreateObjectRequest) returns (CreateObjectResponse);
     rpc ListObjects(ListObjectsRequest) returns (ListObjectsResponse);
     rpc GetObjectURL(GetObjectURLRequest) returns (GetObjectURLResponse);
     rpc DeleteObject(DeleteObjectRequest) returns (DeleteObjectResponse);

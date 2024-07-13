@@ -7,6 +7,12 @@ on:
       - 'v*'
 
 jobs:
+  buf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: bufbuild/buf-setup-action@v1
+
   hadolint-access:
     runs-on: ubuntu-latest
     steps:
@@ -68,6 +74,7 @@ jobs:
       contents: write
       packages: write
     needs:
+      - buf
       - hadolint-access
       - hadolint-manage
       - hadolint-migrate
