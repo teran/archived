@@ -18,8 +18,11 @@ services:
     command:
       - server
       - /data
+      - "--address=:9000"
+      - "--console-address=:9001"
     ports:
       - "9000:9000"
+      - "9001:9001"
   migrate:
     build:
       context: .
@@ -55,6 +58,7 @@ services:
       METADATA_DSN: postgres://postgres:password@postgresql?sslmode=disable
       BLOB_S3_ENDPOINT: http://minio:9000
       BLOB_S3_BUCKET: test-bucket
+      BLOB_S3_CREATE_BUCKET: "true"
       BLOB_S3_ACCESS_KEY_ID: minioadmin
       BLOB_S3_SECRET_KEY: minioadmin
     ports:
