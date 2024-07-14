@@ -25,30 +25,11 @@ builds:
       - CGO_ENABLED=0
     goos:
       - darwin
-      - dragonfly
-      - freebsd
       - linux
-      - netbsd
-      - openbsd
-      - solaris
-      - windows
     goarch:
-      # x86
       - amd64
-      - "386"
-
-      # ARM
       - arm64
-      - arm
-
-      # MIPS
-      - mips64
-      - mips64le
-      - mips
-      - mipsle
     goamd64: ["v1", "v2", "v3"]
-    goarm: ["6", "7"]
-    gomips: ["hardfloat", "softfloat"]
     mod_timestamp: "{{ .CommitTimestamp }}"
   - id: archived-manager
     main: ./cmd/manager
