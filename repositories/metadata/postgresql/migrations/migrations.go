@@ -33,5 +33,9 @@ func MigrateUp(dsn string) error {
 		return errors.Wrap(err, "error creating migrator instance")
 	}
 
-	return errors.Wrap(m.Up(), "error migrating database")
+	if err = m.Up(); err != nil && err != migrate.ErrNoChange {
+		return errors.Wrap(err, "error migrating database")
+	}
+
+	return nil
 }
