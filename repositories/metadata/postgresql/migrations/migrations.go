@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func MigrateUp(dsn string) error {
+func migrateWithMigrationsPath(dsn, migrationsPath string) error {
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return errors.Wrap(err, "error opening database connection")
@@ -27,11 +27,19 @@ func MigrateUp(dsn string) error {
 	}
 
 	m, err := migrate.NewWithDatabaseInstance(
-		"file://migrations/sql",
+		migrationsPath,
 		"postgres", driver)
 	if err != nil {
 		return errors.Wrap(err, "error creating migrator instance")
 	}
 
-	return errors.Wrap(m.Up(), "error migrating database")
+	if err = m.Up(); err != nil && err != migrate.ErrNoChange {
+		return errors.Wrap(err, "error migrating database")
+	}
+
+	return nil
+}
+
+func MigrateUp(dsn string) error {
+	return migrateWithMigrationsPath(dsn, "file://migrations/sql")
 }
