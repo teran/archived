@@ -1,27 +1,18 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"crypto/sha256"
 	"crypto/tls"
-	"encoding/hex"
-	"fmt"
-	"io"
-	"io/fs"
-	"net/http"
 	"os"
-	"path/filepath"
-	"strings"
 
 	kingpin "github.com/alecthomas/kingpin/v2"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/teran/archived/cli/router"
+	"github.com/teran/archived/cli/service"
 	v1proto "github.com/teran/archived/presenter/manage/grpc/proto/v1"
 )
 
@@ -134,182 +125,19 @@ func main() {
 
 	log.Debugf("Initializing manage service client ...")
 	cli := v1proto.NewManageServiceClient(dial)
+	cliSvc := service.New(cli)
 
 	r := router.New(ctx)
-	r.Register(containerCreate.FullCommand(), func(ctx context.Context) error {
-		_, err := cli.CreateContainer(ctx, &v1proto.CreateContainerRequest{
-			Name: *containerCreateName,
-		})
-		if err != nil {
-			return err
-		}
-		fmt.Printf("container `%s` created\n", *containerCreateName)
-		return nil
-	})
-	r.Register(containerList.FullCommand(), func(ctx context.Context) error {
-		resp, err := cli.ListContainers(ctx, &v1proto.ListContainersRequest{})
-		if err != nil {
-			return err
-		}
-
-		for _, container := range resp.GetName() {
-			fmt.Println(container)
-		}
-		return nil
-	})
-	r.Register(versionList.FullCommand(), func(ctx context.Context) error {
-		resp, err := cli.ListVersions(ctx, &v1proto.ListVersionsRequest{
-			Container: *versionListContainer,
-		})
-		if err != nil {
-			return err
-		}
-
-		for _, version := range resp.GetVersions() {
-			fmt.Println(version)
-		}
-
-		return nil
-	})
-	r.Register(versionCreate.FullCommand(), func(ctx context.Context) error {
-		resp, err := cli.CreateVersion(ctx, &v1proto.CreateVersionRequest{
-			Container: *versionCreateContainer,
-		})
-		if err != nil {
-			return err
-		}
-
-		fmt.Printf("version `%s` created unpublished\n", resp.GetVersion())
-		return nil
-	})
-	r.Register(versionPublish.FullCommand(), func(ctx context.Context) error {
-		_, err := cli.PublishVersion(ctx, &v1proto.PublishVersionRequest{
-			Container: *versionPublishContainer,
-			Version:   *versionPublishVersion,
-		})
-		if err != nil {
-			return err
-		}
-
-		fmt.Printf("version `%s` if container `%s` is published now\n", *versionPublishVersion, *versionPublishContainer)
-		return nil
-	})
-	r.Register(objectCreate.FullCommand(), func(ctx context.Context) error {
-		return filepath.Walk(*objectCreatePath, func(path string, info fs.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-
-			if info.IsDir() {
-				return nil
-			}
-
-			shortPath := strings.TrimPrefix(path, *objectCreatePath)
-			log.Debugf("Found: %s\n", shortPath)
-
-			size := info.Size()
-			checksum, err := checksumFile(path)
-			if err != nil {
-				return err
-			}
-
-			resp, err := cli.CreateObject(ctx, &v1proto.CreateObjectRequest{
-				Container: *objectCreateContainer,
-				Version:   *objectCreateVersion,
-				Key:       shortPath,
-				Checksum:  checksum,
-				Size:      size,
-			})
-			if err != nil {
-				return err
-			}
-
-			if url := resp.GetUploadUrl(); url != "" {
-				log.Tracef("Upload URL: `%s`", url)
-
-				fp, err := os.Open(path)
-				if err != nil {
-					return errors.Wrap(err, "error opening file")
-				}
-				defer fp.Close()
-
-				buf := bytes.NewBuffer(nil)
-				if _, err := io.Copy(buf, fp); err != nil {
-					return err
-				}
-
-				req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, buf)
-				if err != nil {
-					return errors.Wrap(err, "error constructing request")
-				}
-
-				req.Header.Set("Content-Type", "multipart/form-data")
-
-				c := &http.Client{}
-				uploadResp, err := c.Do(req)
-				if err != nil {
-					return errors.Wrap(err, "error uploading file")
-				}
-				log.Debugf("upload HTTP response code: %s", uploadResp.Status)
-			}
-
-			return nil
-		})
-	})
-	r.Register(objectList.FullCommand(), func(ctx context.Context) error {
-		resp, err := cli.ListObjects(ctx, &v1proto.ListObjectsRequest{
-			Container: *objectListContainer,
-			Version:   *objectListVersion,
-		})
-		if err != nil {
-			return err
-		}
-
-		for _, object := range resp.GetObjects() {
-			fmt.Println(object)
-		}
-
-		return nil
-	})
-	r.Register(objectURL.FullCommand(), func(ctx context.Context) error {
-		url, err := cli.GetObjectURL(ctx, &v1proto.GetObjectURLRequest{
-			Container: *objectURLContainer,
-			Version:   *objectURLVersion,
-			Key:       *objectURLKey,
-		})
-		if err != nil {
-			return err
-		}
-
-		log.Printf("Object URL received: %s", url)
-		return nil
-	})
+	r.Register(containerCreate.FullCommand(), cliSvc.CreateContainer(*containerCreateName))
+	r.Register(containerList.FullCommand(), cliSvc.ListContainers())
+	r.Register(versionList.FullCommand(), cliSvc.ListVersions(*versionListContainer))
+	r.Register(versionCreate.FullCommand(), cliSvc.CreateVersion(*versionCreateContainer))
+	r.Register(versionPublish.FullCommand(), cliSvc.PublishVersion(*versionPublishContainer, *versionPublishVersion))
+	r.Register(objectCreate.FullCommand(), cliSvc.CreateObject(*objectCreateContainer, *objectCreateVersion, *objectCreatePath))
+	r.Register(objectList.FullCommand(), cliSvc.ListObjects(*objectListContainer, *objectListVersion))
+	r.Register(objectURL.FullCommand(), cliSvc.GetObjectURL(*objectURLContainer, *objectURLVersion, *objectURLKey))
 
 	if err := r.Call(appCmd); err != nil {
 		panic(err)
 	}
-}
-
-func checksumFile(filename string) (string, error) {
-	info, err := os.Stat(filename)
-	if err != nil {
-		return "", errors.Wrap(err, "error performing stat on file")
-	}
-	fp, err := os.Open(filename)
-	if err != nil {
-		return "", errors.Wrap(err, "error opening file")
-	}
-	defer fp.Close()
-
-	h := sha256.New()
-	n, err := io.Copy(h, fp)
-	if err != nil {
-		return "", errors.Wrap(err, "error reading file")
-	}
-
-	if n != info.Size() {
-		return "", errors.Errorf("file size is %d bytes while only %d was copied: early EOF", info.Size(), n)
-	}
-
-	return hex.EncodeToString(h.Sum(nil)), nil
 }
