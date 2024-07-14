@@ -11,8 +11,8 @@ import (
 
 var ErrNotFound = errors.New("entity not found")
 
-type ManageService interface {
-	AccessService
+type Manager interface {
+	Publisher
 
 	CreateContainer(ctx context.Context, name string) error
 	DeleteContainer(ctx context.Context, name string) error
@@ -28,7 +28,7 @@ type ManageService interface {
 	EnsureBLOBPresenceOrGetUploadURL(ctx context.Context, checksum string, size int64) (string, error)
 }
 
-type AccessService interface {
+type Publisher interface {
 	ListContainers(ctx context.Context) ([]string, error)
 
 	ListPublishedVersions(ctx context.Context, container string) ([]string, error)
@@ -42,11 +42,11 @@ type service struct {
 	blobRepo blob.Repository
 }
 
-func NewManageService(mdRepo metadata.Repository, blobRepo blob.Repository) ManageService {
+func NewManager(mdRepo metadata.Repository, blobRepo blob.Repository) Manager {
 	return newSvc(mdRepo, blobRepo)
 }
 
-func NewAccessService(mdRepo metadata.Repository, blobRepo blob.Repository) AccessService {
+func NewPublisher(mdRepo metadata.Repository, blobRepo blob.Repository) Publisher {
 	return newSvc(mdRepo, blobRepo)
 }
 

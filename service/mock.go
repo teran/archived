@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	_ ManageService = (*Mock)(nil)
-	_ AccessService = (*Mock)(nil)
+	_ Manager   = (*Mock)(nil)
+	_ Publisher = (*Mock)(nil)
 )
 
 type Mock struct {

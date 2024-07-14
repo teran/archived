@@ -19,11 +19,11 @@ type Handlers interface {
 }
 
 type handlers struct {
-	svc         service.AccessService
+	svc         service.Publisher
 	templateDir string
 }
 
-func New(svc service.AccessService, templateDir string) Handlers {
+func New(svc service.Publisher, templateDir string) Handlers {
 	return &handlers{
 		svc:         svc,
 		templateDir: templateDir,

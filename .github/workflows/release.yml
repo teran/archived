@@ -14,29 +14,29 @@ jobs:
       - uses: bufbuild/buf-setup-action@v1
       - run: buf lint .
 
-  hadolint-access:
+  hadolint-publisher:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: Dockerfile.access
+          dockerfile: Dockerfile.publisher
   
-  hadolint-manage:
+  hadolint-manager:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: Dockerfile.manage
+          dockerfile: Dockerfile.manager
 
-  hadolint-migrate:
+  hadolint-migrator:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: Dockerfile.migrate
+          dockerfile: Dockerfile.migrator
 
   markdownlint:
     runs-on: ubuntu-latest
@@ -76,9 +76,9 @@ jobs:
       packages: write
     needs:
       - buf
-      - hadolint-access
-      - hadolint-manage
-      - hadolint-migrate
+      - hadolint-publisher
+      - hadolint-manager
+      - hadolint-migrator
       - markdownlint
       - unittests
     steps:
@@ -119,39 +119,39 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and push access container image
+      - name: Build and push publisher container image
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile.access
+          file: ./Dockerfile.publisher
           platforms: amd64
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}/access:latest
-            ghcr.io/${{ github.repository }}/access:${{ github.ref_name }}
-            ghcr.io/${{ github.repository }}/access:${{ github.ref_name }}-${{ steps.timestamp.outputs.now }}
-          outputs: type=image,name=ghcr.io/${{ github.repository }}/access,annotation-index.org.opencontainers.image.description=${{ github.repository }}
-      - name: Build and push manage container image
+            ghcr.io/${{ github.repository }}/publisher:latest
+            ghcr.io/${{ github.repository }}/publisher:${{ github.ref_name }}
+            ghcr.io/${{ github.repository }}/publisher:${{ github.ref_name }}-${{ steps.timestamp.outputs.now }}
+          outputs: type=image,name=ghcr.io/${{ github.repository }}/publisher,annotation-index.org.opencontainers.image.description=${{ github.repository }}
+      - name: Build and push manager container image
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile.manage
+          file: ./Dockerfile.manager
           platforms: amd64
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}/manage:latest
-            ghcr.io/${{ github.repository }}/manage:${{ github.ref_name }}
-            ghcr.io/${{ github.repository }}/manage:${{ github.ref_name }}-${{ steps.timestamp.outputs.now }}
-          outputs: type=image,name=ghcr.io/${{ github.repository }}/manage,annotation-index.org.opencontainers.image.description=${{ github.repository }}
-      - name: Build and push migrate container image
+            ghcr.io/${{ github.repository }}/manager:latest
+            ghcr.io/${{ github.repository }}/manager:${{ github.ref_name }}
+            ghcr.io/${{ github.repository }}/manager:${{ github.ref_name }}-${{ steps.timestamp.outputs.now }}
+          outputs: type=image,name=ghcr.io/${{ github.repository }}/manager,annotation-index.org.opencontainers.image.description=${{ github.repository }}
+      - name: Build and push migrator container image
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile.migrate
+          file: ./Dockerfile.migrator
           platforms: amd64
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}/migrate:latest
-            ghcr.io/${{ github.repository }}/migrate:${{ github.ref_name }}
-            ghcr.io/${{ github.repository }}/migrate:${{ github.ref_name }}-${{ steps.timestamp.outputs.now }}
-          outputs: type=image,name=ghcr.io/${{ github.repository }}/migrate,annotation-index.org.opencontainers.image.description=${{ github.repository }}
+            ghcr.io/${{ github.repository }}/migrator:latest
+            ghcr.io/${{ github.repository }}/migrator:${{ github.ref_name }}
+            ghcr.io/${{ github.repository }}/migrator:${{ github.ref_name }}-${{ steps.timestamp.outputs.now }}
+          outputs: type=image,name=ghcr.io/${{ github.repository }}/migrator,annotation-index.org.opencontainers.image.description=${{ github.repository }}

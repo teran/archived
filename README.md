@@ -50,9 +50,10 @@ if storing copies.
 archived is built with microservice architecture containing the following
 components:
 
-* access - HTTP server to allow data listing and fetching
-* manage - gRPC API to manage containers, versions and objects
+* publisher - HTTP server to allow data listing and fetching
+* manager - gRPC API to manage containers, versions and objects
 * CLI - CLI application to interact with manage component
+* migrator - metadata migration tool
 
 ## How build the project manually
 
@@ -83,7 +84,7 @@ or build them manually by running:
 docker build -f Dockerfile.component .
 ```
 
-Where component is one of access, manage, migrate, etc.
+Where component is one of publisher, manager, migrator, etc.
 
 ## Local development
 

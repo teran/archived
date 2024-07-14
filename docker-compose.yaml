@@ -23,21 +23,21 @@ services:
     ports:
       - "9000:9000"
       - "9001:9001"
-  migrate:
+  migrator:
     build:
       context: .
-      dockerfile: Dockerfile.migrate
-    image: ghcr.io/teran/archived/migrate:latest
+      dockerfile: Dockerfile.migrator
+    image: ghcr.io/teran/archived/migrator:latest
     environment:
       METADATA_DSN: postgres://postgres:password@postgresql?sslmode=disable
     depends_on:
       postgresql:
         condition: service_healthy
-  access:
+  publisher:
     build:
       context: .
-      dockerfile: Dockerfile.access
-    image: ghcr.io/teran/archived/access:latest
+      dockerfile: Dockerfile.publisher
+    image: ghcr.io/teran/archived/publisher:latest
     environment:
       METADATA_DSN: postgres://postgres:password@postgresql?sslmode=disable
       BLOB_S3_ENDPOINT: http://minio:9000
@@ -49,11 +49,11 @@ services:
     depends_on:
       postgresql:
         condition: service_healthy
-  manage:
+  manager:
     build:
       context: .
-      dockerfile: Dockerfile.manage
-    image: ghcr.io/teran/archived/manage:latest
+      dockerfile: Dockerfile.manager
+    image: ghcr.io/teran/archived/manager:latest
     environment:
       METADATA_DSN: postgres://postgres:password@postgresql?sslmode=disable
       BLOB_S3_ENDPOINT: http://minio:9000
