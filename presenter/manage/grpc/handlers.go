@@ -23,10 +23,10 @@ type ManageServerInterface interface {
 type handlers struct {
 	v1.UnimplementedManageServiceServer
 
-	svc service.ManageService
+	svc service.Manager
 }
 
-func New(svc service.ManageService) ManageServerInterface {
+func New(svc service.Manager) ManageServerInterface {
 	return &handlers{
 		svc: svc,
 	}

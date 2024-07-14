@@ -20,29 +20,29 @@ jobs:
       - uses: bufbuild/buf-setup-action@v1
       - run: buf lint .
 
-  hadolint-access:
+  hadolint-publisher:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: Dockerfile.access
+          dockerfile: Dockerfile.publisher
   
-  hadolint-manage:
+  hadolint-manager:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: Dockerfile.manage
+          dockerfile: Dockerfile.manager
 
-  hadolint-migrate:
+  hadolint-migrator:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: Dockerfile.migrate
+          dockerfile: Dockerfile.migrator
 
   markdownlint:
     runs-on: ubuntu-latest

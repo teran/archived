@@ -35,7 +35,7 @@ func main() {
 	lf.FullTimestamp = true
 	log.SetFormatter(lf)
 
-	log.Infof("Initializing archived-migrate (%s @ %s) ...", appVersion, buildTimestamp)
+	log.Infof("Initializing archived-migrator (%s @ %s) ...", appVersion, buildTimestamp)
 
 	g, _ := errgroup.WithContext(context.Background())
 

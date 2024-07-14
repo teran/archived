@@ -6,6 +6,6 @@ RUN apk add --update --no-cache \
 FROM scratch
 
 COPY --from=certificates /etc/ssl/cert.pem /etc/ssl/cert.pem
-COPY --chmod=0755 --chown=root:root dist/archived-manage_linux_amd64_v3/archived-manage /archived-manage
+COPY --chmod=0755 --chown=root:root dist/archived-manager_linux_amd64_v3/archived-manager /archived-manager
 
-ENTRYPOINT [ "/archived-manage" ]
+ENTRYPOINT [ "/archived-manager" ]
