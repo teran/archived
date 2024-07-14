@@ -42,9 +42,11 @@ var (
 			String()
 
 	insecureFlag = app.Flag("insecure", "Do not use TLS for gRPC connection").
-			Envar("ARCHIVED_CLI_INSECURE").
 			Default("false").
 			Bool()
+	insecureSkipVerify = app.Flag("insecure-skip-verify", "Do not perform TLS certificate verification for gRPC connection").
+				Default("false").
+				Bool()
 
 	container           = app.Command("container", "container operations")
 	containerCreate     = container.Command("create", "create new container")
@@ -107,15 +109,25 @@ func main() {
 			FullTimestamp: true,
 		})
 		log.Debug("Debug mode is enabled.")
+	} else {
+		log.SetFormatter(&log.TextFormatter{
+			FullTimestamp: true,
+		})
 	}
 
 	log.Debugf("Initializing gRPC client ...")
 
 	grpcOpts := []grpc.DialOption{}
 	if *insecureFlag {
+		log.Warn("insecure flag is specified which means no TLS is in use!")
 		grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	} else {
-		grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})))
+		if *insecureSkipVerify {
+			log.Warn("insecure-skip-verify flag in specified which means high risk of man-in-the-middle attack!")
+		}
+		grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{
+			InsecureSkipVerify: *insecureSkipVerify,
+		})))
 	}
 
 	dial, err := grpc.NewClient(*manageEndpoint, grpcOpts...)
