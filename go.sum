@@ -243,6 +243,8 @@ github.com/teran/echo-grpc-server v0.0.0-20240512211903-7c0d3d091c93 h1:kiYDPhhM
 github.com/teran/echo-grpc-server v0.0.0-20240512211903-7c0d3d091c93/go.mod h1:ffluio+EtHNzo+6Pd4d0FnEXHnkMZhOTOiWS0FkpbzA=
 github.com/teran/go-docker-testsuite v0.0.6 h1:itW2lpW2tzLMgFBbHDGGCfop+eCy7Lroq/PTq1j5iNs=
 github.com/teran/go-docker-testsuite v0.0.6/go.mod h1:KO9qMSZPAXkaceW10dAmDBL04bWSItnn0f9p16p/YzE=
+github.com/teran/go-grpctest v0.0.6 h1:q34p64c8icQq5TFgLsDa9VM8BThhesN43XTS8PJAh38=
+github.com/teran/go-grpctest v0.0.6/go.mod h1:rNcMrEhPlNH7DFpQbcyl2vFzvfrx4UsxGuf3i/W77d0=
 github.com/teran/go-ptr v1.1.0 h1:c/5SPr+FB4zfmmKVB+KTCNKpgC/zWKBY5JHReL84lKU=
 github.com/teran/go-ptr v1.1.0/go.mod h1:2gyUP12bjbvBfyXm/NflOYJHONy415pNVeSTOZHna+A=
 github.com/teran/go-random v0.0.1 h1:WQ3cF7UUQb/Q0oGAKcYeLeUIcMzD4vSs18oU1pkU/Mo=

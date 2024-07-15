@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
+	grpctest "github.com/teran/go-grpctest"
 
 	v1pb "github.com/teran/archived/presenter/manager/grpc/proto/v1"
 	"github.com/teran/archived/service"
@@ -87,7 +88,7 @@ type manageHandlersTestSuite struct {
 
 	svcMock  *service.Mock
 	handlers ManageServerInterface
-	srv      testServer
+	srv      grpctest.Server
 
 	client v1pb.ManageServiceClient
 }
@@ -95,7 +96,7 @@ type manageHandlersTestSuite struct {
 func (s *manageHandlersTestSuite) SetupTest() {
 	s.svcMock = service.NewMock()
 	s.handlers = New(s.svcMock)
-	s.srv = newTestServer()
+	s.srv = grpctest.New()
 	s.handlers.Register(s.srv.Server())
 
 	err := s.srv.Run()
