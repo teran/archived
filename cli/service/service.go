@@ -16,7 +16,7 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	v1proto "github.com/teran/archived/presenter/manage/grpc/proto/v1"
+	v1proto "github.com/teran/archived/presenter/manager/grpc/proto/v1"
 )
 
 type Service interface {

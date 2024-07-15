@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	v1pb "github.com/teran/archived/presenter/manage/grpc/proto/v1"
+	v1pb "github.com/teran/archived/presenter/manager/grpc/proto/v1"
 	"github.com/teran/archived/service"
 )
 
