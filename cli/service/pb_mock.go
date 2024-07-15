@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	v1proto "github.com/teran/archived/presenter/manage/grpc/proto/v1"
+	v1proto "github.com/teran/archived/presenter/manager/grpc/proto/v1"
 	"github.com/teran/archived/repositories/blob/mock"
 	"google.golang.org/grpc"
 )

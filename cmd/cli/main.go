@@ -13,7 +13,7 @@ import (
 
 	"github.com/teran/archived/cli/router"
 	"github.com/teran/archived/cli/service"
-	v1proto "github.com/teran/archived/presenter/manage/grpc/proto/v1"
+	v1proto "github.com/teran/archived/presenter/manager/grpc/proto/v1"
 )
 
 var (
