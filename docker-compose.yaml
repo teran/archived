@@ -29,6 +29,7 @@ services:
       dockerfile: Dockerfile.migrator
     image: ghcr.io/teran/archived/migrator:latest
     environment:
+      LOG_LEVEL: trace
       METADATA_DSN: postgres://postgres:password@postgresql?sslmode=disable
     depends_on:
       postgresql:
@@ -39,6 +40,7 @@ services:
       dockerfile: Dockerfile.publisher
     image: ghcr.io/teran/archived/publisher:latest
     environment:
+      LOG_LEVEL: trace
       METADATA_DSN: postgres://postgres:password@postgresql?sslmode=disable
       BLOB_S3_ENDPOINT: http://minio:9000
       BLOB_S3_BUCKET: test-bucket
@@ -55,6 +57,7 @@ services:
       dockerfile: Dockerfile.manager
     image: ghcr.io/teran/archived/manager:latest
     environment:
+      LOG_LEVEL: trace
       METADATA_DSN: postgres://postgres:password@postgresql?sslmode=disable
       BLOB_S3_ENDPOINT: http://minio:9000
       BLOB_S3_BUCKET: test-bucket
