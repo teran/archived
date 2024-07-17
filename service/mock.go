@@ -49,6 +49,11 @@ func (m *Mock) ListPublishedVersions(_ context.Context, container string) ([]str
 	return args.Get(0).([]string), args.Error(1)
 }
 
+func (m *Mock) ListPublishedVersionsByPage(_ context.Context, container string, pageNum uint64) (uint64, []string, error) {
+	args := m.Called(container, pageNum)
+	return args.Get(0).(uint64), args.Get(1).([]string), args.Error(2)
+}
+
 func (m *Mock) PublishVersion(_ context.Context, container, id string) error {
 	args := m.Called(container, id)
 	return args.Error(0)
