@@ -88,7 +88,7 @@ func (s *serviceTestSuite) TestListContainers() {
 	s.Require().Equal("test error", err.Error())
 }
 
-func (s *serviceTestSuite) TestListVersions() {
+func (s *serviceTestSuite) TestListPublishedVersions() {
 	s.mdRepoMock.On("ListPublishedVersionsByContainer", "container").Return([]string{
 		"version1", "version2",
 	}, nil).Once()
@@ -98,6 +98,21 @@ func (s *serviceTestSuite) TestListVersions() {
 	s.Require().Equal([]string{
 		"version1", "version2",
 	}, versions)
+}
+
+func (s *serviceTestSuite) TestListPublishedVersionsByPage() {
+	s.mdRepoMock.
+		On("ListPublishedVersionsByContainerAndPage", "container", uint64(500), uint64(50)).
+		Return(uint64(1000), []string{
+			"version1", "version2",
+		}, nil).Once()
+
+	total, versions, err := s.svc.ListPublishedVersionsByPage(s.ctx, "container", 10)
+	s.Require().NoError(err)
+	s.Require().Equal([]string{
+		"version1", "version2",
+	}, versions)
+	s.Require().Equal(uint64(20), total)
 }
 
 func (s *serviceTestSuite) TestListObjects() {

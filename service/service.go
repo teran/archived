@@ -9,6 +9,8 @@ import (
 	"github.com/teran/archived/repositories/metadata"
 )
 
+const defaultVersionsPerPage = 50
+
 var ErrNotFound = errors.New("entity not found")
 
 type Manager interface {
@@ -32,14 +34,16 @@ type Publisher interface {
 	ListContainers(ctx context.Context) ([]string, error)
 
 	ListPublishedVersions(ctx context.Context, container string) ([]string, error)
+	ListPublishedVersionsByPage(ctx context.Context, container string, pageNum uint64) (uint64, []string, error)
 
 	ListObjects(ctx context.Context, container, versionID string) ([]string, error)
 	GetObjectURL(ctx context.Context, container, versionID, key string) (string, error)
 }
 
 type service struct {
-	mdRepo   metadata.Repository
-	blobRepo blob.Repository
+	mdRepo           metadata.Repository
+	blobRepo         blob.Repository
+	versionsPageSize uint64
 }
 
 func NewManager(mdRepo metadata.Repository, blobRepo blob.Repository) Manager {
@@ -52,8 +56,9 @@ func NewPublisher(mdRepo metadata.Repository, blobRepo blob.Repository) Publishe
 
 func newSvc(mdRepo metadata.Repository, blobRepo blob.Repository) *service {
 	return &service{
-		mdRepo:   mdRepo,
-		blobRepo: blobRepo,
+		mdRepo:           mdRepo,
+		blobRepo:         blobRepo,
+		versionsPageSize: defaultVersionsPerPage,
 	}
 }
 
@@ -83,6 +88,13 @@ func (s *service) CreateVersion(ctx context.Context, container string) (id strin
 func (s *service) ListPublishedVersions(ctx context.Context, container string) ([]string, error) {
 	versions, err := s.mdRepo.ListPublishedVersionsByContainer(ctx, container)
 	return versions, mapMetadataErrors(err)
+}
+
+func (s *service) ListPublishedVersionsByPage(ctx context.Context, container string, pageNum uint64) (uint64, []string, error) {
+	offset := pageNum * s.versionsPageSize
+	limit := s.versionsPageSize
+	totalVersions, versions, err := s.mdRepo.ListPublishedVersionsByContainerAndPage(ctx, container, offset, limit)
+	return totalVersions / s.versionsPageSize, versions, mapMetadataErrors(err)
 }
 
 func (s *service) ListAllVersions(ctx context.Context, container string) ([]string, error) {
