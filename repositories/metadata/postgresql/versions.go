@@ -8,6 +8,8 @@ import (
 	ptr "github.com/teran/go-ptr"
 )
 
+const defaultLimit uint64 = 1000
+
 func (r *repository) CreateVersion(ctx context.Context, container string) (string, error) {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -55,14 +57,24 @@ func (r *repository) CreateVersion(ctx context.Context, container string) (strin
 }
 
 func (r *repository) ListPublishedVersionsByContainer(ctx context.Context, container string) ([]string, error) {
-	return r.listVersionsByContainer(ctx, container, ptr.Bool(true))
+	_, versions, err := r.listVersionsByContainer(ctx, container, ptr.Bool(true), 0, 0)
+	return versions, err
 }
 
 func (r *repository) ListAllVersionsByContainer(ctx context.Context, container string) ([]string, error) {
-	return r.listVersionsByContainer(ctx, container, nil)
+	_, versions, err := r.listVersionsByContainer(ctx, container, nil, 0, 0)
+	return versions, err
 }
 
-func (r *repository) listVersionsByContainer(ctx context.Context, container string, isPublished *bool) ([]string, error) {
+func (r *repository) ListPublishedVersionsByContainerAndPage(ctx context.Context, container string, offset, limit uint64) (uint64, []string, error) {
+	return r.listVersionsByContainer(ctx, container, nil, offset, limit)
+}
+
+func (r *repository) listVersionsByContainer(ctx context.Context, container string, isPublished *bool, offset, limit uint64) (uint64, []string, error) {
+	if limit == 0 {
+		limit = defaultLimit
+	}
+
 	row := psql.
 		Select("id").
 		From("containers").
@@ -72,7 +84,7 @@ func (r *repository) listVersionsByContainer(ctx context.Context, container stri
 
 	var containerID uint64
 	if err := row.Scan(&containerID); err != nil {
-		return nil, mapSQLErrors(err)
+		return 0, nil, mapSQLErrors(err)
 	}
 
 	condition := sq.Eq{
@@ -83,15 +95,28 @@ func (r *repository) listVersionsByContainer(ctx context.Context, container stri
 		condition["is_published"] = *isPublished
 	}
 
+	row = psql.
+		Select("COUNT(*)").
+		From("versions").
+		RunWith(r.db).
+		QueryRowContext(ctx)
+
+	var versionsTotal uint64
+	if err := row.Scan(&versionsTotal); err != nil {
+		return 0, nil, mapSQLErrors(err)
+	}
+
 	rows, err := psql.
 		Select("name").
 		From("versions").
 		Where(condition).
 		OrderBy("id").
+		Offset(offset).
+		Limit(limit).
 		RunWith(r.db).
 		QueryContext(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "error executing SQL query")
+		return 0, nil, errors.Wrap(err, "error executing SQL query")
 	}
 	defer rows.Close()
 
@@ -99,13 +124,13 @@ func (r *repository) listVersionsByContainer(ctx context.Context, container stri
 	for rows.Next() {
 		var r string
 		if err := rows.Scan(&r); err != nil {
-			return nil, errors.Wrap(err, "error decoding database result")
+			return 0, nil, errors.Wrap(err, "error decoding database result")
 		}
 
 		result = append(result, r)
 	}
 
-	return result, nil
+	return versionsTotal, result, nil
 }
 
 func (r *repository) MarkVersionPublished(ctx context.Context, container, version string) error {

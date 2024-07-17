@@ -78,3 +78,31 @@ func (s *postgreSQLRepositoryTestSuite) TestListObjectsErrorsNotExistentVersion(
 	s.Require().Error(err)
 	s.Require().Equal(metadata.ErrNotFound, err)
 }
+
+func (s *postgreSQLRepositoryTestSuite) TestVersionsPagination() {
+	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Once()
+	s.tp.On("Now").Return("2024-07-08T10:11:12Z").Once()
+	s.tp.On("Now").Return("2024-07-09T10:11:12Z").Once()
+
+	err := s.repo.CreateContainer(s.ctx, "container1")
+	s.Require().NoError(err)
+
+	version1, err := s.repo.CreateVersion(s.ctx, "container1")
+	s.Require().NoError(err)
+
+	version2, err := s.repo.CreateVersion(s.ctx, "container1")
+	s.Require().NoError(err)
+
+	version3, err := s.repo.CreateVersion(s.ctx, "container1")
+	s.Require().NoError(err)
+
+	total, listByPage, err := s.repo.ListPublishedVersionsByContainerAndPage(s.ctx, "container1", 0, 5)
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(3), total)
+	s.Require().Equal([]string{version1, version2, version3}, listByPage)
+
+	total, listByPage, err = s.repo.ListPublishedVersionsByContainerAndPage(s.ctx, "container1", 1, 2)
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(3), total)
+	s.Require().Equal([]string{version2, version3}, listByPage)
+}
