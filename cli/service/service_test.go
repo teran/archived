@@ -25,7 +25,15 @@ func (s *serviceTestSuite) TestListContainers() {
 func (s *serviceTestSuite) TestCreateVersion() {
 	s.cliMock.On("CreateVersion", "container1").Return("version_id", nil).Once()
 
-	fn := s.svc.CreateVersion("container1")
+	fn := s.svc.CreateVersion("container1", false)
+	s.Require().NoError(fn(s.ctx))
+}
+
+func (s *serviceTestSuite) TestCreateVersionAndPublish() {
+	s.cliMock.On("CreateVersion", "container1").Return("version_id", nil).Once()
+	s.cliMock.On("PublishVersion", "container1", "version_id").Return(nil).Once()
+
+	fn := s.svc.CreateVersion("container1", true)
 	s.Require().NoError(fn(s.ctx))
 }
 
