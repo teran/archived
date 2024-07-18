@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	"github.com/teran/go-ptr"
+	ptr "github.com/teran/go-ptr"
 )
 
 func (s *serviceTestSuite) TestCreateContainer() {
@@ -25,7 +25,7 @@ func (s *serviceTestSuite) TestListContainers() {
 func (s *serviceTestSuite) TestCreateVersion() {
 	s.cliMock.On("CreateVersion", "container1").Return("version_id", nil).Once()
 
-	fn := s.svc.CreateVersion("container1", false)
+	fn := s.svc.CreateVersion("container1", false, nil)
 	s.Require().NoError(fn(s.ctx))
 }
 
@@ -33,7 +33,23 @@ func (s *serviceTestSuite) TestCreateVersionAndPublish() {
 	s.cliMock.On("CreateVersion", "container1").Return("version_id", nil).Once()
 	s.cliMock.On("PublishVersion", "container1", "version_id").Return(nil).Once()
 
-	fn := s.svc.CreateVersion("container1", true)
+	fn := s.svc.CreateVersion("container1", true, nil)
+	s.Require().NoError(fn(s.ctx))
+}
+
+func (s *serviceTestSuite) TestCreateVersionFromDirAndPublish() {
+	s.cliMock.On("CreateVersion", "container1").Return("version_id", nil).Once()
+	s.cliMock.
+		On("CreateObject", "container1", "version_id", "/somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", int64(5)).
+		Return(ptr.String(""), nil).
+		Once()
+	s.cliMock.
+		On("CreateObject", "container1", "version_id", "/somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61", int64(5)).
+		Return(ptr.String(""), nil).
+		Once()
+	s.cliMock.On("PublishVersion", "container1", "version_id").Return(nil).Once()
+
+	fn := s.svc.CreateVersion("container1", true, ptr.String("testdata"))
 	s.Require().NoError(fn(s.ctx))
 }
 
