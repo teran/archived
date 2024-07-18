@@ -105,7 +105,7 @@ func (s *handlersTestSuite) SetupTest() {
 
 	s.serviceMock = service.NewMock()
 
-	s.handlers = New(s.serviceMock, "templates")
+	s.handlers = New(s.serviceMock, "templates", "static")
 	s.handlers.Register(e)
 
 	s.srv = httptest.NewServer(e)
