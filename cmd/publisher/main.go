@@ -47,6 +47,7 @@ type config struct {
 	BLOBS3ForcePathStyle   bool          `envconfig:"BLOB_S3_FORCE_PATH_STYLE" default:"true"`
 
 	HTMLTemplateDir string `envconfig:"HTML_TEMPLATE_DIR" required:"true"`
+	StaticDir       string `envconfig:"STATIC_DIR" required:"true"`
 }
 
 func main() {
@@ -92,7 +93,7 @@ func main() {
 
 	publisherSvc := service.NewPublisher(postgresqlRepo, blobRepo)
 
-	p := htmlPresenter.New(publisherSvc, cfg.HTMLTemplateDir)
+	p := htmlPresenter.New(publisherSvc, cfg.HTMLTemplateDir, cfg.StaticDir)
 	p.Register(e)
 
 	g.Go(func() error {

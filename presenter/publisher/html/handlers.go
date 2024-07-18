@@ -20,12 +20,14 @@ type Handlers interface {
 
 type handlers struct {
 	svc         service.Publisher
+	staticDir   string
 	templateDir string
 }
 
-func New(svc service.Publisher, templateDir string) Handlers {
+func New(svc service.Publisher, templateDir, staticDir string) Handlers {
 	return &handlers{
 		svc:         svc,
+		staticDir:   staticDir,
 		templateDir: templateDir,
 	}
 }
@@ -144,4 +146,6 @@ func (h *handlers) Register(e *echo.Echo) {
 	e.GET("/:container/", h.VersionIndex)
 	e.GET("/:container/:version/", h.ObjectIndex)
 	e.GET("/:container/:version/:object", h.GetObject)
+
+	e.Static(h.staticDir, "static")
 }
