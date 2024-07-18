@@ -23,7 +23,7 @@ type Service interface {
 	CreateContainer(containerName string) func(ctx context.Context) error
 	ListContainers() func(ctx context.Context) error
 
-	CreateVersion(containerName string) func(ctx context.Context) error
+	CreateVersion(containerName string, shouldPublish bool) func(ctx context.Context) error
 	ListVersions(containerName string) func(ctx context.Context) error
 	PublishVersion(containerName, versionID string) func(ctx context.Context) error
 
@@ -69,7 +69,7 @@ func (s *service) ListContainers() func(ctx context.Context) error {
 	}
 }
 
-func (s *service) CreateVersion(containerName string) func(ctx context.Context) error {
+func (s *service) CreateVersion(containerName string, shouldPublish bool) func(ctx context.Context) error {
 	return func(ctx context.Context) error {
 		resp, err := s.cli.CreateVersion(ctx, &v1proto.CreateVersionRequest{
 			Container: containerName,
@@ -78,7 +78,22 @@ func (s *service) CreateVersion(containerName string) func(ctx context.Context) 
 			return err
 		}
 
-		fmt.Printf("version `%s` created unpublished\n", resp.GetVersion())
+		versionID := resp.GetVersion()
+
+		if shouldPublish {
+			_, err = s.cli.PublishVersion(ctx, &v1proto.PublishVersionRequest{
+				Container: containerName,
+				Version:   versionID,
+			})
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("version `%s` created and published\n", versionID)
+		} else {
+			fmt.Printf("version `%s` created unpublished\n", versionID)
+		}
+
 		return nil
 	}
 }
