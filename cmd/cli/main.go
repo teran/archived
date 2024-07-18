@@ -63,6 +63,8 @@ var (
 	versionCreatePublish   = versionCreate.Flag("publish", "publish version right after creating").
 				Default("false").
 				Bool()
+	versionCreateFromDir = versionCreate.Flag("from-dir", "create version right from directory").
+				String()
 
 	versionDelete          = version.Command("delete", "delete the given version")
 	versionDeleteContainer = versionDelete.Arg("container", "name of the container to delete version of").Required().String()
@@ -148,7 +150,7 @@ func main() {
 	r.Register(containerCreate.FullCommand(), cliSvc.CreateContainer(*containerCreateName))
 	r.Register(containerList.FullCommand(), cliSvc.ListContainers())
 	r.Register(versionList.FullCommand(), cliSvc.ListVersions(*versionListContainer))
-	r.Register(versionCreate.FullCommand(), cliSvc.CreateVersion(*versionCreateContainer, *versionCreatePublish))
+	r.Register(versionCreate.FullCommand(), cliSvc.CreateVersion(*versionCreateContainer, *versionCreatePublish, versionCreateFromDir))
 	r.Register(versionPublish.FullCommand(), cliSvc.PublishVersion(*versionPublishContainer, *versionPublishVersion))
 	r.Register(objectCreate.FullCommand(), cliSvc.CreateObject(*objectCreateContainer, *objectCreateVersion, *objectCreatePath))
 	r.Register(objectList.FullCommand(), cliSvc.ListObjects(*objectListContainer, *objectListVersion))
