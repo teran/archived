@@ -117,7 +117,9 @@ func main() {
 
 	log.Debugf("Initializing gRPC client ...")
 
-	grpcOpts := []grpc.DialOption{}
+	grpcOpts := []grpc.DialOption{
+		grpc.WithUserAgent("archived-cli/0.1"),
+	}
 	if *insecureFlag {
 		log.Warn("insecure flag is specified which means no TLS is in use!")
 		grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(insecure.NewCredentials()))
