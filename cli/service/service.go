@@ -48,7 +48,7 @@ func (s *service) CreateContainer(containerName string) func(ctx context.Context
 			Name: containerName,
 		})
 		if err != nil {
-			return err
+			return errors.Wrap(err, "error creating container")
 		}
 		fmt.Printf("container `%s` created\n", containerName)
 		return nil
@@ -59,7 +59,7 @@ func (s *service) ListContainers() func(ctx context.Context) error {
 	return func(ctx context.Context) error {
 		resp, err := s.cli.ListContainers(ctx, &v1proto.ListContainersRequest{})
 		if err != nil {
-			return err
+			return errors.Wrap(err, "error listing containers")
 		}
 
 		for _, container := range resp.GetName() {
@@ -75,7 +75,7 @@ func (s *service) CreateVersion(containerName string, shouldPublish bool, fromDi
 			Container: containerName,
 		})
 		if err != nil {
-			return err
+			return errors.Wrap(err, "error creating version")
 		}
 
 		versionID := resp.GetVersion()
@@ -83,7 +83,7 @@ func (s *service) CreateVersion(containerName string, shouldPublish bool, fromDi
 		if fromDir != nil {
 			err = s.CreateObject(containerName, versionID, *fromDir)(ctx)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "error creating objects")
 			}
 		}
 
@@ -93,7 +93,7 @@ func (s *service) CreateVersion(containerName string, shouldPublish bool, fromDi
 				Version:   versionID,
 			})
 			if err != nil {
-				return err
+				return errors.Wrap(err, "error publishing version")
 			}
 
 			fmt.Printf("version `%s` created and published\n", versionID)
@@ -111,7 +111,7 @@ func (s *service) ListVersions(containerName string) func(ctx context.Context) e
 			Container: containerName,
 		})
 		if err != nil {
-			return err
+			return errors.Wrap(err, "error listing versions")
 		}
 
 		for _, version := range resp.GetVersions() {
@@ -129,19 +129,20 @@ func (s *service) PublishVersion(containerName, versionID string) func(ctx conte
 			Version:   versionID,
 		})
 		if err != nil {
-			return err
+			return errors.Wrap(err, "error publishing version")
 		}
 
-		fmt.Printf("version `%s` if container `%s` is published now\n", containerName, versionID)
+		fmt.Printf("version `%s` of container `%s` is published now\n", containerName, versionID)
 		return nil
 	}
 }
 
 func (s *service) CreateObject(containerName, versionID, directoryPath string) func(ctx context.Context) error {
 	return func(ctx context.Context) error {
+		log.Debugf("running filepath.Walk on `%s`", directoryPath)
 		return filepath.Walk(directoryPath, func(path string, info fs.FileInfo, err error) error {
 			if err != nil {
-				return err
+				return errors.Wrap(err, "walk: internal error")
 			}
 
 			if info.IsDir() {
@@ -149,14 +150,15 @@ func (s *service) CreateObject(containerName, versionID, directoryPath string) f
 			}
 
 			shortPath := strings.TrimPrefix(path, directoryPath)
-			log.Debugf("Found: %s\n", shortPath)
+			log.Debugf("Found file: %s\n", shortPath)
 
 			size := info.Size()
 			checksum, err := checksumFile(path)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "error calculating file checksum")
 			}
 
+			log.Tracef("rpc CreateObject(%s, %s, %s, %s, %d)", containerName, versionID, shortPath, checksum, size)
 			resp, err := s.cli.CreateObject(ctx, &v1proto.CreateObjectRequest{
 				Container: containerName,
 				Version:   versionID,
@@ -165,7 +167,7 @@ func (s *service) CreateObject(containerName, versionID, directoryPath string) f
 				Size:      size,
 			})
 			if err != nil {
-				return err
+				return errors.Wrap(err, "error creating object")
 			}
 
 			if url := resp.GetUploadUrl(); url != "" {
@@ -179,7 +181,7 @@ func (s *service) CreateObject(containerName, versionID, directoryPath string) f
 
 				buf := bytes.NewBuffer(nil)
 				if _, err := io.Copy(buf, fp); err != nil {
-					return err
+					return errors.Wrap(err, "error on data copy")
 				}
 
 				req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, buf)
@@ -209,7 +211,7 @@ func (s *service) ListObjects(containerName, versionID string) func(ctx context.
 			Version:   versionID,
 		})
 		if err != nil {
-			return err
+			return errors.Wrap(err, "error listing objects")
 		}
 
 		for _, object := range resp.GetObjects() {
@@ -228,7 +230,7 @@ func (s *service) GetObjectURL(containerName, versionID, objectKey string) func(
 			Key:       objectKey,
 		})
 		if err != nil {
-			return err
+			return errors.Wrap(err, "error getting object URL")
 		}
 
 		log.Printf("Object URL received: %s", url)
