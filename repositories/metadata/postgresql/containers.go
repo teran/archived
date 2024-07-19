@@ -26,7 +26,7 @@ func (r *repository) ListContainers(ctx context.Context) ([]string, error) {
 	rows, err := psql.
 		Select("name").
 		From("containers").
-		OrderBy("id").
+		OrderBy("name").
 		RunWith(r.db).
 		QueryContext(ctx)
 	if err != nil {
