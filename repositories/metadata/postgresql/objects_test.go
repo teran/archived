@@ -6,6 +6,7 @@ func (s *postgreSQLRepositoryTestSuite) TestObjects() {
 	const containerName = "test-container-1"
 
 	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Once()
+	s.tp.On("Now").Return("2024-07-08T10:11:12Z").Once()
 
 	err := s.repo.CreateContainer(s.ctx, containerName)
 	s.Require().NoError(err)
@@ -35,6 +36,19 @@ func (s *postgreSQLRepositoryTestSuite) TestObjects() {
 	objects, err = s.repo.ListObjects(s.ctx, containerName, versionID, 0, 100)
 	s.Require().NoError(err)
 	s.Require().Equal([]string{}, objects)
+
+	version2ID, err := s.repo.CreateVersion(s.ctx, containerName)
+	s.Require().NoError(err)
+
+	err = s.repo.CreateObject(s.ctx, containerName, version2ID, "data/some-key2.txt", "deadbeef")
+	s.Require().NoError(err)
+
+	err = s.repo.CreateObject(s.ctx, containerName, version2ID, "data/some-key3.txt", "deadbeef")
+	s.Require().NoError(err)
+
+	objects, err = s.repo.ListObjects(s.ctx, containerName, version2ID, 0, 100)
+	s.Require().NoError(err)
+	s.Require().Equal([]string{"data/some-key2.txt", "data/some-key3.txt"}, objects)
 }
 
 func (s *postgreSQLRepositoryTestSuite) TestListObjectsErrors() {
