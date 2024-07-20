@@ -87,6 +87,7 @@ func (r *repository) ListObjects(ctx context.Context, container, version string,
 		From("versions").
 		Where(sq.Eq{
 			"container_id": containerID,
+			"name":         version,
 		}).
 		RunWith(r.db).
 		QueryRowContext(ctx)
