@@ -1,16 +1,16 @@
-
+{{ define "header" }}
 <html>
     <head>
-        <title>Container index</title>
+        <title>{{ .Title }}</title>
     </head>
     <body>
-        <h1>Container index</h1>
+        <h1>{{ .Title }}</h1>
         <hr>
+{{ end }}
 
-        <a href="/test-container-1/">test-container-1/</a><br>
-
+{{ define "footer" }}
         <hr>
         Powered by <a href="https://github.com/teran/archived" target="_blank">archived</a>
     </body>
 </html>
-
+{{ end }}

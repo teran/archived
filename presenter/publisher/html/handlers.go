@@ -1,6 +1,7 @@
 package html
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
 	"net/url"
@@ -38,7 +39,15 @@ func (h *handlers) ContainerIndex(c echo.Context) error {
 		return err
 	}
 
-	return c.Render(http.StatusOK, "container-list.html", containers)
+	type data struct {
+		Title      string
+		Containers []string
+	}
+
+	return c.Render(http.StatusOK, "container-list.html", &data{
+		Title:      "Container index",
+		Containers: containers,
+	})
 }
 
 func (h *handlers) VersionIndex(c echo.Context) error {
@@ -52,11 +61,13 @@ func (h *handlers) VersionIndex(c echo.Context) error {
 	}
 
 	type data struct {
+		Title     string
 		Container string
 		Versions  []string
 	}
 
 	return c.Render(http.StatusOK, "version-list.html", &data{
+		Title:     fmt.Sprintf("Version index (%s)", container),
 		Container: container,
 		Versions:  versions,
 	})
@@ -75,11 +86,13 @@ func (h *handlers) ObjectIndex(c echo.Context) error {
 	}
 
 	type data struct {
+		Title     string
 		Container string
 		Version   string
 		Objects   []string
 	}
 	return c.Render(http.StatusOK, "object-list.html", &data{
+		Title:     fmt.Sprintf("Object index (%s/%s)", container, version),
 		Container: container,
 		Version:   version,
 		Objects:   objects,
