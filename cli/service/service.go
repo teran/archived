@@ -16,6 +16,7 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
+	cache "github.com/teran/archived/cli/service/stat_cache"
 	v1proto "github.com/teran/archived/presenter/manager/grpc/proto/v1"
 )
 
@@ -33,12 +34,14 @@ type Service interface {
 }
 
 type service struct {
-	cli v1proto.ManageServiceClient
+	cache cache.CacheRepository
+	cli   v1proto.ManageServiceClient
 }
 
-func New(cli v1proto.ManageServiceClient) Service {
+func New(cli v1proto.ManageServiceClient, cacheRepo cache.CacheRepository) Service {
 	return &service{
-		cli: cli,
+		cache: cacheRepo,
+		cli:   cli,
 	}
 }
 
@@ -151,13 +154,42 @@ func (s *service) CreateObject(containerName, versionID, directoryPath string) f
 			}
 
 			shortPath := strings.TrimPrefix(path, directoryPath)
-			log.Debugf("Found file: %s\n", shortPath)
-
 			size := info.Size()
-			checksum, err := checksumFile(path)
+
+			log.WithFields(log.Fields{
+				"filename": shortPath,
+				"size":     size,
+			}).Debug("file found")
+
+			log.WithFields(log.Fields{
+				"filename": shortPath,
+				"size":     size,
+			}).Tracef("attempting to retrieve checksum from cache")
+			checksum, err := s.cache.Get(ctx, path, info)
 			if err != nil {
-				return errors.Wrap(err, "error calculating file checksum")
+				return errors.Wrap(err, "error retrieving checksum from cache")
 			}
+
+			if checksum == "" {
+				log.WithFields(log.Fields{
+					"filename": shortPath,
+					"size":     size,
+				}).Debug("generating checksum")
+				checksum, err = checksumFile(path)
+				if err != nil {
+					return errors.Wrap(err, "error calculating file checksum")
+				}
+
+				err := s.cache.Put(ctx, path, info, checksum)
+				if err != nil {
+					log.Warnf("error putting checksum calculation result into cache: %s", err)
+				}
+			}
+			log.WithFields(log.Fields{
+				"filename": shortPath,
+				"size":     size,
+				"checksum": checksum,
+			}).Debug("checksum")
 
 			log.Tracef("rpc CreateObject(%s, %s, %s, %s, %d)", containerName, versionID, shortPath, checksum, size)
 			resp, err := s.cli.CreateObject(ctx, &v1proto.CreateObjectRequest{

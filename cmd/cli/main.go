@@ -4,6 +4,9 @@ import (
 	"context"
 	"crypto/tls"
 	"os"
+	"os/user"
+	"path/filepath"
+	"strings"
 
 	kingpin "github.com/alecthomas/kingpin/v2"
 	log "github.com/sirupsen/logrus"
@@ -13,6 +16,7 @@ import (
 
 	"github.com/teran/archived/cli/router"
 	"github.com/teran/archived/cli/service"
+	"github.com/teran/archived/cli/service/stat_cache/local"
 	v1proto "github.com/teran/archived/presenter/manager/grpc/proto/v1"
 )
 
@@ -47,6 +51,10 @@ var (
 	insecureSkipVerify = app.Flag("insecure-skip-verify", "Do not perform TLS certificate verification for gRPC connection").
 				Default("false").
 				Bool()
+
+	cacheDir = app.Flag("cache-dir", "cache directory for objects").
+			Default("~/.cache/archived/cli/objects").
+			String()
 
 	container           = app.Command("container", "container operations")
 	containerCreate     = container.Command("create", "create new container")
@@ -144,7 +152,18 @@ func main() {
 
 	log.Debugf("Initializing manage service client ...")
 	cli := v1proto.NewManageServiceClient(dial)
-	cliSvc := service.New(cli)
+
+	log.Debugf("Initializing cache directory at `%s`", *cacheDir)
+
+	dir := normalizeHomeDir(*cacheDir)
+	log.Tracef("normalized cache directory: %s", dir)
+
+	cacheRepo, err := local.New(dir)
+	if err != nil {
+		panic(err)
+	}
+
+	cliSvc := service.New(cli, cacheRepo)
 
 	r := router.New(ctx)
 	r.Register(containerCreate.FullCommand(), cliSvc.CreateContainer(*containerCreateName))
@@ -159,4 +178,14 @@ func main() {
 	if err := r.Call(appCmd); err != nil {
 		panic(err)
 	}
+}
+
+func normalizeHomeDir(in string) (out string) {
+	usr, _ := user.Current()
+	dir := usr.HomeDir
+	out = in
+	if strings.HasPrefix(in, "~/") {
+		out = filepath.Join(dir, in[2:])
+	}
+	return out
 }
