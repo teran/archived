@@ -80,7 +80,8 @@ func (s *service) CreateVersion(containerName string, shouldPublish bool, fromDi
 
 		versionID := resp.GetVersion()
 
-		if fromDir != nil {
+		if fromDir != nil && *fromDir != "" {
+			log.Tracef("--from-dir is requested with `%s`", *fromDir)
 			err = s.CreateObject(containerName, versionID, *fromDir)(ctx)
 			if err != nil {
 				return errors.Wrap(err, "error creating objects")

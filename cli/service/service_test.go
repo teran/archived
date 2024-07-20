@@ -37,6 +37,14 @@ func (s *serviceTestSuite) TestCreateVersionAndPublish() {
 	s.Require().NoError(fn(s.ctx))
 }
 
+func (s *serviceTestSuite) TestCreateVersionAndPublishWithEmptyPath() {
+	s.cliMock.On("CreateVersion", "container1").Return("version_id", nil).Once()
+	s.cliMock.On("PublishVersion", "container1", "version_id").Return(nil).Once()
+
+	fn := s.svc.CreateVersion("container1", true, ptr.String(""))
+	s.Require().NoError(fn(s.ctx))
+}
+
 func (s *serviceTestSuite) TestCreateVersionFromDirAndPublish() {
 	s.cliMock.On("CreateVersion", "container1").Return("version_id", nil).Once()
 	s.cliMock.
