@@ -6,6 +6,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 	ptr "github.com/teran/go-ptr"
+
+	cacheMock "github.com/teran/archived/cli/service/stat_cache/mock"
 )
 
 func (s *serviceTestSuite) TestCreateContainer() {
@@ -46,6 +48,11 @@ func (s *serviceTestSuite) TestCreateVersionAndPublishWithEmptyPath() {
 }
 
 func (s *serviceTestSuite) TestCreateVersionFromDirAndPublish() {
+	s.cacheMock.On("Get", "testdata/somefile1").Return("", nil).Once()
+	s.cacheMock.On("Get", "testdata/somefile2").Return("", nil).Once()
+	s.cacheMock.On("Put", "testdata/somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4").Return(nil).Once()
+	s.cacheMock.On("Put", "testdata/somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61").Return(nil).Once()
+
 	s.cliMock.On("CreateVersion", "container1").Return("version_id", nil).Once()
 	s.cliMock.
 		On("CreateObject", "container1", "version_id", "/somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", int64(5)).
@@ -76,6 +83,28 @@ func (s *serviceTestSuite) TestPublishVersion() {
 }
 
 func (s *serviceTestSuite) TestCreateObject() {
+	s.cacheMock.On("Get", "testdata/somefile1").Return("", nil).Once()
+	s.cacheMock.On("Get", "testdata/somefile2").Return("", nil).Once()
+	s.cacheMock.On("Put", "testdata/somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4").Return(nil).Once()
+	s.cacheMock.On("Put", "testdata/somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61").Return(nil).Once()
+
+	s.cliMock.
+		On("CreateObject", "container1", "version1", "/somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", int64(5)).
+		Return(ptr.String(""), nil).
+		Once()
+	s.cliMock.
+		On("CreateObject", "container1", "version1", "/somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61", int64(5)).
+		Return(ptr.String(""), nil).
+		Once()
+
+	fn := s.svc.CreateObject("container1", "version1", "testdata")
+	s.Require().NoError(fn(s.ctx))
+}
+
+func (s *serviceTestSuite) TestCreateObjectWithCache() {
+	s.cacheMock.On("Get", "testdata/somefile1").Return("a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", nil).Once()
+	s.cacheMock.On("Get", "testdata/somefile2").Return("ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61", nil).Once()
+
 	s.cliMock.
 		On("CreateObject", "container1", "version1", "/somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", int64(5)).
 		Return(ptr.String(""), nil).
@@ -107,19 +136,24 @@ func (s *serviceTestSuite) TestGetObjectURL() {
 type serviceTestSuite struct {
 	suite.Suite
 
-	ctx     context.Context
-	cliMock *protoClientMock
-	svc     Service
+	ctx       context.Context
+	cliMock   *protoClientMock
+	cacheMock *cacheMock.Mock
+	svc       Service
 }
 
 func (s *serviceTestSuite) SetupTest() {
 	s.ctx = context.Background()
+
 	s.cliMock = newMock()
-	s.svc = New(s.cliMock)
+	s.cacheMock = cacheMock.New()
+
+	s.svc = New(s.cliMock, s.cacheMock)
 }
 
 func (s *serviceTestSuite) TearDownTest() {
 	s.cliMock.AssertExpectations(s.T())
+	s.cacheMock.AssertExpectations(s.T())
 }
 
 func TestServiceTestSuite(t *testing.T) {
