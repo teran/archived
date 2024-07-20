@@ -27,7 +27,7 @@ func (r *repository) CreateBLOB(ctx context.Context, checksum string, size uint6
 }
 
 func (r *repository) GetBlobKeyByObject(ctx context.Context, container, version, key string) (string, error) {
-	row := psql.
+	row, err := selectQueryRow(ctx, r.db, psql.
 		Select("b.checksum AS checksum").
 		From("blobs b").
 		Join("objects o ON o.blob_id = b.id").
@@ -38,9 +38,10 @@ func (r *repository) GetBlobKeyByObject(ctx context.Context, container, version,
 			"v.name":         version,
 			"o.key":          key,
 			"v.is_published": true,
-		}).
-		RunWith(r.db).
-		QueryRowContext(ctx)
+		}))
+	if err != nil {
+		return "", mapSQLErrors(err)
+	}
 
 	var checksum string
 	if err := row.Scan(&checksum); err != nil {
@@ -51,15 +52,16 @@ func (r *repository) GetBlobKeyByObject(ctx context.Context, container, version,
 }
 
 func (r *repository) EnsureBlobKey(ctx context.Context, key string, size uint64) error {
-	row := psql.
+	row, err := selectQueryRow(ctx, r.db, psql.
 		Select("id").
 		From("blobs").
 		Where(sq.Eq{
 			"checksum": key,
 			"size":     size,
-		}).
-		RunWith(r.db).
-		QueryRowContext(ctx)
+		}))
+	if err != nil {
+		return errors.Wrap(err, "error selecting BLOB")
+	}
 
 	var blobID uint
 	if err := row.Scan(&blobID); err != nil {

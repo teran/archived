@@ -17,12 +17,13 @@ func (r *repository) CreateVersion(ctx context.Context, container string) (strin
 	}
 	defer tx.Rollback()
 
-	row := psql.
+	row, err := selectQueryRow(ctx, tx, psql.
 		Select("id").
 		From("containers").
-		Where(sq.Eq{"name": container}).
-		RunWith(tx).
-		QueryRowContext(ctx)
+		Where(sq.Eq{"name": container}))
+	if err != nil {
+		return "", mapSQLErrors(err)
+	}
 
 	var containerID uint
 	if err := row.Scan(&containerID); err != nil {
@@ -75,12 +76,13 @@ func (r *repository) listVersionsByContainer(ctx context.Context, container stri
 		limit = defaultLimit
 	}
 
-	row := psql.
+	row, err := selectQueryRow(ctx, r.db, psql.
 		Select("id").
 		From("containers").
-		Where(sq.Eq{"name": container}).
-		RunWith(r.db).
-		QueryRowContext(ctx)
+		Where(sq.Eq{"name": container}))
+	if err != nil {
+		return 0, nil, mapSQLErrors(err)
+	}
 
 	var containerID uint64
 	if err := row.Scan(&containerID); err != nil {
@@ -95,28 +97,28 @@ func (r *repository) listVersionsByContainer(ctx context.Context, container stri
 		condition["is_published"] = *isPublished
 	}
 
-	row = psql.
+	row, err = selectQueryRow(ctx, r.db, psql.
 		Select("COUNT(*)").
 		From("versions").
-		RunWith(r.db).
-		QueryRowContext(ctx)
+		Where(sq.Eq{"container_id": containerID}))
+	if err != nil {
+		return 0, nil, mapSQLErrors(err)
+	}
 
 	var versionsTotal uint64
 	if err := row.Scan(&versionsTotal); err != nil {
 		return 0, nil, mapSQLErrors(err)
 	}
 
-	rows, err := psql.
+	rows, err := selectQuery(ctx, r.db, psql.
 		Select("name").
 		From("versions").
 		Where(condition).
 		OrderBy("id").
 		Offset(offset).
-		Limit(limit).
-		RunWith(r.db).
-		QueryContext(ctx)
+		Limit(limit))
 	if err != nil {
-		return 0, nil, errors.Wrap(err, "error executing SQL query")
+		return 0, nil, mapSQLErrors(err)
 	}
 	defer rows.Close()
 
@@ -141,12 +143,14 @@ func (r *repository) MarkVersionPublished(ctx context.Context, container, versio
 	defer tx.Rollback()
 
 	var containerID uint
-	row := psql.
+
+	row, err := selectQueryRow(ctx, tx, psql.
 		Select("id").
 		From("containers").
-		Where(sq.Eq{"name": container}).
-		RunWith(tx).
-		QueryRowContext(ctx)
+		Where(sq.Eq{"name": container}))
+	if err != nil {
+		return mapSQLErrors(err)
+	}
 
 	if err := row.Scan(&containerID); err != nil {
 		return errors.Wrap(err, "error looking up container")

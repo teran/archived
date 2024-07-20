@@ -23,14 +23,12 @@ func (r *repository) CreateContainer(ctx context.Context, name string) error {
 }
 
 func (r *repository) ListContainers(ctx context.Context) ([]string, error) {
-	rows, err := psql.
+	rows, err := selectQuery(ctx, r.db, psql.
 		Select("name").
 		From("containers").
-		OrderBy("name").
-		RunWith(r.db).
-		QueryContext(ctx)
+		OrderBy("name"))
 	if err != nil {
-		return nil, errors.Wrap(mapSQLErrors(err), "error executing SQL query")
+		return nil, mapSQLErrors(err)
 	}
 	defer rows.Close()
 
@@ -38,7 +36,7 @@ func (r *repository) ListContainers(ctx context.Context) ([]string, error) {
 	for rows.Next() {
 		var r string
 		if err := rows.Scan(&r); err != nil {
-			return nil, errors.Wrap(err, "error decoding database result")
+			return nil, mapSQLErrors(err)
 		}
 
 		result = append(result, r)
