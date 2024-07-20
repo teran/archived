@@ -134,5 +134,5 @@ func (s *handlersTestSuite) compareHTMLResponse(url, responseSamplePath string) 
 	data, err := io.ReadAll(resp.Body)
 	s.Require().NoError(err)
 
-	s.Require().Equal(sampleData, data)
+	s.Require().Equal(string(sampleData), string(data))
 }

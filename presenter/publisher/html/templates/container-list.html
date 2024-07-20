@@ -1,16 +1,7 @@
-<html>
-    <head>
-        <title>Container Index</title>
-    </head>
-    <body>
-        <h1>Container index</h1>
-        <hr>
-{{- range $container := . }}
+{{ template "header" . }}
+{{- range $container := .Containers }}
         <a href="/{{ $container }}/">{{ $container }}/</a><br>
 {{- else }}
         <p>No containers found</p>
 {{- end }}
-        <hr>
-        Powered by <a href="https://github.com/teran/archived" target="_blank">archived</a>
-    </body>
-</html>
+{{ template "footer" }}

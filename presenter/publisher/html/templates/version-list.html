@@ -1,18 +1,9 @@
 {{ $container := .Container }}
-<html>
-    <head>
-        <title>Version Index ({{ $container }})</title>
-    </head>
-    <body>
-        <h1>Version Index ({{ $container }})</h1>
-        <hr>
+{{ template "header" . }}
         <a href="..">..</a><br>
 {{- range $version := .Versions }}
         <a href="/{{ $container }}/{{ $version }}/">{{ $version }}/</a><br>
 {{- else }}
         <p>No versions found</p>
 {{- end }}
-        <hr>
-        Powered by <a href="https://github.com/teran/archived" target="_blank">archived</a>
-    </body>
-</html>
+{{ template "footer" }}
