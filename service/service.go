@@ -91,10 +91,23 @@ func (s *service) ListPublishedVersions(ctx context.Context, container string) (
 }
 
 func (s *service) ListPublishedVersionsByPage(ctx context.Context, container string, pageNum uint64) (uint64, []string, error) {
-	offset := pageNum * s.versionsPageSize
+	if pageNum < 1 {
+		pageNum = 1
+	}
+
+	offset := (pageNum - 1) * s.versionsPageSize
 	limit := s.versionsPageSize
 	totalVersions, versions, err := s.mdRepo.ListPublishedVersionsByContainerAndPage(ctx, container, offset, limit)
-	return totalVersions / s.versionsPageSize, versions, mapMetadataErrors(err)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	totalPages := (totalVersions / s.versionsPageSize)
+	if totalVersions%s.versionsPageSize != 0 {
+		totalPages++
+	}
+
+	return totalPages, versions, mapMetadataErrors(err)
 }
 
 func (s *service) ListAllVersions(ctx context.Context, container string) ([]string, error) {

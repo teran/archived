@@ -6,8 +6,10 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"strconv"
 
 	echo "github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 
 	"github.com/teran/archived/service"
 )
@@ -52,7 +54,20 @@ func (h *handlers) ContainerIndex(c echo.Context) error {
 
 func (h *handlers) VersionIndex(c echo.Context) error {
 	container := c.Param("container")
-	versions, err := h.svc.ListPublishedVersions(c.Request().Context(), container)
+
+	pageParam := c.QueryParam("page")
+	var page uint64 = 1
+
+	var err error
+	if pageParam != "" {
+		page, err = strconv.ParseUint(pageParam, 10, 64)
+		if err != nil {
+			log.Warnf("malformed page parameter: `%s`", pageParam)
+			page = 1
+		}
+	}
+
+	pagesCount, versions, err := h.svc.ListPublishedVersionsByPage(c.Request().Context(), container, page)
 	if err != nil {
 		if err == service.ErrNotFound {
 			return c.Render(http.StatusNotFound, "404.html", nil)
@@ -61,15 +76,19 @@ func (h *handlers) VersionIndex(c echo.Context) error {
 	}
 
 	type data struct {
-		Title     string
-		Container string
-		Versions  []string
+		Title       string
+		CurrentPage uint64
+		PagesCount  uint64
+		Container   string
+		Versions    []string
 	}
 
 	return c.Render(http.StatusOK, "version-list.html", &data{
-		Title:     fmt.Sprintf("Version index (%s)", container),
-		Container: container,
-		Versions:  versions,
+		Title:       fmt.Sprintf("Version index (%s)", container),
+		CurrentPage: page,
+		PagesCount:  pagesCount,
+		Container:   container,
+		Versions:    versions,
 	})
 }
 
