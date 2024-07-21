@@ -62,9 +62,9 @@ func (m *Mock) CreateObject(_ context.Context, container, version, key, casKey s
 	return args.Error(0)
 }
 
-func (m *Mock) ListObjects(_ context.Context, container, version string, offset, limit uint64) ([]string, error) {
+func (m *Mock) ListObjects(_ context.Context, container, version string, offset, limit uint64) (uint64, []string, error) {
 	args := m.Called(container, version, offset, limit)
-	return args.Get(0).([]string), args.Error(1)
+	return args.Get(0).(uint64), args.Get(1).([]string), args.Error(2)
 }
 
 func (m *Mock) DeleteObject(_ context.Context, container, version, key string) error {

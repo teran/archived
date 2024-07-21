@@ -117,7 +117,7 @@ func (s *serviceTestSuite) TestListPublishedVersionsByPage() {
 
 func (s *serviceTestSuite) TestListObjects() {
 	// Happy path
-	s.mdRepoMock.On("ListObjects", "container", "versionID", uint64(0), uint64(1000)).Return([]string{
+	s.mdRepoMock.On("ListObjects", "container", "versionID", uint64(0), uint64(1000)).Return(uint64(100), []string{
 		"object1", "object2",
 	}, nil).Once()
 
@@ -128,7 +128,7 @@ func (s *serviceTestSuite) TestListObjects() {
 	}, objects)
 
 	// return error
-	s.mdRepoMock.On("ListObjects", "container", "versionID", uint64(0), uint64(1000)).Return([]string(nil), errors.New("test error")).Once()
+	s.mdRepoMock.On("ListObjects", "container", "versionID", uint64(0), uint64(1000)).Return(uint64(100), []string(nil), errors.New("test error")).Once()
 
 	_, err = s.svc.ListObjects(s.ctx, "container", "versionID")
 	s.Require().Error(err)
