@@ -79,6 +79,11 @@ func (m *Mock) ListObjects(_ context.Context, container, versionID string) ([]st
 	return args.Get(0).([]string), args.Error(1)
 }
 
+func (m *Mock) ListObjectsByPage(_ context.Context, container, versionID string, pageNum uint64) (uint64, []string, error) {
+	args := m.Called(container, versionID, pageNum)
+	return args.Get(0).(uint64), args.Get(1).([]string), args.Error(2)
+}
+
 func (m *Mock) GetObjectURL(ctx context.Context, container, versionID, key string) (string, error) {
 	args := m.Called(container, versionID, key)
 	return args.String(0), args.Error(1)

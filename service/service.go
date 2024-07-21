@@ -25,6 +25,7 @@ type Manager interface {
 	DeleteVersion(ctx context.Context, container, id string) error
 
 	AddObject(ctx context.Context, container, versionID, key string, casKey string) error
+	ListObjects(ctx context.Context, container, versionID string) ([]string, error)
 	DeleteObject(ctx context.Context, container, versionID, key string) error
 
 	EnsureBLOBPresenceOrGetUploadURL(ctx context.Context, checksum string, size int64) (string, error)
@@ -36,7 +37,7 @@ type Publisher interface {
 	ListPublishedVersions(ctx context.Context, container string) ([]string, error)
 	ListPublishedVersionsByPage(ctx context.Context, container string, pageNum uint64) (uint64, []string, error)
 
-	ListObjects(ctx context.Context, container, versionID string) ([]string, error)
+	ListObjectsByPage(ctx context.Context, container, versionID string, pageNum uint64) (uint64, []string, error)
 	GetObjectURL(ctx context.Context, container, versionID, key string) (string, error)
 }
 

@@ -96,7 +96,19 @@ func (h *handlers) ObjectIndex(c echo.Context) error {
 	container := c.Param("container")
 	version := c.Param("version")
 
-	objects, err := h.svc.ListObjects(c.Request().Context(), container, version)
+	pageParam := c.QueryParam("page")
+	var page uint64 = 1
+
+	var err error
+	if pageParam != "" {
+		page, err = strconv.ParseUint(pageParam, 10, 64)
+		if err != nil {
+			log.Warnf("malformed page parameter: `%s`", pageParam)
+			page = 1
+		}
+	}
+
+	pagesCount, objects, err := h.svc.ListObjectsByPage(c.Request().Context(), container, version, page)
 	if err != nil {
 		if err == service.ErrNotFound {
 			return c.Render(http.StatusNotFound, "404.html", nil)
@@ -105,16 +117,20 @@ func (h *handlers) ObjectIndex(c echo.Context) error {
 	}
 
 	type data struct {
-		Title     string
-		Container string
-		Version   string
-		Objects   []string
+		Title       string
+		CurrentPage uint64
+		PagesCount  uint64
+		Container   string
+		Version     string
+		Objects     []string
 	}
 	return c.Render(http.StatusOK, "object-list.html", &data{
-		Title:     fmt.Sprintf("Object index (%s/%s)", container, version),
-		Container: container,
-		Version:   version,
-		Objects:   objects,
+		Title:       fmt.Sprintf("Object index (%s/%s)", container, version),
+		CurrentPage: page,
+		PagesCount:  pagesCount,
+		Container:   container,
+		Version:     version,
+		Objects:     objects,
 	})
 }
 
