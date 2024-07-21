@@ -102,7 +102,7 @@ func (s *serviceTestSuite) TestListPublishedVersions() {
 
 func (s *serviceTestSuite) TestListPublishedVersionsByPage() {
 	s.mdRepoMock.
-		On("ListPublishedVersionsByContainerAndPage", "container", uint64(500), uint64(50)).
+		On("ListPublishedVersionsByContainerAndPage", "container", uint64(450), uint64(50)).
 		Return(uint64(1000), []string{
 			"version1", "version2",
 		}, nil).Once()
