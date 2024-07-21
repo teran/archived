@@ -20,13 +20,13 @@ func (s *handlersTestSuite) TestContainerIndex() {
 }
 
 func (s *handlersTestSuite) TestVersionIndex() {
-	s.serviceMock.On("ListPublishedVersions", "test-container-1").Return([]string{"20241011121314"}, nil).Once()
+	s.serviceMock.On("ListPublishedVersionsByPage", "test-container-1", uint64(1)).Return(uint64(100), []string{"20241011121314"}, nil).Once()
 
 	s.compareHTMLResponse(s.srv.URL+"/test-container-1/", "testdata/versions.html.sample")
 }
 
 func (s *handlersTestSuite) TestObjectIndex() {
-	s.serviceMock.On("ListObjects", "test-container-1", "20241011121314").Return([]string{"test-object-dir/file.txt"}, nil).Once()
+	s.serviceMock.On("ListObjectsByPage", "test-container-1", "20241011121314", uint64(1)).Return(uint64(100), []string{"test-object-dir/file.txt"}, nil).Once()
 
 	s.compareHTMLResponse(s.srv.URL+"/test-container-1/20241011121314/", "testdata/objects.html.sample")
 }
@@ -51,10 +51,10 @@ func (s *handlersTestSuite) TestGetObject() {
 }
 
 func (s *handlersTestSuite) TestErrNotFound() {
-	s.serviceMock.On("ListPublishedVersions", "test-container-1").Return([]string(nil), service.ErrNotFound).Once()
+	s.serviceMock.On("ListPublishedVersionsByPage", "test-container-1", uint64(1)).Return(uint64(100), []string(nil), service.ErrNotFound).Once()
 	s.compareHTMLResponse(s.srv.URL+"/test-container-1/", "testdata/404.html.sample")
 
-	s.serviceMock.On("ListObjects", "test-container-1", "20240101010101").Return([]string(nil), service.ErrNotFound).Once()
+	s.serviceMock.On("ListObjectsByPage", "test-container-1", "20240101010101", uint64(1)).Return(uint64(100), []string(nil), service.ErrNotFound).Once()
 	s.compareHTMLResponse(s.srv.URL+"/test-container-1/20240101010101/", "testdata/404.html.sample")
 
 	s.serviceMock.On("GetObjectURL", "test-container-1", "20240101010101", "test-object.txt").Return("", service.ErrNotFound).Once()
@@ -65,7 +65,7 @@ func (s *handlersTestSuite) TestErrNotFound() {
 }
 
 func (s *handlersTestSuite) TestErr5xx() {
-	s.serviceMock.On("ListPublishedVersions", "test-container-1").Panic("blah").Once()
+	s.serviceMock.On("ListPublishedVersionsByPage", "test-container-1", uint64(1)).Panic("blah").Once()
 	s.compareHTMLResponse(s.srv.URL+"/test-container-1/", "testdata/5xx.html.sample")
 }
 

@@ -65,7 +65,7 @@ func (s *postgreSQLRepositoryTestSuite) TestListAllVersionsByContainerErrors() {
 }
 
 func (s *postgreSQLRepositoryTestSuite) TestListObjectsErrorsNotExistentContainer() {
-	_, err := s.repo.ListObjects(s.ctx, "test-container", "2024-01-02T03:04:05Z", 0, 100)
+	_, _, err := s.repo.ListObjects(s.ctx, "test-container", "2024-01-02T03:04:05Z", 0, 100)
 	s.Require().Error(err)
 	s.Require().Equal(metadata.ErrNotFound, err)
 }
@@ -74,7 +74,7 @@ func (s *postgreSQLRepositoryTestSuite) TestListObjectsErrorsNotExistentVersion(
 	err := s.repo.CreateContainer(s.ctx, "test-container")
 	s.Require().NoError(err)
 
-	_, err = s.repo.ListObjects(s.ctx, "test-container", "2024-01-02T03:04:05Z", 0, 100)
+	_, _, err = s.repo.ListObjects(s.ctx, "test-container", "2024-01-02T03:04:05Z", 0, 100)
 	s.Require().Error(err)
 	s.Require().Equal(metadata.ErrNotFound, err)
 }

@@ -14,3 +14,16 @@
     </body>
 </html>
 {{ end }}
+
+{{ define "pagination" }}
+        <p>
+{{- $current := .CurrentPage }}
+{{- $total := .PagesCount }}
+{{- if gt $current 1 }}
+            <a href="?page={{ sub $current 1 }}">&laquo;</a>
+{{- end }}
+{{- if lt $current $total }}
+            <a href="?page={{ add1 $current }}">&raquo;</a>
+{{- end }}
+        </p>
+{{ end }}

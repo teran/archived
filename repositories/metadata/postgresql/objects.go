@@ -67,7 +67,7 @@ func (r *repository) CreateObject(ctx context.Context, container, version, key, 
 	return nil
 }
 
-func (r *repository) ListObjects(ctx context.Context, container, version string, offset, limit uint64) ([]string, error) {
+func (r *repository) ListObjects(ctx context.Context, container, version string, offset, limit uint64) (uint64, []string, error) {
 	row, err := selectQueryRow(ctx, r.db, psql.
 		Select("id").
 		From("containers").
@@ -75,12 +75,12 @@ func (r *repository) ListObjects(ctx context.Context, container, version string,
 			"name": container,
 		}))
 	if err != nil {
-		return nil, mapSQLErrors(err)
+		return 0, nil, mapSQLErrors(err)
 	}
 
 	var containerID uint
 	if err := row.Scan(&containerID); err != nil {
-		return nil, mapSQLErrors(err)
+		return 0, nil, mapSQLErrors(err)
 	}
 
 	row, err = selectQueryRow(ctx, r.db, psql.
@@ -91,12 +91,25 @@ func (r *repository) ListObjects(ctx context.Context, container, version string,
 			"name":         version,
 		}))
 	if err != nil {
-		return nil, mapSQLErrors(err)
+		return 0, nil, mapSQLErrors(err)
 	}
 
 	var versionID uint
 	if err := row.Scan(&versionID); err != nil {
-		return nil, mapSQLErrors(err)
+		return 0, nil, mapSQLErrors(err)
+	}
+
+	row, err = selectQueryRow(ctx, r.db, psql.
+		Select("COUNT(*)").
+		From("objects").
+		Where(sq.Eq{"version_id": versionID}))
+	if err != nil {
+		return 0, nil, mapSQLErrors(err)
+	}
+
+	var objectsTotal uint64
+	if err := row.Scan(&objectsTotal); err != nil {
+		return 0, nil, mapSQLErrors(err)
 	}
 
 	rows, err := selectQuery(ctx, r.db, psql.
@@ -109,7 +122,7 @@ func (r *repository) ListObjects(ctx context.Context, container, version string,
 		Offset(offset).
 		Limit(limit))
 	if err != nil {
-		return nil, mapSQLErrors(err)
+		return 0, nil, mapSQLErrors(err)
 	}
 	defer rows.Close()
 
@@ -117,13 +130,13 @@ func (r *repository) ListObjects(ctx context.Context, container, version string,
 	for rows.Next() {
 		var r string
 		if err := rows.Scan(&r); err != nil {
-			return nil, errors.Wrap(err, "error decoding database result")
+			return 0, nil, errors.Wrap(err, "error decoding database result")
 		}
 
 		result = append(result, r)
 	}
 
-	return result, nil
+	return objectsTotal, result, nil
 }
 
 func (r *repository) DeleteObject(ctx context.Context, container, version, key string) error {

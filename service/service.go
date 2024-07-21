@@ -25,6 +25,7 @@ type Manager interface {
 	DeleteVersion(ctx context.Context, container, id string) error
 
 	AddObject(ctx context.Context, container, versionID, key string, casKey string) error
+	ListObjects(ctx context.Context, container, versionID string) ([]string, error)
 	DeleteObject(ctx context.Context, container, versionID, key string) error
 
 	EnsureBLOBPresenceOrGetUploadURL(ctx context.Context, checksum string, size int64) (string, error)
@@ -36,7 +37,7 @@ type Publisher interface {
 	ListPublishedVersions(ctx context.Context, container string) ([]string, error)
 	ListPublishedVersionsByPage(ctx context.Context, container string, pageNum uint64) (uint64, []string, error)
 
-	ListObjects(ctx context.Context, container, versionID string) ([]string, error)
+	ListObjectsByPage(ctx context.Context, container, versionID string, pageNum uint64) (uint64, []string, error)
 	GetObjectURL(ctx context.Context, container, versionID, key string) (string, error)
 }
 
@@ -91,10 +92,23 @@ func (s *service) ListPublishedVersions(ctx context.Context, container string) (
 }
 
 func (s *service) ListPublishedVersionsByPage(ctx context.Context, container string, pageNum uint64) (uint64, []string, error) {
-	offset := pageNum * s.versionsPageSize
+	if pageNum < 1 {
+		pageNum = 1
+	}
+
+	offset := (pageNum - 1) * s.versionsPageSize
 	limit := s.versionsPageSize
 	totalVersions, versions, err := s.mdRepo.ListPublishedVersionsByContainerAndPage(ctx, container, offset, limit)
-	return totalVersions / s.versionsPageSize, versions, mapMetadataErrors(err)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	totalPages := (totalVersions / s.versionsPageSize)
+	if (totalVersions % s.versionsPageSize) != 0 {
+		totalPages++
+	}
+
+	return totalPages, versions, mapMetadataErrors(err)
 }
 
 func (s *service) ListAllVersions(ctx context.Context, container string) ([]string, error) {
@@ -116,8 +130,28 @@ func (s *service) AddObject(ctx context.Context, container, versionID, key, casK
 }
 
 func (s *service) ListObjects(ctx context.Context, container, versionID string) ([]string, error) {
-	objects, err := s.mdRepo.ListObjects(ctx, container, versionID, 0, 1000)
+	_, objects, err := s.mdRepo.ListObjects(ctx, container, versionID, 0, 1000)
 	return objects, mapMetadataErrors(err)
+}
+
+func (s *service) ListObjectsByPage(ctx context.Context, container, versionID string, pageNum uint64) (uint64, []string, error) {
+	if pageNum < 1 {
+		pageNum = 1
+	}
+
+	offset := (pageNum - 1) * s.versionsPageSize
+	limit := s.versionsPageSize
+	totalVersions, versions, err := s.mdRepo.ListObjects(ctx, container, versionID, offset, limit)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	totalPages := (totalVersions / s.versionsPageSize)
+	if (totalVersions % s.versionsPageSize) != 0 {
+		totalPages++
+	}
+
+	return totalPages, versions, mapMetadataErrors(err)
 }
 
 func (s *service) GetObjectURL(ctx context.Context, container, versionID, key string) (string, error) {

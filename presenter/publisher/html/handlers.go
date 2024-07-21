@@ -6,8 +6,11 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"strconv"
 
+	sprig "github.com/Masterminds/sprig/v3"
 	echo "github.com/labstack/echo/v4"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/teran/archived/service"
 )
@@ -52,7 +55,20 @@ func (h *handlers) ContainerIndex(c echo.Context) error {
 
 func (h *handlers) VersionIndex(c echo.Context) error {
 	container := c.Param("container")
-	versions, err := h.svc.ListPublishedVersions(c.Request().Context(), container)
+
+	pageParam := c.QueryParam("page")
+	var page uint64 = 1
+
+	var err error
+	if pageParam != "" {
+		page, err = strconv.ParseUint(pageParam, 10, 64)
+		if err != nil {
+			log.Warnf("malformed page parameter: `%s`", pageParam)
+			page = 1
+		}
+	}
+
+	pagesCount, versions, err := h.svc.ListPublishedVersionsByPage(c.Request().Context(), container, page)
 	if err != nil {
 		if err == service.ErrNotFound {
 			return c.Render(http.StatusNotFound, "404.html", nil)
@@ -61,15 +77,19 @@ func (h *handlers) VersionIndex(c echo.Context) error {
 	}
 
 	type data struct {
-		Title     string
-		Container string
-		Versions  []string
+		Title       string
+		CurrentPage uint64
+		PagesCount  uint64
+		Container   string
+		Versions    []string
 	}
 
 	return c.Render(http.StatusOK, "version-list.html", &data{
-		Title:     fmt.Sprintf("Version index (%s)", container),
-		Container: container,
-		Versions:  versions,
+		Title:       fmt.Sprintf("Version index (%s)", container),
+		CurrentPage: page,
+		PagesCount:  pagesCount,
+		Container:   container,
+		Versions:    versions,
 	})
 }
 
@@ -77,7 +97,19 @@ func (h *handlers) ObjectIndex(c echo.Context) error {
 	container := c.Param("container")
 	version := c.Param("version")
 
-	objects, err := h.svc.ListObjects(c.Request().Context(), container, version)
+	pageParam := c.QueryParam("page")
+	var page uint64 = 1
+
+	var err error
+	if pageParam != "" {
+		page, err = strconv.ParseUint(pageParam, 10, 64)
+		if err != nil {
+			log.Warnf("malformed page parameter: `%s`", pageParam)
+			page = 1
+		}
+	}
+
+	pagesCount, objects, err := h.svc.ListObjectsByPage(c.Request().Context(), container, version, page)
 	if err != nil {
 		if err == service.ErrNotFound {
 			return c.Render(http.StatusNotFound, "404.html", nil)
@@ -86,16 +118,20 @@ func (h *handlers) ObjectIndex(c echo.Context) error {
 	}
 
 	type data struct {
-		Title     string
-		Container string
-		Version   string
-		Objects   []string
+		Title       string
+		CurrentPage uint64
+		PagesCount  uint64
+		Container   string
+		Version     string
+		Objects     []string
 	}
 	return c.Render(http.StatusOK, "object-list.html", &data{
-		Title:     fmt.Sprintf("Object index (%s/%s)", container, version),
-		Container: container,
-		Version:   version,
-		Objects:   objects,
+		Title:       fmt.Sprintf("Object index (%s/%s)", container, version),
+		CurrentPage: page,
+		PagesCount:  pagesCount,
+		Container:   container,
+		Version:     version,
+		Objects:     objects,
 	})
 }
 
@@ -150,7 +186,9 @@ func (h *handlers) ErrorHandler(err error, c echo.Context) {
 
 func (h *handlers) Register(e *echo.Echo) {
 	e.Renderer = &renderer{
-		templates: template.Must(template.ParseGlob(path.Join(h.templateDir, "*.html"))),
+		templates: template.Must(
+			template.New("base").Funcs(sprig.FuncMap()).ParseGlob(path.Join(h.templateDir, "*.html")),
+		),
 	}
 
 	e.HTTPErrorHandler = h.ErrorHandler

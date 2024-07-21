@@ -20,7 +20,7 @@ type Repository interface {
 	MarkVersionPublished(ctx context.Context, container, version string) error
 
 	CreateObject(ctx context.Context, container, version, key, casKey string) error
-	ListObjects(ctx context.Context, container, version string, offset, limit uint64) ([]string, error)
+	ListObjects(ctx context.Context, container, version string, offset, limit uint64) (uint64, []string, error)
 	DeleteObject(ctx context.Context, container, version, key string) error
 	RemapObject(ctx context.Context, container, version, key, newCASKey string) error
 
