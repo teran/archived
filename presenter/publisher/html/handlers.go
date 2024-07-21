@@ -8,8 +8,9 @@ import (
 	"path"
 	"strconv"
 
+	sprig "github.com/Masterminds/sprig/v3"
 	echo "github.com/labstack/echo/v4"
-	"github.com/labstack/gommon/log"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/teran/archived/service"
 )
@@ -185,7 +186,9 @@ func (h *handlers) ErrorHandler(err error, c echo.Context) {
 
 func (h *handlers) Register(e *echo.Echo) {
 	e.Renderer = &renderer{
-		templates: template.Must(template.ParseGlob(path.Join(h.templateDir, "*.html"))),
+		templates: template.Must(
+			template.New("base").Funcs(sprig.FuncMap()).ParseGlob(path.Join(h.templateDir, "*.html")),
+		),
 	}
 
 	e.HTTPErrorHandler = h.ErrorHandler
