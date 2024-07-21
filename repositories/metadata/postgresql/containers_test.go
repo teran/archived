@@ -14,7 +14,7 @@ func (s *postgreSQLRepositoryTestSuite) TestContainerOperations() {
 	err = s.repo.CreateContainer(s.ctx, "test-container9")
 	s.Require().Error(err)
 	s.Require().Equal(
-		`error executing SQL query: pq: duplicate key value violates unique constraint "containers_name_key"`,
+		`pq: duplicate key value violates unique constraint "containers_name_key"`,
 		err.Error(),
 	)
 

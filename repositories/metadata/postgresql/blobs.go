@@ -8,7 +8,7 @@ import (
 )
 
 func (r *repository) CreateBLOB(ctx context.Context, checksum string, size uint64, mimeType string) error {
-	_, err := psql.
+	_, err := insertQuery(ctx, r.db, psql.
 		Insert("blobs").
 		Columns(
 			"checksum",
@@ -19,11 +19,8 @@ func (r *repository) CreateBLOB(ctx context.Context, checksum string, size uint6
 			checksum,
 			size,
 			mimeType,
-		).
-		RunWith(r.db).
-		ExecContext(ctx)
-
-	return errors.Wrap(err, "error executing SQL query")
+		))
+	return mapSQLErrors(err)
 }
 
 func (r *repository) GetBlobKeyByObject(ctx context.Context, container, version, key string) (string, error) {

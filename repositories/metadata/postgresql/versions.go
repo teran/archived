@@ -32,7 +32,7 @@ func (r *repository) CreateVersion(ctx context.Context, container string) (strin
 
 	versionID := r.tp().UTC().Format("20060102150405")
 
-	_, err = psql.
+	_, err = insertQuery(ctx, tx, psql.
 		Insert("versions").
 		Columns(
 			"container_id",
@@ -43,11 +43,9 @@ func (r *repository) CreateVersion(ctx context.Context, container string) (strin
 			containerID,
 			versionID,
 			false,
-		).
-		RunWith(tx).
-		ExecContext(ctx)
+		))
 	if err != nil {
-		return "", errors.Wrap(err, "error executing SQL query")
+		return "", mapSQLErrors(err)
 	}
 
 	if err := tx.Commit(); err != nil {
@@ -156,17 +154,15 @@ func (r *repository) MarkVersionPublished(ctx context.Context, container, versio
 		return errors.Wrap(err, "error looking up container")
 	}
 
-	_, err = psql.
+	_, err = updateQuery(ctx, tx, psql.
 		Update("versions").
 		Set("is_published", true).
 		Where(sq.Eq{
 			"container_id": containerID,
 			"name":         version,
-		}).
-		RunWith(tx).
-		ExecContext(ctx)
+		}))
 	if err != nil {
-		return errors.Wrap(err, "error executing SQL query")
+		return mapSQLErrors(err)
 	}
 
 	if err := tx.Commit(); err != nil {

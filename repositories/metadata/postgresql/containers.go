@@ -4,22 +4,18 @@ import (
 	"context"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/pkg/errors"
 )
 
 func (r *repository) CreateContainer(ctx context.Context, name string) error {
-	_, err := psql.
+	_, err := insertQuery(ctx, r.db, psql.
 		Insert("containers").
 		Columns(
 			"name",
 		).
 		Values(
 			name,
-		).
-		RunWith(r.db).
-		ExecContext(ctx)
-
-	return errors.Wrap(err, "error executing SQL query")
+		))
+	return mapSQLErrors(err)
 }
 
 func (r *repository) ListContainers(ctx context.Context) ([]string, error) {
@@ -46,11 +42,8 @@ func (r *repository) ListContainers(ctx context.Context) ([]string, error) {
 }
 
 func (r *repository) DeleteContainer(ctx context.Context, name string) error {
-	_, err := psql.
+	_, err := deleteQuery(ctx, r.db, psql.
 		Delete("containers").
-		Where(sq.Eq{"name": name}).
-		RunWith(r.db).
-		ExecContext(ctx)
-
-	return errors.Wrap(err, "error executing SQL query")
+		Where(sq.Eq{"name": name}))
+	return mapSQLErrors(err)
 }
