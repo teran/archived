@@ -4,33 +4,27 @@ import (
 	"context"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/pkg/errors"
 )
 
 func (r *repository) CreateContainer(ctx context.Context, name string) error {
-	_, err := psql.
+	_, err := insertQuery(ctx, r.db, psql.
 		Insert("containers").
 		Columns(
 			"name",
 		).
 		Values(
 			name,
-		).
-		RunWith(r.db).
-		ExecContext(ctx)
-
-	return errors.Wrap(err, "error executing SQL query")
+		))
+	return mapSQLErrors(err)
 }
 
 func (r *repository) ListContainers(ctx context.Context) ([]string, error) {
-	rows, err := psql.
+	rows, err := selectQuery(ctx, r.db, psql.
 		Select("name").
 		From("containers").
-		OrderBy("name").
-		RunWith(r.db).
-		QueryContext(ctx)
+		OrderBy("name"))
 	if err != nil {
-		return nil, errors.Wrap(mapSQLErrors(err), "error executing SQL query")
+		return nil, mapSQLErrors(err)
 	}
 	defer rows.Close()
 
@@ -38,7 +32,7 @@ func (r *repository) ListContainers(ctx context.Context) ([]string, error) {
 	for rows.Next() {
 		var r string
 		if err := rows.Scan(&r); err != nil {
-			return nil, errors.Wrap(err, "error decoding database result")
+			return nil, mapSQLErrors(err)
 		}
 
 		result = append(result, r)
@@ -48,11 +42,8 @@ func (r *repository) ListContainers(ctx context.Context) ([]string, error) {
 }
 
 func (r *repository) DeleteContainer(ctx context.Context, name string) error {
-	_, err := psql.
+	_, err := deleteQuery(ctx, r.db, psql.
 		Delete("containers").
-		Where(sq.Eq{"name": name}).
-		RunWith(r.db).
-		ExecContext(ctx)
-
-	return errors.Wrap(err, "error executing SQL query")
+		Where(sq.Eq{"name": name}))
+	return mapSQLErrors(err)
 }

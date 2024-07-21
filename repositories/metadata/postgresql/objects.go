@@ -14,7 +14,7 @@ func (r *repository) CreateObject(ctx context.Context, container, version, key, 
 	}
 	defer tx.Rollback()
 
-	row := psql.
+	row, err := selectQueryRow(ctx, tx, psql.
 		Select("v.id as id").
 		From("containers c").
 		Join("versions v ON v.container_id = c.id").
@@ -22,28 +22,30 @@ func (r *repository) CreateObject(ctx context.Context, container, version, key, 
 			"c.name":       container,
 			"v.name":       version,
 			"is_published": false,
-		}).
-		RunWith(tx).
-		QueryRowContext(ctx)
+		}))
+	if err != nil {
+		return mapSQLErrors(err)
+	}
 
 	var versionID uint
 	if err := row.Scan(&versionID); err != nil {
-		return errors.Wrap(mapSQLErrors(err), "error looking up version")
+		return mapSQLErrors(err)
 	}
 
-	row = psql.
+	row, err = selectQueryRow(ctx, tx, psql.
 		Select("id").
 		From("blobs").
-		Where(sq.Eq{"checksum": casKey}).
-		RunWith(tx).
-		QueryRowContext(ctx)
+		Where(sq.Eq{"checksum": casKey}))
+	if err != nil {
+		return mapSQLErrors(err)
+	}
 
 	var blobID uint
 	if err := row.Scan(&blobID); err != nil {
-		return errors.Wrap(mapSQLErrors(err), "error looking up blob")
+		return mapSQLErrors(err)
 	}
 
-	_, err = psql.
+	_, err = insertQuery(ctx, tx, psql.
 		Insert("objects").
 		Columns(
 			"version_id",
@@ -54,11 +56,9 @@ func (r *repository) CreateObject(ctx context.Context, container, version, key, 
 			versionID,
 			key,
 			blobID,
-		).
-		RunWith(tx).
-		ExecContext(ctx)
+		))
 	if err != nil {
-		return errors.Wrap(err, "error executing SQL query")
+		return mapSQLErrors(err)
 	}
 
 	if err := tx.Commit(); err != nil {
@@ -68,36 +68,38 @@ func (r *repository) CreateObject(ctx context.Context, container, version, key, 
 }
 
 func (r *repository) ListObjects(ctx context.Context, container, version string, offset, limit uint64) ([]string, error) {
-	row := psql.
+	row, err := selectQueryRow(ctx, r.db, psql.
 		Select("id").
 		From("containers").
 		Where(sq.Eq{
 			"name": container,
-		}).
-		RunWith(r.db).
-		QueryRowContext(ctx)
+		}))
+	if err != nil {
+		return nil, mapSQLErrors(err)
+	}
 
 	var containerID uint
 	if err := row.Scan(&containerID); err != nil {
 		return nil, mapSQLErrors(err)
 	}
 
-	row = psql.
+	row, err = selectQueryRow(ctx, r.db, psql.
 		Select("id").
 		From("versions").
 		Where(sq.Eq{
 			"container_id": containerID,
 			"name":         version,
-		}).
-		RunWith(r.db).
-		QueryRowContext(ctx)
+		}))
+	if err != nil {
+		return nil, mapSQLErrors(err)
+	}
 
 	var versionID uint
 	if err := row.Scan(&versionID); err != nil {
 		return nil, mapSQLErrors(err)
 	}
 
-	rows, err := psql.
+	rows, err := selectQuery(ctx, r.db, psql.
 		Select("key").
 		From("objects").
 		Where(sq.Eq{
@@ -105,11 +107,9 @@ func (r *repository) ListObjects(ctx context.Context, container, version string,
 		}).
 		OrderBy("id").
 		Offset(offset).
-		Limit(limit).
-		RunWith(r.db).
-		QueryContext(ctx)
+		Limit(limit))
 	if err != nil {
-		return nil, errors.Wrap(err, "error executing SQL query")
+		return nil, mapSQLErrors(err)
 	}
 	defer rows.Close()
 
@@ -133,32 +133,31 @@ func (r *repository) DeleteObject(ctx context.Context, container, version, key s
 	}
 	defer tx.Rollback()
 
-	row := psql.
+	row, err := selectQueryRow(ctx, tx, psql.
 		Select("v.id").
 		From("versions v").
 		Join("containers c ON v.container_id = c.id").
 		Where(sq.Eq{
 			"c.name": container,
 			"v.name": version,
-		}).
-		RunWith(tx).
-		QueryRowContext(ctx)
+		}))
+	if err != nil {
+		return mapSQLErrors(err)
+	}
 
 	var versionID uint
 	if err := row.Scan(&versionID); err != nil {
 		return errors.Wrap(err, "error looking up version")
 	}
 
-	_, err = psql.
+	_, err = deleteQuery(ctx, tx, psql.
 		Delete("objects").
 		Where(sq.Eq{
 			"version_id": versionID,
 			"key":        key,
-		}).
-		RunWith(tx).
-		ExecContext(ctx)
+		}))
 	if err != nil {
-		return errors.Wrap(err, "error executing SQL query")
+		return mapSQLErrors(err)
 	}
 
 	if err := tx.Commit(); err != nil {
@@ -174,45 +173,45 @@ func (r *repository) RemapObject(ctx context.Context, container, version, key, n
 	}
 	defer tx.Rollback()
 
-	row := psql.
+	row, err := selectQueryRow(ctx, tx, psql.
 		Select("v.id").
 		From("versions v").
 		Join("containers c ON v.container_id = c.id").
 		Where(sq.Eq{
 			"c.name": container,
 			"v.name": version,
-		}).
-		RunWith(tx).
-		QueryRowContext(ctx)
+		}))
+	if err != nil {
+		return mapSQLErrors(err)
+	}
 
 	var versionID uint
 	if err := row.Scan(&versionID); err != nil {
 		return errors.Wrap(err, "error looking up version")
 	}
 
-	row = psql.
+	row, err = selectQueryRow(ctx, tx, psql.
 		Select("id").
 		From("blobs").
-		Where(sq.Eq{"checksum": newCASKey}).
-		RunWith(tx).
-		QueryRowContext(ctx)
+		Where(sq.Eq{"checksum": newCASKey}))
+	if err != nil {
+		return mapSQLErrors(err)
+	}
 
 	var blobID uint
 	if err := row.Scan(&blobID); err != nil {
 		return errors.Wrap(err, "error looking up blob")
 	}
 
-	_, err = psql.
+	_, err = updateQuery(ctx, tx, psql.
 		Update("objects").
 		Set("blob_id", blobID).
 		Where(sq.Eq{
 			"version_id": versionID,
 			"key":        key,
-		}).
-		RunWith(tx).
-		ExecContext(ctx)
+		}))
 	if err != nil {
-		return errors.Wrap(err, "error executing SQL query")
+		return mapSQLErrors(err)
 	}
 
 	if err := tx.Commit(); err != nil {
