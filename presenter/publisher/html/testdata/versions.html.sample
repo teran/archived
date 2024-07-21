@@ -11,6 +11,12 @@
         <a href="..">..</a><br>
         <a href="/test-container-1/20241011121314/">20241011121314/</a><br>
 
+
+        <p>
+            <a href="?page=2">&raquo;</a>
+        </p>
+
+
         <hr>
         Powered by <a href="https://github.com/teran/archived" target="_blank">archived</a>
     </body>
