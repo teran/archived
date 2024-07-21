@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"net"
 	"net/http"
 	"runtime/debug"
@@ -12,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/kelseyhightower/envconfig"
 	_ "github.com/lib/pq"
@@ -110,9 +112,11 @@ func main() {
 
 	gs := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
+			logging.UnaryServerInterceptor(interceptorLogger()),
 			recovery.UnaryServerInterceptor(recovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
 		),
 		grpc.ChainStreamInterceptor(
+			logging.StreamServerInterceptor(interceptorLogger()),
 			recovery.StreamServerInterceptor(recovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
 		),
 	)
@@ -135,4 +139,31 @@ func main() {
 func grpcPanicRecoveryHandler(p any) (err error) {
 	log.Errorf("recovered from panic: %s", debug.Stack())
 	return status.Errorf(codes.Internal, "%s", p)
+}
+
+func interceptorLogger() logging.Logger {
+	return logging.LoggerFunc(func(_ context.Context, lvl logging.Level, msg string, fields ...any) {
+		switch lvl {
+		case logging.LevelDebug:
+			log.Debugf("%s: %s", msg, formatFields(fields))
+		case logging.LevelInfo:
+			log.Infof("%s: %s", msg, formatFields(fields))
+		case logging.LevelWarn:
+			log.Warnf("%s: %s", msg, formatFields(fields))
+		case logging.LevelError:
+			log.Errorf("%s: %s", msg, formatFields(fields))
+		default:
+			panic(fmt.Sprintf("unknown level %v", lvl))
+		}
+	})
+}
+
+func formatFields(in []any) (out string) {
+	for i := 1; i < len(in); i += 2 {
+		key := in[i-1]
+		value := in[i]
+
+		out += fmt.Sprintf("%v=%v; ", key, value)
+	}
+	return out
 }
