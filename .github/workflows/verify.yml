@@ -101,7 +101,7 @@ jobs:
           args: build --snapshot
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and push publisher container image
+      - name: Build publisher container image
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -109,7 +109,7 @@ jobs:
           platforms: amd64
           push: false
           outputs: type=image,name=ghcr.io/${{ github.repository }}/publisher,annotation-index.org.opencontainers.image.description=${{ github.repository }}
-      - name: Build and push manager container image
+      - name: Build manager container image
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -117,7 +117,7 @@ jobs:
           platforms: amd64
           push: false
           outputs: type=image,name=ghcr.io/${{ github.repository }}/manager,annotation-index.org.opencontainers.image.description=${{ github.repository }}
-      - name: Build and push migrator container image
+      - name: Build migrator container image
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -125,7 +125,7 @@ jobs:
           platforms: amd64
           push: false
           outputs: type=image,name=ghcr.io/${{ github.repository }}/migrator,annotation-index.org.opencontainers.image.description=${{ github.repository }}
-      - name: Build and push cli container image
+      - name: Build cli container image
         uses: docker/build-push-action@v5
         with:
           context: .
