@@ -179,7 +179,7 @@ func (s *serviceTestSuite) SetupTest() {
 	s.mdRepoMock = mdRepoMock.New()
 	s.blobRepoMock = blobRepoMock.New()
 
-	s.svc = newSvc(s.mdRepoMock, s.blobRepoMock)
+	s.svc = newSvc(s.mdRepoMock, s.blobRepoMock, 50, 50)
 }
 
 func (s *serviceTestSuite) TearDownTest() {

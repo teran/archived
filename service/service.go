@@ -9,8 +9,6 @@ import (
 	"github.com/teran/archived/repositories/metadata"
 )
 
-const defaultVersionsPerPage = 50
-
 var ErrNotFound = errors.New("entity not found")
 
 type Manager interface {
@@ -45,21 +43,23 @@ type service struct {
 	mdRepo           metadata.Repository
 	blobRepo         blob.Repository
 	versionsPageSize uint64
+	objectsPageSize  uint64
 }
 
 func NewManager(mdRepo metadata.Repository, blobRepo blob.Repository) Manager {
-	return newSvc(mdRepo, blobRepo)
+	return newSvc(mdRepo, blobRepo, 50, 50)
 }
 
-func NewPublisher(mdRepo metadata.Repository, blobRepo blob.Repository) Publisher {
-	return newSvc(mdRepo, blobRepo)
+func NewPublisher(mdRepo metadata.Repository, blobRepo blob.Repository, versionsPerPage, objectsPerPage uint64) Publisher {
+	return newSvc(mdRepo, blobRepo, versionsPerPage, objectsPerPage)
 }
 
-func newSvc(mdRepo metadata.Repository, blobRepo blob.Repository) *service {
+func newSvc(mdRepo metadata.Repository, blobRepo blob.Repository, versionsPerPage, objectsPerPage uint64) *service {
 	return &service{
 		mdRepo:           mdRepo,
 		blobRepo:         blobRepo,
-		versionsPageSize: defaultVersionsPerPage,
+		versionsPageSize: versionsPerPage,
+		objectsPageSize:  objectsPerPage,
 	}
 }
 
@@ -139,19 +139,19 @@ func (s *service) ListObjectsByPage(ctx context.Context, container, versionID st
 		pageNum = 1
 	}
 
-	offset := (pageNum - 1) * s.versionsPageSize
-	limit := s.versionsPageSize
-	totalVersions, versions, err := s.mdRepo.ListObjects(ctx, container, versionID, offset, limit)
+	offset := (pageNum - 1) * s.objectsPageSize
+	limit := s.objectsPageSize
+	totalObjects, objects, err := s.mdRepo.ListObjects(ctx, container, versionID, offset, limit)
 	if err != nil {
 		return 0, nil, err
 	}
 
-	totalPages := (totalVersions / s.versionsPageSize)
-	if (totalVersions % s.versionsPageSize) != 0 {
+	totalPages := (totalObjects / s.objectsPageSize)
+	if (totalObjects % s.objectsPageSize) != 0 {
 		totalPages++
 	}
 
-	return totalPages, versions, mapMetadataErrors(err)
+	return totalPages, objects, mapMetadataErrors(err)
 }
 
 func (s *service) GetObjectURL(ctx context.Context, container, versionID, key string) (string, error) {
