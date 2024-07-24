@@ -90,19 +90,25 @@ func (s *postgreSQLRepositoryTestSuite) TestVersionsPagination() {
 	version1, err := s.repo.CreateVersion(s.ctx, "container1")
 	s.Require().NoError(err)
 
-	version2, err := s.repo.CreateVersion(s.ctx, "container1")
+	err = s.repo.MarkVersionPublished(s.ctx, "container1", version1)
+	s.Require().NoError(err)
+
+	_, err = s.repo.CreateVersion(s.ctx, "container1")
 	s.Require().NoError(err)
 
 	version3, err := s.repo.CreateVersion(s.ctx, "container1")
 	s.Require().NoError(err)
 
+	err = s.repo.MarkVersionPublished(s.ctx, "container1", version3)
+	s.Require().NoError(err)
+
 	total, listByPage, err := s.repo.ListPublishedVersionsByContainerAndPage(s.ctx, "container1", 0, 5)
 	s.Require().NoError(err)
-	s.Require().Equal(uint64(3), total)
-	s.Require().Equal([]string{version1, version2, version3}, listByPage)
+	s.Require().Equal(uint64(2), total)
+	s.Require().Equal([]string{version1, version3}, listByPage)
 
 	total, listByPage, err = s.repo.ListPublishedVersionsByContainerAndPage(s.ctx, "container1", 1, 2)
 	s.Require().NoError(err)
-	s.Require().Equal(uint64(3), total)
-	s.Require().Equal([]string{version2, version3}, listByPage)
+	s.Require().Equal(uint64(2), total)
+	s.Require().Equal([]string{version3}, listByPage)
 }

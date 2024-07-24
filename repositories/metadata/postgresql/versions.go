@@ -66,7 +66,7 @@ func (r *repository) ListAllVersionsByContainer(ctx context.Context, container s
 }
 
 func (r *repository) ListPublishedVersionsByContainerAndPage(ctx context.Context, container string, offset, limit uint64) (uint64, []string, error) {
-	return r.listVersionsByContainer(ctx, container, nil, offset, limit)
+	return r.listVersionsByContainer(ctx, container, ptr.Bool(true), offset, limit)
 }
 
 func (r *repository) listVersionsByContainer(ctx context.Context, container string, isPublished *bool, offset, limit uint64) (uint64, []string, error) {
@@ -98,7 +98,7 @@ func (r *repository) listVersionsByContainer(ctx context.Context, container stri
 	row, err = selectQueryRow(ctx, r.db, psql.
 		Select("COUNT(*)").
 		From("versions").
-		Where(sq.Eq{"container_id": containerID}))
+		Where(condition))
 	if err != nil {
 		return 0, nil, mapSQLErrors(err)
 	}
