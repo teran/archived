@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/stretchr/testify/mock"
+	"github.com/teran/archived/exporter/models"
 	"github.com/teran/archived/repositories/metadata"
 )
 
@@ -90,4 +91,9 @@ func (m *Mock) GetBlobKeyByObject(_ context.Context, container, version, key str
 func (m *Mock) EnsureBlobKey(_ context.Context, key string, size uint64) error {
 	args := m.Called(key, size)
 	return args.Error(0)
+}
+
+func (m *Mock) CountStats(ctx context.Context) (*models.Stats, error) {
+	args := m.Called()
+	return args.Get(0).(*models.Stats), args.Error(1)
 }

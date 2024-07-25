@@ -167,3 +167,15 @@ jobs:
             ghcr.io/${{ github.repository }}/cli:${{ github.ref_name }}
             ghcr.io/${{ github.repository }}/cli:${{ github.ref_name }}-${{ steps.timestamp.outputs.now }}
           outputs: type=image,name=ghcr.io/${{ github.repository }}/cli,annotation-index.org.opencontainers.image.description=${{ github.repository }}
+      - name: Build and push exporter container image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.exporter
+          platforms: amd64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/exporter:latest
+            ghcr.io/${{ github.repository }}/exporter:${{ github.ref_name }}
+            ghcr.io/${{ github.repository }}/exporter:${{ github.ref_name }}-${{ steps.timestamp.outputs.now }}
+          outputs: type=image,name=ghcr.io/${{ github.repository }}/exporter,annotation-index.org.opencontainers.image.description=${{ github.repository }}
