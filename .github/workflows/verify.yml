@@ -133,3 +133,11 @@ jobs:
           platforms: amd64
           push: false
           outputs: type=image,name=ghcr.io/${{ github.repository }}/cli,annotation-index.org.opencontainers.image.description=${{ github.repository }}
+      - name: Build exporter container image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.exporter
+          platforms: amd64
+          push: false
+          outputs: type=image,name=ghcr.io/${{ github.repository }}/exporter,annotation-index.org.opencontainers.image.description=${{ github.repository }}

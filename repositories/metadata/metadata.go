@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
+
+	"github.com/teran/archived/exporter/models"
 )
 
 var ErrNotFound = errors.New("not found")
@@ -27,4 +29,6 @@ type Repository interface {
 	CreateBLOB(ctx context.Context, checksum string, size uint64, mimeType string) error
 	GetBlobKeyByObject(ctx context.Context, container, version, key string) (string, error)
 	EnsureBlobKey(ctx context.Context, key string, size uint64) error
+
+	CountStats(ctx context.Context) (*models.Stats, error)
 }
