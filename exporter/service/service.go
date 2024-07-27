@@ -43,7 +43,7 @@ func New(repo metadata.Repository) (Service, error) {
 				Name:      "versions_amount",
 				Help:      "Total amount of versions",
 			},
-			[]string{"container", "is_published"},
+			[]string{"container_name", "is_published"},
 		),
 
 		objectsTotal: prometheus.NewGaugeVec(
@@ -52,7 +52,7 @@ func New(repo metadata.Repository) (Service, error) {
 				Name:      "objects_amount",
 				Help:      "Total amount of objects",
 			},
-			[]string{"container", "version", "is_published"},
+			[]string{"container_name", "version_id", "is_published"},
 		),
 
 		blobsTotal: prometheus.NewGaugeVec(
@@ -69,7 +69,7 @@ func New(repo metadata.Repository) (Service, error) {
 				Namespace: "archived",
 				Name:      "blobs_raw_size_bytes",
 				Help:      "Total raw size of blobs (i.e. before deduplication)",
-			}, []string{"container", "version", "is_published"},
+			}, []string{"container_name", "version_id", "is_published"},
 		),
 
 		blobsTotalRawSize: prometheus.NewGaugeVec(
