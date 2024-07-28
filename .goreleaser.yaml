@@ -1,21 +1,6 @@
 ---
 version: 2
 builds:
-  - id: archived-publisher
-    main: ./cmd/publisher
-    binary: archived-publisher
-    ldflags:
-      - -s -w -X main.appVersion={{.Version}} -X main.buildTimestamp={{.Date}}
-    env:
-      - CGO_ENABLED=0
-    goos:
-      - linux
-    goarch:
-      - amd64
-      - arm64
-    goamd64: ["v1", "v2", "v3"]
-    goarm: ["7"]
-    mod_timestamp: "{{ .CommitTimestamp }}"
   - id: archived-cli
     main: ./cmd/cli
     binary: archived-cli
@@ -30,6 +15,36 @@ builds:
       - amd64
       - arm64
     goamd64: ["v1", "v2", "v3"]
+    mod_timestamp: "{{ .CommitTimestamp }}"
+  - id: archived-exporter
+    main: ./cmd/exporter
+    binary: archived-exporter
+    ldflags:
+      - -s -w -X main.appVersion={{.Version}} -X main.buildTimestamp={{.Date}}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    goamd64: ["v1", "v2", "v3"]
+    goarm: ["7"]
+    mod_timestamp: "{{ .CommitTimestamp }}"
+  - id: archived-gc
+    main: ./cmd/gc
+    binary: archived-gc
+    ldflags:
+      - -s -w -X main.appVersion={{.Version}} -X main.buildTimestamp={{.Date}}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    goamd64: ["v1", "v2", "v3"]
+    goarm: ["7"]
     mod_timestamp: "{{ .CommitTimestamp }}"
   - id: archived-manager
     main: ./cmd/manager
@@ -61,9 +76,9 @@ builds:
     goamd64: ["v1", "v2", "v3"]
     goarm: ["7"]
     mod_timestamp: "{{ .CommitTimestamp }}"
-  - id: archived-exporter
-    main: ./cmd/exporter
-    binary: archived-exporter
+  - id: archived-publisher
+    main: ./cmd/publisher
+    binary: archived-publisher
     ldflags:
       - -s -w -X main.appVersion={{.Version}} -X main.buildTimestamp={{.Date}}
     env:

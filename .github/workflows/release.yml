@@ -119,42 +119,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and push publisher container image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile.publisher
-          platforms: amd64
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository }}/publisher:latest
-            ghcr.io/${{ github.repository }}/publisher:${{ github.ref_name }}
-            ghcr.io/${{ github.repository }}/publisher:${{ github.ref_name }}-${{ steps.timestamp.outputs.now }}
-          outputs: type=image,name=ghcr.io/${{ github.repository }}/publisher,annotation-index.org.opencontainers.image.description=${{ github.repository }}
-      - name: Build and push manager container image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile.manager
-          platforms: amd64
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository }}/manager:latest
-            ghcr.io/${{ github.repository }}/manager:${{ github.ref_name }}
-            ghcr.io/${{ github.repository }}/manager:${{ github.ref_name }}-${{ steps.timestamp.outputs.now }}
-          outputs: type=image,name=ghcr.io/${{ github.repository }}/manager,annotation-index.org.opencontainers.image.description=${{ github.repository }}
-      - name: Build and push migrator container image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile.migrator
-          platforms: amd64
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository }}/migrator:latest
-            ghcr.io/${{ github.repository }}/migrator:${{ github.ref_name }}
-            ghcr.io/${{ github.repository }}/migrator:${{ github.ref_name }}-${{ steps.timestamp.outputs.now }}
-          outputs: type=image,name=ghcr.io/${{ github.repository }}/migrator,annotation-index.org.opencontainers.image.description=${{ github.repository }}
       - name: Build and push cli container image
         uses: docker/build-push-action@v5
         with:
@@ -179,3 +143,51 @@ jobs:
             ghcr.io/${{ github.repository }}/exporter:${{ github.ref_name }}
             ghcr.io/${{ github.repository }}/exporter:${{ github.ref_name }}-${{ steps.timestamp.outputs.now }}
           outputs: type=image,name=ghcr.io/${{ github.repository }}/exporter,annotation-index.org.opencontainers.image.description=${{ github.repository }}
+      - name: Build and push gc container image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.gc
+          platforms: amd64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/gc:latest
+            ghcr.io/${{ github.repository }}/gc:${{ github.ref_name }}
+            ghcr.io/${{ github.repository }}/gc:${{ github.ref_name }}-${{ steps.timestamp.outputs.now }}
+          outputs: type=image,name=ghcr.io/${{ github.repository }}/gc,annotation-index.org.opencontainers.image.description=${{ github.repository }}
+      - name: Build and push manager container image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.manager
+          platforms: amd64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/manager:latest
+            ghcr.io/${{ github.repository }}/manager:${{ github.ref_name }}
+            ghcr.io/${{ github.repository }}/manager:${{ github.ref_name }}-${{ steps.timestamp.outputs.now }}
+          outputs: type=image,name=ghcr.io/${{ github.repository }}/manager,annotation-index.org.opencontainers.image.description=${{ github.repository }}
+      - name: Build and push migrator container image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.migrator
+          platforms: amd64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/migrator:latest
+            ghcr.io/${{ github.repository }}/migrator:${{ github.ref_name }}
+            ghcr.io/${{ github.repository }}/migrator:${{ github.ref_name }}-${{ steps.timestamp.outputs.now }}
+          outputs: type=image,name=ghcr.io/${{ github.repository }}/migrator,annotation-index.org.opencontainers.image.description=${{ github.repository }}
+      - name: Build and push publisher container image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.publisher
+          platforms: amd64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/publisher:latest
+            ghcr.io/${{ github.repository }}/publisher:${{ github.ref_name }}
+            ghcr.io/${{ github.repository }}/publisher:${{ github.ref_name }}-${{ steps.timestamp.outputs.now }}
+          outputs: type=image,name=ghcr.io/${{ github.repository }}/publisher,annotation-index.org.opencontainers.image.description=${{ github.repository }}

@@ -101,30 +101,6 @@ jobs:
           args: build --snapshot
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build publisher container image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile.publisher
-          platforms: amd64
-          push: false
-          outputs: type=image,name=ghcr.io/${{ github.repository }}/publisher,annotation-index.org.opencontainers.image.description=${{ github.repository }}
-      - name: Build manager container image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile.manager
-          platforms: amd64
-          push: false
-          outputs: type=image,name=ghcr.io/${{ github.repository }}/manager,annotation-index.org.opencontainers.image.description=${{ github.repository }}
-      - name: Build migrator container image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile.migrator
-          platforms: amd64
-          push: false
-          outputs: type=image,name=ghcr.io/${{ github.repository }}/migrator,annotation-index.org.opencontainers.image.description=${{ github.repository }}
       - name: Build cli container image
         uses: docker/build-push-action@v5
         with:
@@ -141,3 +117,35 @@ jobs:
           platforms: amd64
           push: false
           outputs: type=image,name=ghcr.io/${{ github.repository }}/exporter,annotation-index.org.opencontainers.image.description=${{ github.repository }}
+      - name: Build gc container image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.gc
+          platforms: amd64
+          push: false
+          outputs: type=image,name=ghcr.io/${{ github.repository }}/gc,annotation-index.org.opencontainers.image.description=${{ github.repository }}
+      - name: Build manager container image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.manager
+          platforms: amd64
+          push: false
+          outputs: type=image,name=ghcr.io/${{ github.repository }}/manager,annotation-index.org.opencontainers.image.description=${{ github.repository }}
+      - name: Build migrator container image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.migrator
+          platforms: amd64
+          push: false
+          outputs: type=image,name=ghcr.io/${{ github.repository }}/migrator,annotation-index.org.opencontainers.image.description=${{ github.repository }}
+      - name: Build publisher container image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.publisher
+          platforms: amd64
+          push: false
+          outputs: type=image,name=ghcr.io/${{ github.repository }}/publisher,annotation-index.org.opencontainers.image.description=${{ github.repository }}
