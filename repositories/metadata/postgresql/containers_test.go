@@ -1,6 +1,8 @@
 package postgresql
 
 func (s *postgreSQLRepositoryTestSuite) TestContainerOperations() {
+	s.tp.On("Now").Return("2024-01-02T01:02:03Z").Times(3)
+
 	list, err := s.repo.ListContainers(s.ctx)
 	s.Require().NoError(err)
 	s.Require().Equal([]string{}, list)

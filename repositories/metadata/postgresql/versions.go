@@ -38,11 +38,13 @@ func (r *repository) CreateVersion(ctx context.Context, container string) (strin
 			"container_id",
 			"name",
 			"is_published",
+			"created_at",
 		).
 		Values(
 			containerID,
 			versionID,
 			false,
+			r.tp().UTC(),
 		))
 	if err != nil {
 		return "", mapSQLErrors(err)

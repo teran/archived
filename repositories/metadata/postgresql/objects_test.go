@@ -5,8 +5,9 @@ import "github.com/teran/archived/repositories/metadata"
 func (s *postgreSQLRepositoryTestSuite) TestObjects() {
 	const containerName = "test-container-1"
 
-	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Once()
-	s.tp.On("Now").Return("2024-07-08T10:11:12Z").Once()
+	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Times(3)
+	s.tp.On("Now").Return("2024-07-07T10:11:13Z").Times(5)
+	s.tp.On("Now").Return("2024-07-07T10:11:14Z").Twice()
 
 	err := s.repo.CreateContainer(s.ctx, containerName)
 	s.Require().NoError(err)
@@ -55,6 +56,8 @@ func (s *postgreSQLRepositoryTestSuite) TestObjects() {
 }
 
 func (s *postgreSQLRepositoryTestSuite) TestListObjectsErrors() {
+	s.tp.On("Now").Return("2024-01-02T01:02:03Z").Once()
+
 	// Nothing exists: container and version
 	_, _, err := s.repo.ListObjects(s.ctx, "container", "version", 0, 1000)
 	s.Require().Error(err)

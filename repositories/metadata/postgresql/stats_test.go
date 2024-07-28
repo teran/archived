@@ -5,8 +5,9 @@ import "github.com/teran/archived/exporter/models"
 func (s *postgreSQLRepositoryTestSuite) TestCountStats() {
 	const containerName = "test-container-1"
 
-	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Once()
-	s.tp.On("Now").Return("2024-07-08T10:11:12Z").Once()
+	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Times(3)
+	s.tp.On("Now").Return("2024-07-07T10:11:13Z").Times(5)
+	s.tp.On("Now").Return("2024-07-07T10:11:14Z").Once()
 
 	// Create container
 	err := s.repo.CreateContainer(s.ctx, containerName)
@@ -61,7 +62,7 @@ func (s *postgreSQLRepositoryTestSuite) TestCountStats() {
 			},
 			{
 				ContainerName: "test-container-1",
-				VersionName:   "20240708101112",
+				VersionName:   "20240707101113",
 				IsPublished:   true,
 				ObjectsCount:  1,
 			},
@@ -76,7 +77,7 @@ func (s *postgreSQLRepositoryTestSuite) TestCountStats() {
 			},
 			{
 				ContainerName: "test-container-1",
-				VersionName:   "20240708101112",
+				VersionName:   "20240707101113",
 				IsPublished:   true,
 				SizeBytes:     10,
 			},
