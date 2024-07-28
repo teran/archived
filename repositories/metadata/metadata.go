@@ -19,7 +19,9 @@ type Repository interface {
 	ListAllVersionsByContainer(ctx context.Context, container string) ([]string, error)
 	ListPublishedVersionsByContainer(ctx context.Context, container string) ([]string, error)
 	ListPublishedVersionsByContainerAndPage(ctx context.Context, container string, offset, limit uint64) (uint64, []string, error)
+	ListUnpublishedVersionsByContainer(ctx context.Context, container string) ([]string, error)
 	MarkVersionPublished(ctx context.Context, container, version string) error
+	DeleteVersion(ctx context.Context, container, version string) error
 
 	CreateObject(ctx context.Context, container, version, key, casKey string) error
 	ListObjects(ctx context.Context, container, version string, offset, limit uint64) (uint64, []string, error)

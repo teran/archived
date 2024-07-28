@@ -53,7 +53,17 @@ func (m *Mock) ListPublishedVersionsByContainerAndPage(_ context.Context, contai
 	return args.Get(0).(uint64), args.Get(1).([]string), args.Error(2)
 }
 
+func (m *Mock) ListUnpublishedVersionsByContainer(_ context.Context, container string) ([]string, error) {
+	args := m.Called(container)
+	return args.Get(0).([]string), args.Error(1)
+}
+
 func (m *Mock) MarkVersionPublished(_ context.Context, container, version string) error {
+	args := m.Called(container, version)
+	return args.Error(0)
+}
+
+func (m *Mock) DeleteVersion(ctx context.Context, container, version string) error {
 	args := m.Called(container, version)
 	return args.Error(0)
 }

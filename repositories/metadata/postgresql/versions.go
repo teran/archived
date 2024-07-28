@@ -67,6 +67,11 @@ func (r *repository) ListAllVersionsByContainer(ctx context.Context, container s
 	return versions, err
 }
 
+func (r *repository) ListUnpublishedVersionsByContainer(ctx context.Context, container string) ([]string, error) {
+	_, versions, err := r.listVersionsByContainer(ctx, container, ptr.Bool(false), 0, 0)
+	return versions, err
+}
+
 func (r *repository) ListPublishedVersionsByContainerAndPage(ctx context.Context, container string, offset, limit uint64) (uint64, []string, error) {
 	return r.listVersionsByContainer(ctx, container, ptr.Bool(true), offset, limit)
 }
@@ -171,5 +176,44 @@ func (r *repository) MarkVersionPublished(ctx context.Context, container, versio
 		return errors.Wrap(err, "error committing transaction")
 	}
 
+	return nil
+}
+
+func (r *repository) DeleteVersion(ctx context.Context, container, version string) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return errors.Wrap(err, "error beginning transaction")
+	}
+	defer tx.Rollback()
+
+	row, err := selectQueryRow(ctx, tx, psql.
+		Select("v.id").
+		From("versions v").
+		Join("containers c ON v.container_id = c.id").
+		Where(sq.Eq{
+			"c.name": container,
+			"v.name": version,
+		}))
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+
+	var versionID uint64
+	if err := row.Scan(&versionID); err != nil {
+		return errors.Wrap(err, "error looking up version")
+	}
+
+	_, err = deleteQuery(ctx, tx, psql.
+		Delete("versions").
+		Where(sq.Eq{
+			"id": versionID,
+		}))
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return errors.Wrap(err, "error committing transaction")
+	}
 	return nil
 }
