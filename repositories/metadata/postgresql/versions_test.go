@@ -114,3 +114,47 @@ func (s *postgreSQLRepositoryTestSuite) TestVersionsPagination() {
 	s.Require().Equal(uint64(2), total)
 	s.Require().Equal([]string{version3}, listByPage)
 }
+
+func (s *postgreSQLRepositoryTestSuite) TestDeleteVersion() {
+	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Times(4)
+	s.tp.On("Now").Return("2024-07-07T10:11:13Z").Times(2)
+	s.tp.On("Now").Return("2024-07-07T10:11:14Z").Times(2)
+	s.tp.On("Now").Return("2024-07-07T10:11:15Z").Times(2)
+
+	err := s.repo.CreateContainer(s.ctx, "container1")
+	s.Require().NoError(err)
+
+	err = s.repo.CreateContainer(s.ctx, "container2")
+	s.Require().NoError(err)
+
+	version1, err := s.repo.CreateVersion(s.ctx, "container1")
+	s.Require().NoError(err)
+
+	version2, err := s.repo.CreateVersion(s.ctx, "container1")
+	s.Require().NoError(err)
+
+	version3, err := s.repo.CreateVersion(s.ctx, "container2")
+	s.Require().NoError(err)
+
+	version4, err := s.repo.CreateVersion(s.ctx, "container2")
+	s.Require().NoError(err)
+
+	versions1, err := s.repo.ListAllVersionsByContainer(s.ctx, "container1")
+	s.Require().NoError(err)
+	s.Require().Equal([]string{version1, version2}, versions1)
+
+	versions2, err := s.repo.ListAllVersionsByContainer(s.ctx, "container2")
+	s.Require().NoError(err)
+	s.Require().Equal([]string{version3, version4}, versions2)
+
+	err = s.repo.DeleteVersion(s.ctx, "container1", version1)
+	s.Require().NoError(err)
+
+	versions1, err = s.repo.ListAllVersionsByContainer(s.ctx, "container1")
+	s.Require().NoError(err)
+	s.Require().Equal([]string{version2}, versions1)
+
+	versions2, err = s.repo.ListAllVersionsByContainer(s.ctx, "container2")
+	s.Require().NoError(err)
+	s.Require().Equal([]string{version3, version4}, versions2)
+}

@@ -24,6 +24,8 @@ type config struct {
 	LogLevel log.Level `envconfig:"LOG_LEVEL" default:"info"`
 
 	MetadataDSN string `envconfig:"METADATA_DSN" required:"true"`
+
+	DryRun bool `envconfig:"DRY_RUN" default:"true"`
 }
 
 func main() {
@@ -49,7 +51,7 @@ func main() {
 
 	postgresqlRepo := postgresql.New(db)
 
-	svc := service.New(postgresqlRepo)
+	svc := service.New(postgresqlRepo, cfg.DryRun)
 
 	g, ctx := errgroup.WithContext(context.Background())
 
