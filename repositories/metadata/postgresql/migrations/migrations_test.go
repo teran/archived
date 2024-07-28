@@ -5,15 +5,23 @@ import (
 	"testing"
 
 	_ "github.com/lib/pq"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/suite"
 	postgresApp "github.com/teran/go-docker-testsuite/applications/postgres"
 )
 
+func init() {
+	log.SetLevel(log.TraceLevel)
+}
+
 func (s *migrateTestSuite) TestMigrateTwice() {
-	err := migrateWithMigrationsPath(s.postgresDBApp.MustDSN("test_db"), "file://sql")
+	err := migrateUpWithMigrationsPath(s.postgresDBApp.MustDSN("test_db"), "file://sql")
 	s.Require().NoError(err)
 
-	err = migrateWithMigrationsPath(s.postgresDBApp.MustDSN("test_db"), "file://sql")
+	err = migrateUpWithMigrationsPath(s.postgresDBApp.MustDSN("test_db"), "file://sql")
+	s.Require().NoError(err)
+
+	err = migrateDownWithMigrationsPath(s.postgresDBApp.MustDSN("test_db"), "file://sql")
 	s.Require().NoError(err)
 }
 
