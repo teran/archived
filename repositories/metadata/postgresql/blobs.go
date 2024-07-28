@@ -14,11 +14,13 @@ func (r *repository) CreateBLOB(ctx context.Context, checksum string, size uint6
 			"checksum",
 			"size",
 			"mime_type",
+			"created_at",
 		).
 		Values(
 			checksum,
 			size,
 			mimeType,
+			r.tp().UTC(),
 		))
 	return mapSQLErrors(err)
 }

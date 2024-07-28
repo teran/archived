@@ -51,11 +51,13 @@ func (r *repository) CreateObject(ctx context.Context, container, version, key, 
 			"version_id",
 			"key",
 			"blob_id",
+			"created_at",
 		).
 		Values(
 			versionID,
 			key,
 			blobID,
+			r.tp().UTC(),
 		))
 	if err != nil {
 		return mapSQLErrors(err)

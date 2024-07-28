@@ -8,7 +8,7 @@ func (s *postgreSQLRepositoryTestSuite) TestBlobs() {
 		checksum      = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
 	)
 
-	s.tp.On("Now").Return("2024-01-02T01:02:03Z").Once()
+	s.tp.On("Now").Return("2024-01-02T01:02:03Z").Times(5)
 
 	err := s.repo.CreateContainer(s.ctx, containerName)
 	s.Require().NoError(err)
@@ -31,6 +31,8 @@ func (s *postgreSQLRepositoryTestSuite) TestBlobs() {
 }
 
 func (s *postgreSQLRepositoryTestSuite) TestGetBlobKeyByObjectErrors() {
+	s.tp.On("Now").Return("2024-01-02T01:02:03Z").Twice()
+
 	// Nothing exists: container, version, key
 	_, err := s.repo.GetBlobKeyByObject(s.ctx, "container", "version", "key")
 	s.Require().Error(err)
@@ -64,6 +66,8 @@ func (s *postgreSQLRepositoryTestSuite) TestGetBlobKeyByObjectErrors() {
 }
 
 func (s *postgreSQLRepositoryTestSuite) TestEnsureBlobKey() {
+	s.tp.On("Now").Return("2024-01-02T01:02:03Z").Once()
+
 	err := s.repo.EnsureBlobKey(s.ctx, "deadbeef", 1234)
 	s.Require().Error(err)
 	s.Require().Equal(metadata.ErrNotFound, err)

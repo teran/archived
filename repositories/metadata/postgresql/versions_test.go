@@ -3,14 +3,14 @@ package postgresql
 import "github.com/teran/archived/repositories/metadata"
 
 func (s *postgreSQLRepositoryTestSuite) TestVersionsOperations() {
+	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Times(4)
+	s.tp.On("Now").Return("2024-07-07T11:12:13Z").Times(2)
+
 	err := s.repo.CreateContainer(s.ctx, "container1")
 	s.Require().NoError(err)
 
 	err = s.repo.CreateContainer(s.ctx, "container2")
 	s.Require().NoError(err)
-
-	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Once()
-	s.tp.On("Now").Return("2024-07-07T11:12:13Z").Once()
 
 	vName, err := s.repo.CreateVersion(s.ctx, "container1")
 	s.Require().NoError(err)
@@ -30,7 +30,7 @@ func (s *postgreSQLRepositoryTestSuite) TestVersionsOperations() {
 }
 
 func (s *postgreSQLRepositoryTestSuite) TestPublishVersion() {
-	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Once()
+	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Times(3)
 
 	err := s.repo.CreateContainer(s.ctx, "container1")
 	s.Require().NoError(err)
@@ -71,6 +71,8 @@ func (s *postgreSQLRepositoryTestSuite) TestListObjectsErrorsNotExistentContaine
 }
 
 func (s *postgreSQLRepositoryTestSuite) TestListObjectsErrorsNotExistentVersion() {
+	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Once()
+
 	err := s.repo.CreateContainer(s.ctx, "test-container")
 	s.Require().NoError(err)
 
@@ -80,9 +82,9 @@ func (s *postgreSQLRepositoryTestSuite) TestListObjectsErrorsNotExistentVersion(
 }
 
 func (s *postgreSQLRepositoryTestSuite) TestVersionsPagination() {
-	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Once()
-	s.tp.On("Now").Return("2024-07-08T10:11:12Z").Once()
-	s.tp.On("Now").Return("2024-07-09T10:11:12Z").Once()
+	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Times(3)
+	s.tp.On("Now").Return("2024-07-07T10:11:13Z").Times(2)
+	s.tp.On("Now").Return("2024-07-07T10:11:14Z").Times(2)
 
 	err := s.repo.CreateContainer(s.ctx, "container1")
 	s.Require().NoError(err)

@@ -11,9 +11,11 @@ func (r *repository) CreateContainer(ctx context.Context, name string) error {
 		Insert("containers").
 		Columns(
 			"name",
+			"created_at",
 		).
 		Values(
 			name,
+			r.tp().UTC(),
 		))
 	return mapSQLErrors(err)
 }
