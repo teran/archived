@@ -73,29 +73,21 @@ func (s *service) Run(ctx context.Context) error {
 					return errors.Wrapf(err, "error listing objects for container `%s`; version `%s`", container, version)
 				}
 
-				for _, object := range objects {
+				if total == 0 {
+					break
+				}
+
+				if !s.dryRun {
 					log.WithFields(log.Fields{
 						"container": container,
 						"version":   version,
-						"object":    object,
-					}).Debug("deleting object ...")
+						"amount":    len(objects),
+					}).Info("Performing actual metadata deletion: objects")
 
-					if !s.dryRun {
-						log.WithFields(log.Fields{
-							"container": container,
-							"version":   version,
-							"object":    object,
-						}).Info("Performing actual metadata deletion: object")
-
-						err = s.repo.DeleteObject(ctx, container, version, object)
-						if err != nil {
-							return errors.Wrapf(err, "error removing object `%s/%s/%s`", container, version, object)
-						}
+					err = s.repo.DeleteObject(ctx, container, version, objects...)
+					if err != nil {
+						return errors.Wrapf(err, "error removing object from `%s/%s (%d objects)`", container, version, len(objects))
 					}
-				}
-
-				if total == 0 {
-					break
 				}
 			}
 

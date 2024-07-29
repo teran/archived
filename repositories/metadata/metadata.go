@@ -25,7 +25,7 @@ type Repository interface {
 
 	CreateObject(ctx context.Context, container, version, key, casKey string) error
 	ListObjects(ctx context.Context, container, version string, offset, limit uint64) (uint64, []string, error)
-	DeleteObject(ctx context.Context, container, version, key string) error
+	DeleteObject(ctx context.Context, container, version string, key ...string) error
 	RemapObject(ctx context.Context, container, version, key, newCASKey string) error
 
 	CreateBLOB(ctx context.Context, checksum string, size uint64, mimeType string) error
