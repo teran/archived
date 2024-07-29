@@ -78,7 +78,7 @@ func (m *Mock) ListObjects(_ context.Context, container, version string, offset,
 	return args.Get(0).(uint64), args.Get(1).([]string), args.Error(2)
 }
 
-func (m *Mock) DeleteObject(_ context.Context, container, version, key string) error {
+func (m *Mock) DeleteObject(_ context.Context, container, version string, key ...string) error {
 	args := m.Called(container, version, key)
 	return args.Error(0)
 }

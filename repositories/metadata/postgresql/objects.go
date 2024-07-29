@@ -141,7 +141,7 @@ func (r *repository) ListObjects(ctx context.Context, container, version string,
 	return objectsTotal, result, nil
 }
 
-func (r *repository) DeleteObject(ctx context.Context, container, version, key string) error {
+func (r *repository) DeleteObject(ctx context.Context, container, version string, key ...string) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return errors.Wrap(err, "error beginning transaction")
