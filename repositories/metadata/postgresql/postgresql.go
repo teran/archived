@@ -71,6 +71,15 @@ func selectQueryRow(ctx context.Context, db queryRunner, q sq.SelectBuilder) (sq
 		return nil, err
 	}
 
+	start := time.Now()
+	defer func() {
+		log.WithFields(log.Fields{
+			"query":    sql,
+			"args":     args,
+			"duration": time.Now().Sub(start),
+		}).Tracef("SQL query executed")
+	}()
+
 	return db.QueryRowContext(ctx, sql, args...), nil
 }
 
