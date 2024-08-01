@@ -107,12 +107,12 @@ func (s *postgreSQLRepositoryTestSuite) TestVersionsPagination() {
 	total, listByPage, err := s.repo.ListPublishedVersionsByContainerAndPage(s.ctx, "container1", 0, 5)
 	s.Require().NoError(err)
 	s.Require().Equal(uint64(2), total)
-	s.Require().Equal([]string{version1, version3}, listByPage)
+	s.Require().Equal([]string{version3, version1}, listByPage)
 
 	total, listByPage, err = s.repo.ListPublishedVersionsByContainerAndPage(s.ctx, "container1", 1, 2)
 	s.Require().NoError(err)
 	s.Require().Equal(uint64(2), total)
-	s.Require().Equal([]string{version3}, listByPage)
+	s.Require().Equal([]string{version1}, listByPage)
 }
 
 func (s *postgreSQLRepositoryTestSuite) TestDeleteVersion() {
@@ -141,11 +141,11 @@ func (s *postgreSQLRepositoryTestSuite) TestDeleteVersion() {
 
 	versions1, err := s.repo.ListAllVersionsByContainer(s.ctx, "container1")
 	s.Require().NoError(err)
-	s.Require().Equal([]string{version1, version2}, versions1)
+	s.Require().Equal([]string{version2, version1}, versions1)
 
 	versions2, err := s.repo.ListAllVersionsByContainer(s.ctx, "container2")
 	s.Require().NoError(err)
-	s.Require().Equal([]string{version3, version4}, versions2)
+	s.Require().Equal([]string{version4, version3}, versions2)
 
 	err = s.repo.DeleteVersion(s.ctx, "container1", version1)
 	s.Require().NoError(err)
@@ -156,7 +156,7 @@ func (s *postgreSQLRepositoryTestSuite) TestDeleteVersion() {
 
 	versions2, err = s.repo.ListAllVersionsByContainer(s.ctx, "container2")
 	s.Require().NoError(err)
-	s.Require().Equal([]string{version3, version4}, versions2)
+	s.Require().Equal([]string{version4, version3}, versions2)
 }
 
 func (s *postgreSQLRepositoryTestSuite) TestGetLatestPublishedVersionByContainer() {
