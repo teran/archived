@@ -57,6 +57,30 @@ func (r *repository) CreateVersion(ctx context.Context, container string) (strin
 	return versionID, nil
 }
 
+func (r *repository) GetLatestPublishedVersionByContainer(ctx context.Context, container string) (string, error) {
+	row, err := selectQueryRow(ctx, r.db, psql.
+		Select("v.name").
+		From("versions v").
+		Join("containers c ON v.container_id = c.id").
+		Where(sq.Eq{
+			"c.name":         container,
+			"v.is_published": true,
+		}).
+		OrderBy("v.created_at DESC").
+		Limit(1),
+	)
+	if err != nil {
+		return "", mapSQLErrors(err)
+	}
+
+	var versionName string
+	if err := row.Scan(&versionName); err != nil {
+		return "", mapSQLErrors(err)
+	}
+
+	return versionName, nil
+}
+
 func (r *repository) ListPublishedVersionsByContainer(ctx context.Context, container string) ([]string, error) {
 	_, versions, err := r.listVersionsByContainer(ctx, container, ptr.Bool(true), 0, 0)
 	return versions, err

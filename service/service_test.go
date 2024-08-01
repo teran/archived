@@ -163,6 +163,25 @@ func (s *serviceTestSuite) TestEnsureBLOBPresenceOrGetUploadURL() {
 	s.Require().Equal("https://example.com", url)
 }
 
+func (s *serviceTestSuite) TestListObjectsByLatestVersion() {
+	s.mdRepoMock.On("GetLatestPublishedVersionByContainer", "container1").Return("versionID", nil).Once()
+	s.mdRepoMock.On("ListObjects", "container1", "versionID", uint64(0), uint64(50)).Return(uint64(100), []string{"obj1", "obj2"}, nil).Once()
+
+	_, objects, err := s.svc.ListObjectsByPage(s.ctx, "container1", "latest", 1)
+	s.Require().NoError(err)
+	s.Require().Equal([]string{"obj1", "obj2"}, objects)
+}
+
+func (s *serviceTestSuite) TestGetObjectURLWithLatestVersion() {
+	s.mdRepoMock.On("GetLatestPublishedVersionByContainer", "container12").Return("versionID", nil).Once()
+	s.mdRepoMock.On("GetBlobKeyByObject", "container12", "versionID", "key").Return("deadbeef", nil).Once()
+	s.blobRepoMock.On("GetBlobURL", "deadbeef").Return("url", nil).Once()
+
+	url, err := s.svc.GetObjectURL(s.ctx, "container12", "latest", "key")
+	s.Require().NoError(err)
+	s.Require().Equal("url", url)
+}
+
 // Definitions
 type serviceTestSuite struct {
 	suite.Suite
