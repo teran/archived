@@ -135,6 +135,14 @@ func (s *service) ListObjects(ctx context.Context, container, versionID string) 
 }
 
 func (s *service) ListObjectsByPage(ctx context.Context, container, versionID string, pageNum uint64) (uint64, []string, error) {
+	var err error
+	if versionID == "latest" {
+		versionID, err = s.mdRepo.GetLatestPublishedVersionByContainer(ctx, container)
+		if err != nil {
+			return 0, nil, mapMetadataErrors(err)
+		}
+	}
+
 	if pageNum < 1 {
 		pageNum = 1
 	}
@@ -155,12 +163,20 @@ func (s *service) ListObjectsByPage(ctx context.Context, container, versionID st
 }
 
 func (s *service) GetObjectURL(ctx context.Context, container, versionID, key string) (string, error) {
-	key, err := s.mdRepo.GetBlobKeyByObject(ctx, container, versionID, key)
+	var err error
+	if versionID == "latest" {
+		versionID, err = s.mdRepo.GetLatestPublishedVersionByContainer(ctx, container)
+		if err != nil {
+			return "", mapMetadataErrors(err)
+		}
+	}
+
+	objectKey, err := s.mdRepo.GetBlobKeyByObject(ctx, container, versionID, key)
 	if err != nil {
 		return "", mapMetadataErrors(err)
 	}
 
-	return s.blobRepo.GetBlobURL(ctx, key)
+	return s.blobRepo.GetBlobURL(ctx, objectKey)
 }
 
 func (s *service) EnsureBLOBPresenceOrGetUploadURL(ctx context.Context, checksum string, size int64) (string, error) {

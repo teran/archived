@@ -16,6 +16,7 @@ type Repository interface {
 	DeleteContainer(ctx context.Context, name string) error
 
 	CreateVersion(ctx context.Context, container string) (string, error)
+	GetLatestPublishedVersionByContainer(ctx context.Context, container string) (string, error)
 	ListAllVersionsByContainer(ctx context.Context, container string) ([]string, error)
 	ListPublishedVersionsByContainer(ctx context.Context, container string) ([]string, error)
 	ListPublishedVersionsByContainerAndPage(ctx context.Context, container string, offset, limit uint64) (uint64, []string, error)

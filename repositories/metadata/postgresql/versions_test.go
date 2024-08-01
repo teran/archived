@@ -158,3 +158,43 @@ func (s *postgreSQLRepositoryTestSuite) TestDeleteVersion() {
 	s.Require().NoError(err)
 	s.Require().Equal([]string{version3, version4}, versions2)
 }
+
+func (s *postgreSQLRepositoryTestSuite) TestGetLatestPublishedVersionByContainer() {
+	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Times(4)
+	s.tp.On("Now").Return("2024-07-07T10:11:13Z").Times(2)
+	s.tp.On("Now").Return("2024-07-07T10:11:14Z").Times(2)
+	s.tp.On("Now").Return("2024-07-07T10:11:15Z").Times(2)
+	s.tp.On("Now").Return("2024-07-07T10:11:16Z").Times(2)
+
+	err := s.repo.CreateContainer(s.ctx, "container1")
+	s.Require().NoError(err)
+
+	err = s.repo.CreateContainer(s.ctx, "container2")
+	s.Require().NoError(err)
+
+	_, err = s.repo.CreateVersion(s.ctx, "container1")
+	s.Require().NoError(err)
+
+	version2, err := s.repo.CreateVersion(s.ctx, "container1")
+	s.Require().NoError(err)
+
+	err = s.repo.MarkVersionPublished(s.ctx, "container1", version2)
+	s.Require().NoError(err)
+
+	_, err = s.repo.CreateVersion(s.ctx, "container1")
+	s.Require().NoError(err)
+
+	_, err = s.repo.CreateVersion(s.ctx, "container2")
+	s.Require().NoError(err)
+
+	_, err = s.repo.CreateVersion(s.ctx, "container2")
+	s.Require().NoError(err)
+
+	versionName, err := s.repo.GetLatestPublishedVersionByContainer(s.ctx, "container1")
+	s.Require().NoError(err)
+	s.Require().Equal(version2, versionName)
+
+	_, err = s.repo.GetLatestPublishedVersionByContainer(s.ctx, "container2")
+	s.Require().Error(err)
+	s.Require().Equal("not found", err.Error())
+}

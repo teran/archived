@@ -38,6 +38,11 @@ func (m *Mock) CreateVersion(_ context.Context, container string) (string, error
 	return args.String(0), args.Error(1)
 }
 
+func (m *Mock) GetLatestPublishedVersionByContainer(_ context.Context, container string) (string, error) {
+	args := m.Called(container)
+	return args.String(0), args.Error(1)
+}
+
 func (m *Mock) ListAllVersionsByContainer(_ context.Context, container string) ([]string, error) {
 	args := m.Called(container)
 	return args.Get(0).([]string), args.Error(1)
