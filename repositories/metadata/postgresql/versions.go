@@ -143,7 +143,7 @@ func (r *repository) listVersionsByContainer(ctx context.Context, container stri
 		Select("name").
 		From("versions").
 		Where(condition).
-		OrderBy("id").
+		OrderBy("created_at DESC").
 		Offset(offset).
 		Limit(limit))
 	if err != nil {
