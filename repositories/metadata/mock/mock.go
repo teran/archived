@@ -4,7 +4,8 @@ import (
 	"context"
 
 	"github.com/stretchr/testify/mock"
-	"github.com/teran/archived/exporter/models"
+	emodels "github.com/teran/archived/exporter/models"
+	"github.com/teran/archived/models"
 	"github.com/teran/archived/repositories/metadata"
 )
 
@@ -43,24 +44,24 @@ func (m *Mock) GetLatestPublishedVersionByContainer(_ context.Context, container
 	return args.String(0), args.Error(1)
 }
 
-func (m *Mock) ListAllVersionsByContainer(_ context.Context, container string) ([]string, error) {
+func (m *Mock) ListAllVersionsByContainer(_ context.Context, container string) ([]models.Version, error) {
 	args := m.Called(container)
-	return args.Get(0).([]string), args.Error(1)
+	return args.Get(0).([]models.Version), args.Error(1)
 }
 
-func (m *Mock) ListPublishedVersionsByContainer(_ context.Context, container string) ([]string, error) {
+func (m *Mock) ListPublishedVersionsByContainer(_ context.Context, container string) ([]models.Version, error) {
 	args := m.Called(container)
-	return args.Get(0).([]string), args.Error(1)
+	return args.Get(0).([]models.Version), args.Error(1)
 }
 
-func (m *Mock) ListPublishedVersionsByContainerAndPage(_ context.Context, container string, offset, limit uint64) (uint64, []string, error) {
+func (m *Mock) ListPublishedVersionsByContainerAndPage(_ context.Context, container string, offset, limit uint64) (uint64, []models.Version, error) {
 	args := m.Called(container, offset, limit)
-	return args.Get(0).(uint64), args.Get(1).([]string), args.Error(2)
+	return args.Get(0).(uint64), args.Get(1).([]models.Version), args.Error(2)
 }
 
-func (m *Mock) ListUnpublishedVersionsByContainer(_ context.Context, container string) ([]string, error) {
+func (m *Mock) ListUnpublishedVersionsByContainer(_ context.Context, container string) ([]models.Version, error) {
 	args := m.Called(container)
-	return args.Get(0).([]string), args.Error(1)
+	return args.Get(0).([]models.Version), args.Error(1)
 }
 
 func (m *Mock) MarkVersionPublished(_ context.Context, container, version string) error {
@@ -108,7 +109,7 @@ func (m *Mock) EnsureBlobKey(_ context.Context, key string, size uint64) error {
 	return args.Error(0)
 }
 
-func (m *Mock) CountStats(ctx context.Context) (*models.Stats, error) {
+func (m *Mock) CountStats(ctx context.Context) (*emodels.Stats, error) {
 	args := m.Called()
-	return args.Get(0).(*models.Stats), args.Error(1)
+	return args.Get(0).(*emodels.Stats), args.Error(1)
 }

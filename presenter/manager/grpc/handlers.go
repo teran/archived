@@ -76,8 +76,13 @@ func (h *handlers) ListVersions(ctx context.Context, in *v1.ListVersionsRequest)
 		return nil, err
 	}
 
+	versionNames := []string{}
+	for _, v := range versions {
+		versionNames = append(versionNames, v.Name)
+	}
+
 	return &v1.ListVersionsResponse{
-		Versions: versions,
+		Versions: versionNames,
 	}, nil
 }
 

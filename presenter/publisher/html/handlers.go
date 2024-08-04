@@ -12,6 +12,7 @@ import (
 	echo "github.com/labstack/echo/v4"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/teran/archived/models"
 	"github.com/teran/archived/service"
 )
 
@@ -81,7 +82,7 @@ func (h *handlers) VersionIndex(c echo.Context) error {
 		CurrentPage uint64
 		PagesCount  uint64
 		Container   string
-		Versions    []string
+		Versions    []models.Version
 	}
 
 	return c.Render(http.StatusOK, "version-list.html", &data{
