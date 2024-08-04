@@ -2,10 +2,13 @@ package postgresql
 
 import (
 	"context"
+	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/pkg/errors"
 	ptr "github.com/teran/go-ptr"
+
+	"github.com/teran/archived/models"
 )
 
 const defaultLimit uint64 = 1000
@@ -81,26 +84,26 @@ func (r *repository) GetLatestPublishedVersionByContainer(ctx context.Context, c
 	return versionName, nil
 }
 
-func (r *repository) ListPublishedVersionsByContainer(ctx context.Context, container string) ([]string, error) {
+func (r *repository) ListPublishedVersionsByContainer(ctx context.Context, container string) ([]models.Version, error) {
 	_, versions, err := r.listVersionsByContainer(ctx, container, ptr.Bool(true), 0, 0)
 	return versions, err
 }
 
-func (r *repository) ListAllVersionsByContainer(ctx context.Context, container string) ([]string, error) {
+func (r *repository) ListAllVersionsByContainer(ctx context.Context, container string) ([]models.Version, error) {
 	_, versions, err := r.listVersionsByContainer(ctx, container, nil, 0, 0)
 	return versions, err
 }
 
-func (r *repository) ListUnpublishedVersionsByContainer(ctx context.Context, container string) ([]string, error) {
+func (r *repository) ListUnpublishedVersionsByContainer(ctx context.Context, container string) ([]models.Version, error) {
 	_, versions, err := r.listVersionsByContainer(ctx, container, ptr.Bool(false), 0, 0)
 	return versions, err
 }
 
-func (r *repository) ListPublishedVersionsByContainerAndPage(ctx context.Context, container string, offset, limit uint64) (uint64, []string, error) {
+func (r *repository) ListPublishedVersionsByContainerAndPage(ctx context.Context, container string, offset, limit uint64) (uint64, []models.Version, error) {
 	return r.listVersionsByContainer(ctx, container, ptr.Bool(true), offset, limit)
 }
 
-func (r *repository) listVersionsByContainer(ctx context.Context, container string, isPublished *bool, offset, limit uint64) (uint64, []string, error) {
+func (r *repository) listVersionsByContainer(ctx context.Context, container string, isPublished *bool, offset, limit uint64) (uint64, []models.Version, error) {
 	if limit == 0 {
 		limit = defaultLimit
 	}
@@ -140,7 +143,7 @@ func (r *repository) listVersionsByContainer(ctx context.Context, container stri
 	}
 
 	rows, err := selectQuery(ctx, r.db, psql.
-		Select("name").
+		Select("name", "is_published", "created_at").
 		From("versions").
 		Where(condition).
 		OrderBy("created_at DESC").
@@ -151,12 +154,21 @@ func (r *repository) listVersionsByContainer(ctx context.Context, container stri
 	}
 	defer rows.Close()
 
-	result := []string{}
+	result := []models.Version{}
 	for rows.Next() {
-		var r string
-		if err := rows.Scan(&r); err != nil {
+		var (
+			r         models.Version
+			createdAt time.Time
+		)
+
+		if err := rows.Scan(&r.Name, &r.IsPublished, &createdAt); err != nil {
 			return 0, nil, errors.Wrap(err, "error decoding database result")
 		}
+		r.CreatedAt = time.Date(
+			createdAt.Year(), createdAt.Month(), createdAt.Day(),
+			createdAt.Hour(), createdAt.Minute(), createdAt.Second(), createdAt.Nanosecond(),
+			time.UTC,
+		)
 
 		result = append(result, r)
 	}

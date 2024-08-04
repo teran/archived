@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/teran/archived/models"
 	blobRepoMock "github.com/teran/archived/repositories/blob/mock"
 	"github.com/teran/archived/repositories/metadata"
 	mdRepoMock "github.com/teran/archived/repositories/metadata/mock"
@@ -89,28 +90,32 @@ func (s *serviceTestSuite) TestListContainers() {
 }
 
 func (s *serviceTestSuite) TestListPublishedVersions() {
-	s.mdRepoMock.On("ListPublishedVersionsByContainer", "container").Return([]string{
-		"version1", "version2",
+	s.mdRepoMock.On("ListPublishedVersionsByContainer", "container").Return([]models.Version{
+		{Name: "version1"},
+		{Name: "version2"},
 	}, nil).Once()
 
 	versions, err := s.svc.ListPublishedVersions(s.ctx, "container")
 	s.Require().NoError(err)
-	s.Require().Equal([]string{
-		"version1", "version2",
+	s.Require().Equal([]models.Version{
+		{Name: "version1"},
+		{Name: "version2"},
 	}, versions)
 }
 
 func (s *serviceTestSuite) TestListPublishedVersionsByPage() {
 	s.mdRepoMock.
 		On("ListPublishedVersionsByContainerAndPage", "container", uint64(450), uint64(50)).
-		Return(uint64(1000), []string{
-			"version1", "version2",
+		Return(uint64(1000), []models.Version{
+			{Name: "version1"},
+			{Name: "version2"},
 		}, nil).Once()
 
 	total, versions, err := s.svc.ListPublishedVersionsByPage(s.ctx, "container", 10)
 	s.Require().NoError(err)
-	s.Require().Equal([]string{
-		"version1", "version2",
+	s.Require().Equal([]models.Version{
+		{Name: "version1"},
+		{Name: "version2"},
 	}, versions)
 	s.Require().Equal(uint64(20), total)
 }

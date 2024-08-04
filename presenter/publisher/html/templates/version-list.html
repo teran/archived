@@ -2,7 +2,7 @@
 {{ template "header" . }}
         <a href="..">..</a><br>
 {{- range $version := .Versions }}
-        <a href="/{{ $container }}/{{ $version }}/">{{ $version }}/</a><br>
+        <a href="/{{ $container }}/{{ $version.Name }}/">{{ $version.Name }}/</a><br>
 {{- else }}
         <p>No versions found</p>
 {{- end }}

@@ -10,6 +10,7 @@ import (
 	echo "github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/stretchr/testify/suite"
+	"github.com/teran/archived/models"
 	"github.com/teran/archived/service"
 )
 
@@ -20,7 +21,9 @@ func (s *handlersTestSuite) TestContainerIndex() {
 }
 
 func (s *handlersTestSuite) TestVersionIndex() {
-	s.serviceMock.On("ListPublishedVersionsByPage", "test-container-1", uint64(1)).Return(uint64(100), []string{"20241011121314"}, nil).Once()
+	s.serviceMock.On("ListPublishedVersionsByPage", "test-container-1", uint64(1)).Return(uint64(100), []models.Version{
+		{Name: "20241011121314"},
+	}, nil).Once()
 
 	s.compareHTMLResponse(s.srv.URL+"/test-container-1/", "testdata/versions.html.sample")
 }
@@ -51,7 +54,7 @@ func (s *handlersTestSuite) TestGetObject() {
 }
 
 func (s *handlersTestSuite) TestErrNotFound() {
-	s.serviceMock.On("ListPublishedVersionsByPage", "test-container-1", uint64(1)).Return(uint64(100), []string(nil), service.ErrNotFound).Once()
+	s.serviceMock.On("ListPublishedVersionsByPage", "test-container-1", uint64(1)).Return(uint64(100), []models.Version(nil), service.ErrNotFound).Once()
 	s.compareHTMLResponse(s.srv.URL+"/test-container-1/", "testdata/404.html.sample")
 
 	s.serviceMock.On("ListObjectsByPage", "test-container-1", "20240101010101", uint64(1)).Return(uint64(100), []string(nil), service.ErrNotFound).Once()

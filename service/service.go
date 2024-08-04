@@ -5,6 +5,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/teran/archived/models"
 	"github.com/teran/archived/repositories/blob"
 	"github.com/teran/archived/repositories/metadata"
 )
@@ -18,7 +19,7 @@ type Manager interface {
 	DeleteContainer(ctx context.Context, name string) error
 
 	CreateVersion(ctx context.Context, container string) (id string, err error)
-	ListAllVersions(ctx context.Context, container string) ([]string, error)
+	ListAllVersions(ctx context.Context, container string) ([]models.Version, error)
 	PublishVersion(ctx context.Context, container, id string) error
 	DeleteVersion(ctx context.Context, container, id string) error
 
@@ -32,8 +33,8 @@ type Manager interface {
 type Publisher interface {
 	ListContainers(ctx context.Context) ([]string, error)
 
-	ListPublishedVersions(ctx context.Context, container string) ([]string, error)
-	ListPublishedVersionsByPage(ctx context.Context, container string, pageNum uint64) (uint64, []string, error)
+	ListPublishedVersions(ctx context.Context, container string) ([]models.Version, error)
+	ListPublishedVersionsByPage(ctx context.Context, container string, pageNum uint64) (uint64, []models.Version, error)
 
 	ListObjectsByPage(ctx context.Context, container, versionID string, pageNum uint64) (uint64, []string, error)
 	GetObjectURL(ctx context.Context, container, versionID, key string) (string, error)
@@ -86,12 +87,12 @@ func (s *service) CreateVersion(ctx context.Context, container string) (id strin
 	return version, mapMetadataErrors(err)
 }
 
-func (s *service) ListPublishedVersions(ctx context.Context, container string) ([]string, error) {
+func (s *service) ListPublishedVersions(ctx context.Context, container string) ([]models.Version, error) {
 	versions, err := s.mdRepo.ListPublishedVersionsByContainer(ctx, container)
 	return versions, mapMetadataErrors(err)
 }
 
-func (s *service) ListPublishedVersionsByPage(ctx context.Context, container string, pageNum uint64) (uint64, []string, error) {
+func (s *service) ListPublishedVersionsByPage(ctx context.Context, container string, pageNum uint64) (uint64, []models.Version, error) {
 	if pageNum < 1 {
 		pageNum = 1
 	}
@@ -111,7 +112,7 @@ func (s *service) ListPublishedVersionsByPage(ctx context.Context, container str
 	return totalPages, versions, mapMetadataErrors(err)
 }
 
-func (s *service) ListAllVersions(ctx context.Context, container string) ([]string, error) {
+func (s *service) ListAllVersions(ctx context.Context, container string) ([]models.Version, error) {
 	versions, err := s.mdRepo.ListAllVersionsByContainer(ctx, container)
 	return versions, mapMetadataErrors(err)
 }

@@ -51,7 +51,7 @@ func (s *service) Run(ctx context.Context) error {
 		for _, version := range versions {
 			log.WithFields(log.Fields{
 				"container": container,
-				"version":   version,
+				"version":   version.Name,
 			}).Debugf("listing objects ...")
 
 			var (
@@ -69,9 +69,9 @@ func (s *service) Run(ctx context.Context) error {
 
 				var objects []string = []string{}
 
-				total, objects, err = s.cfg.MdRepo.ListObjects(ctx, container, version, offset, defaultLimit)
+				total, objects, err = s.cfg.MdRepo.ListObjects(ctx, container, version.Name, offset, defaultLimit)
 				if err != nil {
-					return errors.Wrapf(err, "error listing objects for container `%s`; version `%s`", container, version)
+					return errors.Wrapf(err, "error listing objects for container `%s`; version `%s`", container, version.Name)
 				}
 
 				if total == 0 {
@@ -81,29 +81,29 @@ func (s *service) Run(ctx context.Context) error {
 				if !s.cfg.DryRun {
 					log.WithFields(log.Fields{
 						"container": container,
-						"version":   version,
+						"version":   version.Name,
 						"amount":    len(objects),
 					}).Info("Performing actual metadata deletion: objects")
 
-					err = s.cfg.MdRepo.DeleteObject(ctx, container, version, objects...)
+					err = s.cfg.MdRepo.DeleteObject(ctx, container, version.Name, objects...)
 					if err != nil {
-						return errors.Wrapf(err, "error removing object from `%s/%s (%d objects)`", container, version, len(objects))
+						return errors.Wrapf(err, "error removing object from `%s/%s (%d objects)`", container, version.Name, len(objects))
 					}
 				}
 			}
 
 			log.WithFields(log.Fields{
 				"container": container,
-				"version":   version,
+				"version":   version.Name,
 			}).Debug("deleting version ...")
 
 			if !s.cfg.DryRun {
 				log.WithFields(log.Fields{
 					"container": container,
-					"version":   version,
+					"version":   version.Name,
 				}).Info("Performing actual metadata deletion: version")
 
-				err = s.cfg.MdRepo.DeleteVersion(ctx, container, version)
+				err = s.cfg.MdRepo.DeleteVersion(ctx, container, version.Name)
 				if err != nil {
 					return err
 				}

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/stretchr/testify/mock"
+	"github.com/teran/archived/models"
 )
 
 var (
@@ -39,19 +40,19 @@ func (m *Mock) CreateVersion(_ context.Context, container string) (id string, er
 	return args.String(0), args.Error(1)
 }
 
-func (m *Mock) ListAllVersions(_ context.Context, container string) ([]string, error) {
+func (m *Mock) ListAllVersions(_ context.Context, container string) ([]models.Version, error) {
 	args := m.Called(container)
-	return args.Get(0).([]string), args.Error(1)
+	return args.Get(0).([]models.Version), args.Error(1)
 }
 
-func (m *Mock) ListPublishedVersions(_ context.Context, container string) ([]string, error) {
+func (m *Mock) ListPublishedVersions(_ context.Context, container string) ([]models.Version, error) {
 	args := m.Called(container)
-	return args.Get(0).([]string), args.Error(1)
+	return args.Get(0).([]models.Version), args.Error(1)
 }
 
-func (m *Mock) ListPublishedVersionsByPage(_ context.Context, container string, pageNum uint64) (uint64, []string, error) {
+func (m *Mock) ListPublishedVersionsByPage(_ context.Context, container string, pageNum uint64) (uint64, []models.Version, error) {
 	args := m.Called(container, pageNum)
-	return args.Get(0).(uint64), args.Get(1).([]string), args.Error(2)
+	return args.Get(0).(uint64), args.Get(1).([]models.Version), args.Error(2)
 }
 
 func (m *Mock) PublishVersion(_ context.Context, container, id string) error {
