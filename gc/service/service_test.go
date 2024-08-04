@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"testing"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/suite"
@@ -40,7 +41,14 @@ func (s *serviceTestSuite) SetupTest() {
 	s.ctx = context.TODO()
 
 	s.repoMock = repoMock.New()
-	s.svc = New(s.repoMock, false)
+
+	var err error
+	s.svc, err = New(&Config{
+		MdRepo:                   s.repoMock,
+		DryRun:                   false,
+		UnpublishedVersionMaxAge: 10 * time.Hour,
+	})
+	s.Require().NoError(err)
 }
 
 func (s *serviceTestSuite) TearDownTest() {

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/kelseyhightower/envconfig"
 	_ "github.com/lib/pq"
@@ -25,7 +26,8 @@ type config struct {
 
 	MetadataDSN string `envconfig:"METADATA_DSN" required:"true"`
 
-	DryRun bool `envconfig:"DRY_RUN" default:"true"`
+	DryRun                   bool          `envconfig:"DRY_RUN" default:"true"`
+	UnpublishedVersionMaxAge time.Duration `envconfig:"UNPUBLISHED_VERSION_MAX_AGE" default:"168h"`
 }
 
 func main() {
@@ -51,7 +53,14 @@ func main() {
 
 	postgresqlRepo := postgresql.New(db)
 
-	svc := service.New(postgresqlRepo, cfg.DryRun)
+	svc, err := service.New(&service.Config{
+		MdRepo:                   postgresqlRepo,
+		DryRun:                   cfg.DryRun,
+		UnpublishedVersionMaxAge: cfg.UnpublishedVersionMaxAge,
+	})
+	if err != nil {
+		panic(err)
+	}
 
 	g, ctx := errgroup.WithContext(context.Background())
 
