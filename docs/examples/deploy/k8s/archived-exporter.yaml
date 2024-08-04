@@ -1,0 +1,69 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: archived-exporter
+  namespace: archived
+  labels:
+    app.kubernetes.io/name: archived-exporter
+    app.kubernetes.io/app: archived-exporter
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: archived-exporter
+      app.kubernetes.io/app: archived-exporter
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: archived-exporter
+        app.kubernetes.io/app: archived-exporter
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/app
+                operator: In
+                values:
+                - archived-exporter
+            topologyKey: "kubernetes.io/node"
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: exporter
+          image: ghcr.io/teran/archived/exporter:latest
+          imagePullPolicy: Always
+          env:
+            - name: METADATA_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: metadata-database-ro
+                  key: METADATA_DSN_RO
+            - name: LOG_LEVEL
+              value: "trace"
+          ports:
+            - name: metrics
+              containerPort: 8081
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 10m
+              memory: 128Mi
+            limits:
+              memory: 1Gi
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
+            timeoutSeconds: 1
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true

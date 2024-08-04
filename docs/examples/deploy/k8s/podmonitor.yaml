@@ -1,0 +1,48 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: archived-publisher
+  namespace: archived
+  labels:
+    app.kubernetes.io/name: archived-publisher
+    app.kubernetes.io/app: archived-publisher
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: archived-publisher
+      app.kubernetes.io/app: archived-publisher
+  podMetricsEndpoints:
+  - port: metrics
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: archived-manager
+  namespace: archived
+  labels:
+    app.kubernetes.io/name: archived-manager
+    app.kubernetes.io/app: archived-manager
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: archived-manager
+      app.kubernetes.io/app: archived-manager
+  podMetricsEndpoints:
+  - port: metrics
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: archived-exporter
+  namespace: archived
+  labels:
+    app.kubernetes.io/name: archived-exporter
+    app.kubernetes.io/app: archived-exporter
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: archived-exporter
+      app.kubernetes.io/app: archived-exporter
+  podMetricsEndpoints:
+  - port: metrics

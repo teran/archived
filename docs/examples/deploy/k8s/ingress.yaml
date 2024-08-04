@@ -1,0 +1,69 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    kubernetes.io/ingress.class: nginx
+    kubernetes.io/tls-acme: "true"
+    cert-manager.io/cluster-issuer: homelab-ca-issuer       # CHANGEME: issuer name
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/client-body-buffer-size: 256m
+    nginx.ingress.kubernetes.io/proxy-body-size: 256m
+  labels:
+    app.kubernetes.io/name: archived-access
+    app.kubernetes.io/app: archived-access
+  name: archived
+  namespace: archived
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: archived.example.com  # CHANGEME: publisher domain
+    http:
+      paths:
+      - backend:
+          service:
+            name: archived-publisher
+            port:
+              number: 8080
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - archived.archived.example.com             # CHANGEME: publisher domain
+    secretName: archived.archived.example.com   # CHANGEME: publisher domain
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    kubernetes.io/ingress.class: nginx
+    kubernetes.io/tls-acme: "true"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/client-body-buffer-size: 256m
+    nginx.ingress.kubernetes.io/proxy-body-size: 256m
+    nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
+  name: archived-manage
+  namespace: archived
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: archived-manage.example.com  # CHANGEME: manager domain
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: archived-manager
+            port:
+              number: 5555
+  tls:
+  - hosts:
+    - archived-manage.example.com             # CHANGEME: manager domain
+    secretName: archived-manage.example.com   # CHANGEME: manager domain
