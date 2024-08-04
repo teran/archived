@@ -7,6 +7,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/suite"
+	gtm "github.com/teran/go-time"
 
 	"github.com/teran/archived/models"
 	repoMock "github.com/teran/archived/repositories/metadata/mock"
@@ -17,10 +18,19 @@ func init() {
 }
 
 func (s *serviceTestSuite) TestAll() {
+	s.tp.On("Now").Return("2024-08-01T10:11:12Z").Once()
+
 	call1 := s.repoMock.On("ListContainers").Return([]string{"container1"}, nil).Once()
 
 	call2 := s.repoMock.On("ListUnpublishedVersionsByContainer", "container1").Return([]models.Version{
-		{Name: "version1"},
+		{
+			Name:      "version1",
+			CreatedAt: time.Date(2024, 7, 31, 10, 1, 1, 0, time.UTC),
+		},
+		{
+			Name:      "version2",
+			CreatedAt: time.Date(2024, 8, 1, 10, 1, 1, 0, time.UTC),
+		},
 	}, nil).Once().NotBefore(call1)
 	call3 := s.repoMock.On("ListObjects", "container1", "version1", uint64(0), uint64(1000)).Return(uint64(3), []string{"obj1", "obj2", "obj3"}, nil).Once().NotBefore(call2)
 	call4 := s.repoMock.On("DeleteObject", "container1", "version1", []string{"obj1", "obj2", "obj3"}).Return(nil).Once().NotBefore(call3)
@@ -38,6 +48,7 @@ type serviceTestSuite struct {
 	ctx      context.Context
 	svc      Service
 	repoMock *repoMock.Mock
+	tp       *gtm.TimeNowMock
 }
 
 func (s *serviceTestSuite) SetupTest() {
@@ -45,17 +56,21 @@ func (s *serviceTestSuite) SetupTest() {
 
 	s.repoMock = repoMock.New()
 
+	s.tp = gtm.NewTimeNowMock()
+
 	var err error
 	s.svc, err = New(&Config{
 		MdRepo:                   s.repoMock,
 		DryRun:                   false,
 		UnpublishedVersionMaxAge: 10 * time.Hour,
+		TimeNowFunc:              s.tp.Now,
 	})
 	s.Require().NoError(err)
 }
 
 func (s *serviceTestSuite) TearDownTest() {
 	s.repoMock.AssertExpectations(s.T())
+	s.tp.AssertExpectations(s.T())
 }
 
 func TestServiceTestSuite(t *testing.T) {

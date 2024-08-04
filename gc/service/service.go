@@ -38,6 +38,8 @@ func (s *service) Run(ctx context.Context) error {
 
 	log.Infof("found %d containers", len(containers))
 
+	now := s.cfg.TimeNowFunc().UTC()
+
 	for _, container := range containers {
 		log.WithFields(log.Fields{
 			"container": container,
@@ -53,6 +55,14 @@ func (s *service) Run(ctx context.Context) error {
 				"container": container,
 				"version":   version.Name,
 			}).Debugf("listing objects ...")
+
+			if version.CreatedAt.After(now.Add(-1 * s.cfg.UnpublishedVersionMaxAge)) {
+				log.WithFields(log.Fields{
+					"container": container,
+					"version":   version.Name,
+				}).Debug("version is newer max version age. Skipping ...")
+				continue
+			}
 
 			var (
 				total  uint64 = 0
