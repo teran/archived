@@ -1,0 +1,10 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: s3-blob-repository
+  namespace: archived
+data:
+  BLOB_S3_ENDPOINT: https://s3.example.com # (CHANGEME: s3 endpoint)
+  BLOB_S3_BUCKET: "<CHANGEME: blob bucket>"
+  BLOB_S3_CREATE_BUCKET: "true"

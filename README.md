@@ -50,10 +50,95 @@ if storing copies.
 archived is built with microservice architecture containing the following
 components:
 
-* publisher - HTTP server to allow data listing and fetching
-* manager - gRPC API to manage containers, versions and objects
+* archived-publisher - HTTP server to allow data listing and fetching
+* archived-manager - gRPC API to manage containers, versions and objects
+* archived-exporter - Prometheus metrics exporter for metadata entities
 * CLI - CLI application to interact with manage component
 * migrator - metadata migration tool
+
+## Deploy
+
+archived is distributed as a number of prebuilt binaries which allows to choose
+any particular way to deploy it from systemd services to Kubernetes.
+
+The main things are required to know before deployment:
+
+* archived-publisher can use RO replica of PostgreSQL for operation
+    and can scale
+* archived-manager requires RW PostgreSQL instance since it performs
+    writes, can also scale
+* archived-exporter is sufficient to run in the only copy since it just
+    provides metrics for the database stuff, RO replica access is also enough
+* archived-migrator must be ran each time archived is upgrading right before
+    other components
+* archived-cli could run anywhere and will require network access to
+    archived-manager
+* there's no authentication on any stage at the moment (yes, even for
+    cli/manager)
+
+An example for Kubernetes deployment specs is available in
+[docs/examples/deploy/k8s](docs/examples/deploy/k8s) directory.
+
+## CLI
+
+archived-cli provides an CLI interface to operate archived including creating
+containers, versions and objects. It works with archived-manager to handle
+requests.
+
+```shell
+usage: archived-cli --endpoint=ENDPOINT [<flags>] <command> [<args> ...]
+
+CLI interface for archived
+
+
+Flags:
+      --[no-]help          Show context-sensitive help (also try --help-long and --help-man).
+  -d, --[no-]debug         Enable debug mode ($ARCHIVED_CLI_DEBUG)
+  -t, --[no-]trace         Enable trace mode (debug mode on steroids) ($ARCHIVED_CLI_TRACE)
+  -s, --endpoint=ENDPOINT  Manage API endpoint address ($ARCHIVED_CLI_ENDPOINT)
+      --[no-]insecure      Do not use TLS for gRPC connection
+      --[no-]insecure-skip-verify
+                           Do not perform TLS certificate verification for gRPC connection
+      --cache-dir="~/.cache/archived/cli/objects"
+                           cache directory for objects
+
+Commands:
+help [<command>...]
+    Show help.
+
+container create <name>
+    create new container
+
+container delete <name>
+    delete the given container
+
+container list
+    list containers
+
+version create [<flags>] <container>
+    create new version for given container
+
+version delete <container> <version>
+    delete the given version
+
+version list <container>
+    list versions for the given container
+
+version publish <container> <version>
+    publish the given version
+
+object list <container> <version>
+    list objects in the given container and version
+
+object create <container> <version> <path>
+    create object(s) from location
+
+object url <container> <version> <key>
+    get URL for the object
+
+object delete <container> <version> <key>
+    delete object
+```
 
 ## How build the project manually
 

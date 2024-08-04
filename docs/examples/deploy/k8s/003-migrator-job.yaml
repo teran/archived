@@ -1,0 +1,30 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: archived-migrator
+  namespace: archived
+  labels:
+    app.kubernetes.io/name: archived-migrator
+    app.kubernetes.io/app: archived-migrator
+spec:
+  template:
+    metadata:
+      name: archived-migrator
+      labels:
+        app.kubernetes.io/name: archived-migrator
+        app.kubernetes.io/app: archived-migrator
+    spec:
+      containers:
+        - name: migrator
+          image: ghcr.io/teran/archived/migrator:latest
+          imagePullPolicy: Always
+          env:
+            - name: METADATA_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: metadatadb-app
+                  key: uri
+            - name: LOG_LEVEL
+              value: "trace"
+      restartPolicy: OnFailure

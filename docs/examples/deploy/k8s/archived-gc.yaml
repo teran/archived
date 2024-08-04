@@ -1,0 +1,35 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: archived-gc
+  namespace: archived
+  labels:
+    app.kubernetes.io/name: archived-gc
+    app.kubernetes.io/app: archived-gc
+spec:
+  schedule: "48 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          name: archived-gc
+          labels:
+            app.kubernetes.io/name: archived-gc
+            app.kubernetes.io/app: archived-gc
+        spec:
+          containers:
+            - name: gc
+              image: ghcr.io/teran/archived/gc:latest
+              imagePullPolicy: Always
+              env:
+                - name: METADATA_DSN
+                  valueFrom:
+                    secretKeyRef:
+                      name: metadatadb-app
+                      key: uri
+                - name: LOG_LEVEL
+                  value: "trace"
+                - name: DRY_RUN
+                  value: "false"
+          restartPolicy: OnFailure
