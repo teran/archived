@@ -22,7 +22,7 @@ require (
 	github.com/teran/go-grpctest v0.0.6
 	github.com/teran/go-ptr v1.1.0
 	github.com/teran/go-time v0.0.2
-	golang.org/x/sync v0.7.0
+	golang.org/x/sync v0.8.0
 	google.golang.org/grpc v1.65.0
 )
 
