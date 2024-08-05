@@ -57,6 +57,7 @@ func main() {
 		MdRepo:                   postgresqlRepo,
 		DryRun:                   cfg.DryRun,
 		UnpublishedVersionMaxAge: cfg.UnpublishedVersionMaxAge,
+		TimeNowFunc:              time.Now,
 	})
 	if err != nil {
 		panic(err)
