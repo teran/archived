@@ -72,21 +72,21 @@ func main() {
 
 		http.HandleFunc("/healthz/readiness", func(w http.ResponseWriter, r *http.Request) {
 			if err := db.Ping(); err != nil {
-				w.WriteHeader(http.StatusOK)
-				w.Write([]byte("ok\n"))
-			} else {
 				w.WriteHeader(http.StatusServiceUnavailable)
 				w.Write([]byte("failed\n"))
+			} else {
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte("ok\n"))
 			}
 		})
 
 		http.HandleFunc("/healthz/liveness", func(w http.ResponseWriter, r *http.Request) {
 			if err := db.Ping(); err != nil {
-				w.WriteHeader(http.StatusOK)
-				w.Write([]byte("ok\n"))
-			} else {
 				w.WriteHeader(http.StatusServiceUnavailable)
 				w.Write([]byte("failed\n"))
+			} else {
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte("ok\n"))
 			}
 		})
 
