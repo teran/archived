@@ -64,6 +64,32 @@ func main() {
 
 	g.Go(func() error {
 		http.Handle("/metrics", promhttp.Handler())
+
+		http.HandleFunc("/healthz/startup", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("ok\n"))
+		})
+
+		http.HandleFunc("/healthz/readiness", func(w http.ResponseWriter, r *http.Request) {
+			if err := db.Ping(); err != nil {
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte("ok\n"))
+			} else {
+				w.WriteHeader(http.StatusServiceUnavailable)
+				w.Write([]byte("failed\n"))
+			}
+		})
+
+		http.HandleFunc("/healthz/liveness", func(w http.ResponseWriter, r *http.Request) {
+			if err := db.Ping(); err != nil {
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte("ok\n"))
+			} else {
+				w.WriteHeader(http.StatusServiceUnavailable)
+				w.Write([]byte("failed\n"))
+			}
+		})
+
 		return http.ListenAndServe(cfg.Addr, nil)
 	})
 
