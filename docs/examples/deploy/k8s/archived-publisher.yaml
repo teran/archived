@@ -63,15 +63,21 @@ spec:
               memory: 128Mi
             limits:
               memory: 1Gi
-          readinessProbe:
+          startupProbe:
             httpGet:
-              path: /metrics
+              path: /healthz/startup
               port: metrics
             timeoutSeconds: 1
+          readinessProbe:
+            httpGet:
+              path: /healthz/readiness
+              port: metrics
+            timeoutSeconds: 5
           livenessProbe:
             httpGet:
-              path: /metrics
+              path: /healthz/liveness
               port: metrics
+            timeoutSeconds: 5
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
