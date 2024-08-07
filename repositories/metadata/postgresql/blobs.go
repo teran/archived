@@ -30,12 +30,13 @@ func (r *repository) GetBlobKeyByObject(ctx context.Context, container, version,
 		Select("b.checksum AS checksum").
 		From("blobs b").
 		Join("objects o ON o.blob_id = b.id").
+		Join("object_keys ok ON ok.id = o.key_id").
 		Join("versions v ON o.version_id = v.id").
 		Join("containers c ON v.container_id = c.id").
 		Where(sq.Eq{
 			"c.name":         container,
 			"v.name":         version,
-			"o.key":          key,
+			"ok.key":         key,
 			"v.is_published": true,
 		}))
 	if err != nil {

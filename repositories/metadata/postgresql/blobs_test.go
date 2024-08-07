@@ -8,7 +8,7 @@ func (s *postgreSQLRepositoryTestSuite) TestBlobs() {
 		checksum      = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
 	)
 
-	s.tp.On("Now").Return("2024-01-02T01:02:03Z").Times(5)
+	s.tp.On("Now").Return("2024-01-02T01:02:03Z").Times(6)
 
 	err := s.repo.CreateContainer(s.ctx, containerName)
 	s.Require().NoError(err)

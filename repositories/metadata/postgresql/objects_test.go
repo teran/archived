@@ -7,7 +7,7 @@ func (s *postgreSQLRepositoryTestSuite) TestObjects() {
 
 	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Times(3)
 	s.tp.On("Now").Return("2024-07-07T10:11:13Z").Times(5)
-	s.tp.On("Now").Return("2024-07-07T10:11:14Z").Twice()
+	s.tp.On("Now").Return("2024-07-07T10:11:14Z").Times(5)
 
 	err := s.repo.CreateContainer(s.ctx, containerName)
 	s.Require().NoError(err)

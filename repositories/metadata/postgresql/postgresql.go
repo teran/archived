@@ -101,6 +101,15 @@ func insertQuery(ctx context.Context, db execRunner, q sq.InsertBuilder) (sql.Re
 	return db.ExecContext(ctx, sql, args...)
 }
 
+func insertQueryRow(ctx context.Context, db queryRunner, q sq.InsertBuilder) (sq.RowScanner, error) {
+	sql, args, err := mkQuery(q)
+	if err != nil {
+		return nil, err
+	}
+
+	return db.QueryRowContext(ctx, sql, args...), nil
+}
+
 func updateQuery(ctx context.Context, db execRunner, q sq.UpdateBuilder) (sql.Result, error) {
 	sql, args, err := mkQuery(q)
 	if err != nil {

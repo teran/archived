@@ -45,17 +45,38 @@ func (r *repository) CreateObject(ctx context.Context, container, version, key, 
 		return mapSQLErrors(err)
 	}
 
+	row, err = insertQueryRow(ctx, tx, psql.
+		Insert("object_keys").
+		Columns(
+			"key",
+			"created_at",
+		).
+		Values(
+			key,
+			r.tp().UTC(),
+		).
+		Suffix("ON CONFLICT (key) DO UPDATE SET key=excluded.key RETURNING id"),
+	)
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+
+	var okID uint
+	if err := row.Scan(&okID); err != nil {
+		return mapSQLErrors(err)
+	}
+
 	_, err = insertQuery(ctx, tx, psql.
 		Insert("objects").
 		Columns(
 			"version_id",
-			"key",
+			"key_id",
 			"blob_id",
 			"created_at",
 		).
 		Values(
 			versionID,
-			key,
+			okID,
 			blobID,
 			r.tp().UTC(),
 		))
@@ -115,12 +136,13 @@ func (r *repository) ListObjects(ctx context.Context, container, version string,
 	}
 
 	rows, err := selectQuery(ctx, r.db, psql.
-		Select("key").
-		From("objects").
+		Select("ok.key").
+		From("objects o").
+		Join("object_keys ok ON ok.id = o.key_id").
 		Where(sq.Eq{
 			"version_id": versionID,
 		}).
-		OrderBy("id").
+		OrderBy("o.id").
 		Offset(offset).
 		Limit(limit))
 	if err != nil {
@@ -165,11 +187,25 @@ func (r *repository) DeleteObject(ctx context.Context, container, version string
 		return errors.Wrap(err, "error looking up version")
 	}
 
+	row, err = selectQueryRow(ctx, tx, psql.
+		Select("id").
+		From("object_keys").
+		Where(sq.Eq{
+			"key": key,
+		}))
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+	var okID uint
+	if err := row.Scan(&okID); err != nil {
+		return errors.Wrap(err, "error looking up version")
+	}
+
 	_, err = deleteQuery(ctx, tx, psql.
 		Delete("objects").
 		Where(sq.Eq{
 			"version_id": versionID,
-			"key":        key,
+			"key_id":     okID,
 		}))
 	if err != nil {
 		return mapSQLErrors(err)
@@ -218,12 +254,27 @@ func (r *repository) RemapObject(ctx context.Context, container, version, key, n
 		return errors.Wrap(err, "error looking up blob")
 	}
 
+	row, err = selectQueryRow(ctx, tx, psql.
+		Select("id").
+		From("object_keys").
+		Where(sq.Eq{
+			"key": key,
+		}))
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+
+	var okID uint
+	if err := row.Scan(&okID); err != nil {
+		return errors.Wrap(err, "error looking up blob")
+	}
+
 	_, err = updateQuery(ctx, tx, psql.
 		Update("objects").
 		Set("blob_id", blobID).
 		Where(sq.Eq{
 			"version_id": versionID,
-			"key":        key,
+			"key_id":     okID,
 		}))
 	if err != nil {
 		return mapSQLErrors(err)
