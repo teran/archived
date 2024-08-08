@@ -119,9 +119,9 @@ func main() {
 		})
 
 		http.HandleFunc("/healthz/readiness", func(w http.ResponseWriter, r *http.Request) {
-			log.Warnf("db.Ping() error on readiness probe: %s", err)
-
 			if err := db.Ping(); err != nil {
+				log.Warnf("db.Ping() error on readiness probe: %s", err)
+
 				w.WriteHeader(http.StatusServiceUnavailable)
 				w.Write([]byte("failed\n"))
 			} else {
