@@ -137,12 +137,12 @@ func (r *repository) ListObjects(ctx context.Context, container, version string,
 
 	rows, err := selectQuery(ctx, r.db, psql.
 		Select("ok.key").
-		From("objects o").
-		Join("object_keys ok ON ok.id = o.key_id").
+		From("object_keys ok").
+		Join("objects o ON ok.id = o.key_id").
 		Where(sq.Eq{
 			"version_id": versionID,
 		}).
-		OrderBy("o.id").
+		OrderBy("ok.key").
 		Offset(offset).
 		Limit(limit))
 	if err != nil {
