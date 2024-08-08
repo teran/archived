@@ -6,8 +6,8 @@ func (s *postgreSQLRepositoryTestSuite) TestCountStats() {
 	const containerName = "test-container-1"
 
 	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Times(3)
-	s.tp.On("Now").Return("2024-07-07T10:11:13Z").Times(5)
-	s.tp.On("Now").Return("2024-07-07T10:11:14Z").Once()
+	s.tp.On("Now").Return("2024-07-07T10:11:13Z").Times(7)
+	s.tp.On("Now").Return("2024-07-07T10:11:14Z").Twice()
 
 	// Create container
 	err := s.repo.CreateContainer(s.ctx, containerName)
