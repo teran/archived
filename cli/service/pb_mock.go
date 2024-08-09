@@ -49,7 +49,8 @@ func (m *protoClientMock) ListVersions(ctx context.Context, in *v1proto.ListVers
 }
 
 func (m *protoClientMock) DeleteVersion(ctx context.Context, in *v1proto.DeleteVersionRequest, opts ...grpc.CallOption) (*v1proto.DeleteVersionResponse, error) {
-	panic("not implemented")
+	args := m.Called(in.GetContainer(), in.GetVersion())
+	return &v1proto.DeleteVersionResponse{}, args.Error(0)
 }
 
 func (m *protoClientMock) PublishVersion(ctx context.Context, in *v1proto.PublishVersionRequest, opts ...grpc.CallOption) (*v1proto.PublishVersionResponse, error) {

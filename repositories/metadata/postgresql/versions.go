@@ -240,6 +240,16 @@ func (r *repository) DeleteVersion(ctx context.Context, container, version strin
 	}
 
 	_, err = deleteQuery(ctx, tx, psql.
+		Delete("objects").
+		Where(sq.Eq{
+			"version_id": versionID,
+		}),
+	)
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+
+	_, err = deleteQuery(ctx, tx, psql.
 		Delete("versions").
 		Where(sq.Eq{
 			"id": versionID,

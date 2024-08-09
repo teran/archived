@@ -41,6 +41,16 @@ func (s *manageHandlersTestSuite) TestCreateVersion() {
 	s.Require().Equal("20240102030405", resp.GetVersion())
 }
 
+func (s *manageHandlersTestSuite) TestDeleteVersion() {
+	s.svcMock.On("DeleteVersion", "test-container", "test-version").Return(nil).Once()
+
+	_, err := s.client.DeleteVersion(s.ctx, &v1pb.DeleteVersionRequest{
+		Container: "test-container",
+		Version:   "test-version",
+	})
+	s.Require().NoError(err)
+}
+
 func (s *manageHandlersTestSuite) TestPublishVersion() {
 	s.svcMock.On("PublishVersion", "test-container", "20240102030405").Return(nil).Once()
 

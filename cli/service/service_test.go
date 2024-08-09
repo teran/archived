@@ -68,6 +68,13 @@ func (s *serviceTestSuite) TestCreateVersionFromDirAndPublish() {
 	s.Require().NoError(fn(s.ctx))
 }
 
+func (s *serviceTestSuite) TestDeleteVersion() {
+	s.cliMock.On("DeleteVersion", "container1", "version1").Return(nil).Once()
+
+	fn := s.svc.DeleteVersion("container1", "version1")
+	s.Require().NoError(fn(s.ctx))
+}
+
 func (s *serviceTestSuite) TestListVersions() {
 	s.cliMock.On("ListVersions", "container1").Return([]string{"version1", "version2", "version3"}, nil).Once()
 
