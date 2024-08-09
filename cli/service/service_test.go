@@ -158,13 +158,14 @@ func (s *serviceTestSuite) TestCreateObjectWithUploadURL() {
 
 		s.Require().Equal("1234\n", string(data))
 
+		s.Require().Equal("/test-url", r.RequestURI)
 		s.Require().Equal("multipart/form-data", r.Header.Get("Content-Type"))
 	}))
 	defer srv.Close()
 
 	s.cliMock.
 		On("CreateObject", "container1", "version1", "somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", int64(5)).
-		Return(ptr.String(srv.URL), nil).
+		Return(ptr.String(srv.URL+"/test-url"), nil).
 		Once()
 	s.cliMock.
 		On("CreateObject", "container1", "version1", "somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61", int64(5)).
