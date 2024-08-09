@@ -34,6 +34,10 @@ type Service interface {
 	GetObjectURL(containerName, versionID, objectKey string) func(ctx context.Context) error
 }
 
+func init() {
+	log.SetLevel(log.TraceLevel)
+}
+
 type service struct {
 	cache cache.CacheRepository
 	cli   v1proto.ManageServiceClient
@@ -171,6 +175,7 @@ func (s *service) CreateObject(containerName, versionID, directoryPath string) f
 			}
 
 			shortPath := strings.TrimPrefix(path, directoryPath)
+			shortPath = strings.TrimPrefix(shortPath, "/")
 			size := info.Size()
 
 			log.WithFields(log.Fields{
