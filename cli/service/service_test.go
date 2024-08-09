@@ -177,6 +177,8 @@ func (s *serviceTestSuite) TestCreateObjectWithUploadURL() {
 }
 
 func (s *serviceTestSuite) TestDeleteObject() {
+	s.cliMock.On("DeleteObject", "container1", "version1", "key1").Return(nil).Once()
+
 	fn := s.svc.DeleteObject("container1", "version1", "key1")
 	s.Require().NoError(fn(s.ctx))
 }
