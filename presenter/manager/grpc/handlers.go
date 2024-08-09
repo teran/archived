@@ -41,8 +41,13 @@ func (h *handlers) CreateContainer(ctx context.Context, in *v1.CreateContainerRe
 	return &v1.CreateContainerResponse{}, nil
 }
 
-func (h *handlers) DeleteContainer(context.Context, *v1.DeleteContainerRequest) (*v1.DeleteContainerResponse, error) {
-	panic("not implemented")
+func (h *handlers) DeleteContainer(ctx context.Context, in *v1.DeleteContainerRequest) (*v1.DeleteContainerResponse, error) {
+	err := h.svc.DeleteContainer(ctx, in.GetName())
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.DeleteContainerResponse{}, nil
 }
 
 func (h *handlers) ListContainers(ctx context.Context, _ *v1.ListContainersRequest) (*v1.ListContainersResponse, error) {
@@ -134,12 +139,27 @@ func (h *handlers) ListObjects(ctx context.Context, in *v1.ListObjectsRequest) (
 	}, nil
 }
 
-func (h *handlers) GetObjectURL(context.Context, *v1.GetObjectURLRequest) (*v1.GetObjectURLResponse, error) {
-	panic("not implemented")
+func (h *handlers) GetObjectURL(ctx context.Context, in *v1.GetObjectURLRequest) (*v1.GetObjectURLResponse, error) {
+	url, err := h.svc.GetObjectURL(ctx, in.GetContainer(), in.GetVersion(), in.GetKey())
+	if err != nil {
+		if err == service.ErrNotFound {
+			return nil, status.Error(codes.NotFound, err.Error())
+		}
+		return nil, err
+	}
+
+	return &v1.GetObjectURLResponse{
+		Url: url,
+	}, nil
 }
 
-func (h *handlers) DeleteObject(context.Context, *v1.DeleteObjectRequest) (*v1.DeleteObjectResponse, error) {
-	panic("not implemented")
+func (h *handlers) DeleteObject(ctx context.Context, in *v1.DeleteObjectRequest) (*v1.DeleteObjectResponse, error) {
+	err := h.svc.DeleteObject(ctx, in.GetContainer(), in.GetVersion(), in.GetKey())
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.DeleteObjectResponse{}, nil
 }
 
 func (h *handlers) Register(gs *grpc.Server) {

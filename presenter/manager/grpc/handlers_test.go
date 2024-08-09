@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	grpctest "github.com/teran/go-grpctest"
 
+	"github.com/teran/archived/models"
 	v1pb "github.com/teran/archived/presenter/manager/grpc/proto/v1"
 	"github.com/teran/archived/service"
 )
@@ -39,6 +40,34 @@ func (s *manageHandlersTestSuite) TestCreateVersion() {
 	})
 	s.Require().NoError(err)
 	s.Require().Equal("20240102030405", resp.GetVersion())
+}
+
+func (s *manageHandlersTestSuite) TestDeleteContainer() {
+	s.svcMock.On("DeleteContainer", "test-container").Return(nil).Once()
+
+	_, err := s.client.DeleteContainer(s.ctx, &v1pb.DeleteContainerRequest{
+		Name: "test-container",
+	})
+	s.Require().NoError(err)
+}
+
+func (s *manageHandlersTestSuite) TestListVersions() {
+	s.svcMock.On("ListAllVersions", "test-container").Return([]models.Version{
+		{
+			Name: "version1",
+		},
+		{
+			Name: "version2",
+		},
+	}, nil).Once()
+
+	resp, err := s.client.ListVersions(s.ctx, &v1pb.ListVersionsRequest{
+		Container: "test-container",
+	})
+	s.Require().NoError(err)
+	s.Require().Equal([]string{
+		"version1", "version2",
+	}, resp.GetVersions())
 }
 
 func (s *manageHandlersTestSuite) TestDeleteVersion() {
@@ -87,6 +116,29 @@ func (s *manageHandlersTestSuite) TestListObjects() {
 	s.Require().Equal([]string{
 		"obj1", "obj2", "obj3",
 	}, resp.GetObjects())
+}
+
+func (s *manageHandlersTestSuite) TestGetObjectURL() {
+	s.svcMock.On("GetObjectURL", "test-container", "test-version", "test-key").Return("test-url", nil).Once()
+
+	resp, err := s.client.GetObjectURL(s.ctx, &v1pb.GetObjectURLRequest{
+		Container: "test-container",
+		Version:   "test-version",
+		Key:       "test-key",
+	})
+	s.Require().NoError(err)
+	s.Require().Equal("test-url", resp.GetUrl())
+}
+
+func (s *manageHandlersTestSuite) TestDeleteObject() {
+	s.svcMock.On("DeleteObject", "test-container", "test-version", "test-key").Return(nil).Once()
+
+	_, err := s.client.DeleteObject(s.ctx, &v1pb.DeleteObjectRequest{
+		Container: "test-container",
+		Version:   "test-version",
+		Key:       "test-key",
+	})
+	s.Require().NoError(err)
 }
 
 // Definitions ...
