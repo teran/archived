@@ -2,6 +2,9 @@ package service
 
 import (
 	"context"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -134,6 +137,34 @@ func (s *serviceTestSuite) TestCreateObjectWithCache() {
 	s.cliMock.
 		On("CreateObject", "container1", "version1", "somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", int64(5)).
 		Return(ptr.String(""), nil).
+		Once()
+	s.cliMock.
+		On("CreateObject", "container1", "version1", "somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61", int64(5)).
+		Return(ptr.String(""), nil).
+		Once()
+
+	fn := s.svc.CreateObject("container1", "version1", "testdata")
+	s.Require().NoError(fn(s.ctx))
+}
+
+func (s *serviceTestSuite) TestCreateObjectWithUploadURL() {
+	s.cacheMock.On("Get", "testdata/somefile1").Return("a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", nil).Once()
+	s.cacheMock.On("Get", "testdata/somefile2").Return("ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61", nil).Once()
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		data, err := io.ReadAll(r.Body)
+		s.Require().NoError(err)
+		defer r.Body.Close()
+
+		s.Require().Equal("1234\n", string(data))
+
+		s.Require().Equal("multipart/form-data", r.Header.Get("Content-Type"))
+	}))
+	defer srv.Close()
+
+	s.cliMock.
+		On("CreateObject", "container1", "version1", "somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", int64(5)).
+		Return(ptr.String(srv.URL), nil).
 		Once()
 	s.cliMock.
 		On("CreateObject", "container1", "version1", "somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61", int64(5)).
