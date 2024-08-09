@@ -12,11 +12,11 @@ to change. MVP will be available on first release v0.0.1
 
 The following things are going to be implemented in further releases:
 
-* authentication for manage API
-* authentication for access API
-* garbage collector
-* additional metadata repositories (like MongoDB, CockroachDB, etc.)
-* additional version creators for CLI (like RPM repo, APR repo, etc.)
+* [ ] authentication for manage API
+* [ ] authentication for access API
+* [X] garbage collector
+* [ ] additional metadata repositories (like MongoDB, CockroachDB, etc.)
+* [ ] additional version creators for CLI (like RPM repo, APR repo, etc.)
 
 ## How it works
 
