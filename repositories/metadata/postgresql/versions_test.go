@@ -169,6 +169,7 @@ func (s *postgreSQLRepositoryTestSuite) TestDeleteVersion() {
 	s.tp.On("Now").Return("2024-07-07T10:11:13Z").Times(2)
 	s.tp.On("Now").Return("2024-07-07T10:11:14Z").Times(2)
 	s.tp.On("Now").Return("2024-07-07T10:11:15Z").Times(2)
+	s.tp.On("Now").Return("2024-07-07T10:11:16Z").Times(3)
 
 	err := s.repo.CreateContainer(s.ctx, "container1")
 	s.Require().NoError(err)
@@ -186,6 +187,12 @@ func (s *postgreSQLRepositoryTestSuite) TestDeleteVersion() {
 	s.Require().NoError(err)
 
 	version4, err := s.repo.CreateVersion(s.ctx, "container2")
+	s.Require().NoError(err)
+
+	err = s.repo.CreateBLOB(s.ctx, "deadbeef", 10, "application/octet-stream")
+	s.Require().NoError(err)
+
+	err = s.repo.CreateObject(s.ctx, "container2", version4, "testkey", "deadbeef")
 	s.Require().NoError(err)
 
 	versions1, err := s.repo.ListAllVersionsByContainer(s.ctx, "container1")

@@ -123,7 +123,8 @@ func (s *service) PublishVersion(ctx context.Context, container, id string) erro
 }
 
 func (s *service) DeleteVersion(ctx context.Context, container, id string) error {
-	panic("not implemented")
+	err := s.mdRepo.DeleteVersion(ctx, container, id)
+	return mapMetadataErrors(err)
 }
 
 func (s *service) AddObject(ctx context.Context, container, versionID, key, casKey string) error {

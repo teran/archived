@@ -86,8 +86,13 @@ func (h *handlers) ListVersions(ctx context.Context, in *v1.ListVersionsRequest)
 	}, nil
 }
 
-func (h *handlers) DeleteVersion(context.Context, *v1.DeleteVersionRequest) (*v1.DeleteVersionResponse, error) {
-	panic("not implemented")
+func (h *handlers) DeleteVersion(ctx context.Context, in *v1.DeleteVersionRequest) (*v1.DeleteVersionResponse, error) {
+	err := h.svc.DeleteVersion(ctx, in.GetContainer(), in.GetVersion())
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.DeleteVersionResponse{}, nil
 }
 
 func (h *handlers) PublishVersion(ctx context.Context, in *v1.PublishVersionRequest) (*v1.PublishVersionResponse, error) {

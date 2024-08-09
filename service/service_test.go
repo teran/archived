@@ -51,9 +51,10 @@ func (s *serviceTestSuite) TestPublishVersion() {
 }
 
 func (s *serviceTestSuite) TestDeleteVersion() {
-	s.Require().PanicsWithValue("not implemented", func() {
-		s.svc.DeleteVersion(s.ctx, "container", "version")
-	})
+	s.mdRepoMock.On("DeleteVersion", "test_container", "test_version").Return(nil).Once()
+
+	err := s.svc.DeleteVersion(s.ctx, "test_container", "test_version")
+	s.Require().NoError(err)
 }
 
 func (s *serviceTestSuite) TestAddObject() {

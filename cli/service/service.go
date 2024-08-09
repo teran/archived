@@ -25,6 +25,7 @@ type Service interface {
 	ListContainers() func(ctx context.Context) error
 
 	CreateVersion(containerName string, shouldPublish bool, fromDir *string) func(ctx context.Context) error
+	DeleteVersion(containerName, versionID string) func(ctx context.Context) error
 	ListVersions(containerName string) func(ctx context.Context) error
 	PublishVersion(containerName, versionID string) func(ctx context.Context) error
 
@@ -104,6 +105,22 @@ func (s *service) CreateVersion(containerName string, shouldPublish bool, fromDi
 		} else {
 			fmt.Printf("version `%s` created unpublished\n", versionID)
 		}
+
+		return nil
+	}
+}
+
+func (s *service) DeleteVersion(containerName, versionID string) func(ctx context.Context) error {
+	return func(ctx context.Context) error {
+		_, err := s.cli.DeleteVersion(ctx, &v1proto.DeleteVersionRequest{
+			Container: containerName,
+			Version:   versionID,
+		})
+		if err != nil {
+			return errors.Wrap(err, "error deleting version")
+		}
+
+		fmt.Printf("version `%s` of container `%s` has been deleted\n", versionID, containerName)
 
 		return nil
 	}
