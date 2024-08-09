@@ -72,9 +72,10 @@ func (s *serviceTestSuite) TestAddObjectWithLeadingSlash() {
 }
 
 func (s *serviceTestSuite) TestDeleteObject() {
-	s.Require().PanicsWithValue("not implemented", func() {
-		s.svc.DeleteObject(s.ctx, "container", "version", "key")
-	})
+	s.mdRepoMock.On("DeleteObject", "test-container", "test-version", []string{"test-key"}).Return(nil).Once()
+
+	err := s.svc.DeleteObject(s.ctx, "test-container", "test-version", "test-key")
+	s.Require().NoError(err)
 }
 
 func (s *serviceTestSuite) TestListContainers() {
