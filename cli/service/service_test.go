@@ -176,6 +176,11 @@ func (s *serviceTestSuite) TestCreateObjectWithUploadURL() {
 	s.Require().NoError(fn(s.ctx))
 }
 
+func (s *serviceTestSuite) TestDeleteObject() {
+	fn := s.svc.DeleteObject("container1", "version1", "key1")
+	s.Require().NoError(fn(s.ctx))
+}
+
 func (s *serviceTestSuite) TestListObjects() {
 	s.cliMock.On("ListObjects", "container1", "version1").Return([]string{"obj1", "obj2", "obj3"}, nil).Once()
 
