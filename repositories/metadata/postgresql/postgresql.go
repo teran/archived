@@ -47,26 +47,8 @@ type execRunner interface {
 	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
 }
 
-type query interface {
-	ToSql() (string, []interface{}, error)
-}
-
-func mkQuery(q query) (string, []any, error) {
-	sql, args, err := q.ToSql()
-	if err != nil {
-		return "", nil, err
-	}
-
-	log.WithFields(log.Fields{
-		"query": sql,
-		"args":  args,
-	}).Tracef("SQL query generated")
-
-	return sql, args, nil
-}
-
 func selectQueryRow(ctx context.Context, db queryRunner, q sq.SelectBuilder) (sq.RowScanner, error) {
-	sql, args, err := mkQuery(q)
+	sql, args, err := q.ToSql()
 	if err != nil {
 		return nil, err
 	}
@@ -77,53 +59,98 @@ func selectQueryRow(ctx context.Context, db queryRunner, q sq.SelectBuilder) (sq
 			"query":    sql,
 			"args":     args,
 			"duration": time.Now().Sub(start),
-		}).Tracef("SQL query executed")
+		}).Debug("SQL query executed")
 	}()
 
 	return db.QueryRowContext(ctx, sql, args...), nil
 }
 
 func selectQuery(ctx context.Context, db queryRunner, q sq.SelectBuilder) (*sql.Rows, error) {
-	sql, args, err := mkQuery(q)
+	sql, args, err := q.ToSql()
 	if err != nil {
 		return nil, err
 	}
+
+	start := time.Now()
+	defer func() {
+		log.WithFields(log.Fields{
+			"query":    sql,
+			"args":     args,
+			"duration": time.Now().Sub(start),
+		}).Debug("SQL query executed")
+	}()
 
 	return db.QueryContext(ctx, sql, args...)
 }
 
 func insertQuery(ctx context.Context, db execRunner, q sq.InsertBuilder) (sql.Result, error) {
-	sql, args, err := mkQuery(q)
+	sql, args, err := q.ToSql()
 	if err != nil {
 		return nil, err
 	}
+
+	start := time.Now()
+	defer func() {
+		log.WithFields(log.Fields{
+			"query":    sql,
+			"args":     args,
+			"duration": time.Now().Sub(start),
+		}).Debug("SQL query executed")
+	}()
 
 	return db.ExecContext(ctx, sql, args...)
 }
 
 func insertQueryRow(ctx context.Context, db queryRunner, q sq.InsertBuilder) (sq.RowScanner, error) {
-	sql, args, err := mkQuery(q)
+	sql, args, err := q.ToSql()
 	if err != nil {
 		return nil, err
 	}
+
+	start := time.Now()
+	defer func() {
+		log.WithFields(log.Fields{
+			"query":    sql,
+			"args":     args,
+			"duration": time.Now().Sub(start),
+		}).Debug("SQL query executed")
+	}()
 
 	return db.QueryRowContext(ctx, sql, args...), nil
 }
 
 func updateQuery(ctx context.Context, db execRunner, q sq.UpdateBuilder) (sql.Result, error) {
-	sql, args, err := mkQuery(q)
+	sql, args, err := q.ToSql()
 	if err != nil {
 		return nil, err
 	}
+
+	start := time.Now()
+	defer func() {
+		log.WithFields(log.Fields{
+			"query":    sql,
+			"args":     args,
+			"duration": time.Now().Sub(start),
+		}).Debug("SQL query executed")
+	}()
 
 	return db.ExecContext(ctx, sql, args...)
 }
 
 func deleteQuery(ctx context.Context, db execRunner, q sq.DeleteBuilder) (sql.Result, error) {
-	sql, args, err := mkQuery(q)
+	sql, args, err := q.ToSql()
 	if err != nil {
 		return nil, err
 	}
+
+	start := time.Now()
+	defer func() {
+		log.WithFields(log.Fields{
+			"query":    sql,
+			"args":     args,
+			"duration": time.Now().Sub(start),
+		}).Debug("SQL query executed")
+	}()
 
 	return db.ExecContext(ctx, sql, args...)
 }
