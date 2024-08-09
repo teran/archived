@@ -79,6 +79,7 @@ func (m *protoClientMock) GetObjectURL(ctx context.Context, in *v1proto.GetObjec
 	}, args.Error(1)
 }
 
-func (m *protoClientMock) DeleteObject(ctx context.Context, in *v1proto.DeleteObjectRequest, opts ...grpc.CallOption) (*v1proto.DeleteObjectResponse, error) {
-	panic("not implemented")
+func (m *protoClientMock) DeleteObject(_ context.Context, in *v1proto.DeleteObjectRequest, opts ...grpc.CallOption) (*v1proto.DeleteObjectResponse, error) {
+	args := m.Called(in.GetContainer(), in.GetVersion(), in.GetKey())
+	return &v1proto.DeleteObjectResponse{}, args.Error(0)
 }
