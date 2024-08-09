@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"strings"
 
 	"github.com/pkg/errors"
 
@@ -128,7 +129,7 @@ func (s *service) DeleteVersion(ctx context.Context, container, id string) error
 }
 
 func (s *service) AddObject(ctx context.Context, container, versionID, key, casKey string) error {
-	return s.mdRepo.CreateObject(ctx, container, versionID, key, casKey)
+	return s.mdRepo.CreateObject(ctx, container, versionID, strings.TrimPrefix(key, "/"), casKey)
 }
 
 func (s *service) ListObjects(ctx context.Context, container, versionID string) ([]string, error) {

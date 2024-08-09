@@ -64,6 +64,13 @@ func (s *serviceTestSuite) TestAddObject() {
 	s.Require().NoError(err)
 }
 
+func (s *serviceTestSuite) TestAddObjectWithLeadingSlash() {
+	s.mdRepoMock.On("CreateObject", "container", "versionID", "key", "cas_key").Return(nil).Once()
+
+	err := s.svc.AddObject(s.ctx, "container", "versionID", "/key", "cas_key")
+	s.Require().NoError(err)
+}
+
 func (s *serviceTestSuite) TestDeleteObject() {
 	s.Require().PanicsWithValue("not implemented", func() {
 		s.svc.DeleteObject(s.ctx, "container", "version", "key")
