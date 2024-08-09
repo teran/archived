@@ -32,6 +32,7 @@ type Service interface {
 	CreateObject(containerName, versionID, directoryPath string) func(ctx context.Context) error
 	ListObjects(containerName, versionID string) func(ctx context.Context) error
 	GetObjectURL(containerName, versionID, objectKey string) func(ctx context.Context) error
+	DeleteObject(containerName, versionID, objectKey string) func(ctx context.Context) error
 }
 
 func init() {
@@ -289,6 +290,22 @@ func (s *service) GetObjectURL(containerName, versionID, objectKey string) func(
 		}
 
 		log.Printf("Object URL received: %s", url)
+		return nil
+	}
+}
+
+func (s *service) DeleteObject(containerName, versionID, objectKey string) func(ctx context.Context) error {
+	return func(ctx context.Context) error {
+		_, err := s.cli.DeleteObject(ctx, &v1proto.DeleteObjectRequest{
+			Container: containerName,
+			Version:   versionID,
+			Key:       objectKey,
+		})
+		if err != nil {
+			return errors.Wrap(err, "error deleting object")
+		}
+
+		log.Printf("Object `%s` (%s/%s) deleted", objectKey, containerName, versionID)
 		return nil
 	}
 }

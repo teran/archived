@@ -200,7 +200,8 @@ func (s *service) EnsureBLOBPresenceOrGetUploadURL(ctx context.Context, checksum
 }
 
 func (s *service) DeleteObject(ctx context.Context, container, versionID, key string) error {
-	panic("not implemented")
+	err := s.mdRepo.DeleteObject(ctx, container, versionID, key)
+	return mapMetadataErrors(err)
 }
 
 func mapMetadataErrors(err error) error {
