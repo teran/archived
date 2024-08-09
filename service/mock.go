@@ -91,6 +91,6 @@ func (m *Mock) GetObjectURL(ctx context.Context, container, versionID, key strin
 }
 
 func (m *Mock) DeleteObject(_ context.Context, container, versionID, key string) error {
-	args := m.Called(container)
+	args := m.Called(container, versionID, key)
 	return args.Error(0)
 }
