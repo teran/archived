@@ -23,6 +23,7 @@ import (
 type Service interface {
 	CreateContainer(containerName string) func(ctx context.Context) error
 	ListContainers() func(ctx context.Context) error
+	DeleteContainer(containerName string) func(ctx context.Context) error
 
 	CreateVersion(containerName string, shouldPublish bool, fromDir *string) func(ctx context.Context) error
 	DeleteVersion(containerName, versionID string) func(ctx context.Context) error
@@ -70,6 +71,20 @@ func (s *service) ListContainers() func(ctx context.Context) error {
 		for _, container := range resp.GetName() {
 			fmt.Println(container)
 		}
+		return nil
+	}
+}
+
+func (s *service) DeleteContainer(containerName string) func(ctx context.Context) error {
+	return func(ctx context.Context) error {
+		_, err := s.cli.DeleteContainer(ctx, &v1proto.DeleteContainerRequest{
+			Name: containerName,
+		})
+		if err != nil {
+			return errors.Wrap(err, "error deleting container")
+		}
+
+		fmt.Printf("container `%s` has been deleted\n", containerName)
 		return nil
 	}
 }
