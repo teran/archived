@@ -7,6 +7,7 @@ require (
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/alecthomas/kingpin/v2 v2.4.0
 	github.com/aws/aws-sdk-go v1.55.5
+	github.com/bradfitz/gomemcache v0.0.0-20230905024940-24af94b03874
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/golang-migrate/migrate/v4 v4.17.1
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.1.0
@@ -18,7 +19,7 @@ require (
 	github.com/prometheus/client_golang v1.19.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.9.0
-	github.com/teran/go-docker-testsuite v0.0.7
+	github.com/teran/go-docker-testsuite v0.0.8
 	github.com/teran/go-grpctest v0.0.6
 	github.com/teran/go-ptr v1.1.0
 	github.com/teran/go-time v0.0.2

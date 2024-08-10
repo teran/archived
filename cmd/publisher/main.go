@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	memcacheCli "github.com/bradfitz/gomemcache/memcache"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/labstack/echo-contrib/echoprometheus"
 	echo "github.com/labstack/echo/v4"
@@ -21,6 +22,7 @@ import (
 
 	htmlPresenter "github.com/teran/archived/presenter/publisher/html"
 	awsBlobRepo "github.com/teran/archived/repositories/blob/aws"
+	"github.com/teran/archived/repositories/cache/metadata/memcache"
 	"github.com/teran/archived/repositories/metadata/postgresql"
 	"github.com/teran/archived/service"
 )
@@ -37,6 +39,9 @@ type config struct {
 	LogLevel log.Level `envconfig:"LOG_LEVEL" default:"info"`
 
 	MetadataDSN string `envconfig:"METADATA_DSN" required:"true"`
+
+	MemcacheServers []string      `envconfig:"MEMCACHE_SERVERS"`
+	MemcacheTTL     time.Duration `envconfig:"MEMCACHE_TTL" default:"60m"`
 
 	BLOBS3Endpoint         string        `envconfig:"BLOB_S3_ENDPOINT" required:"true"`
 	BLOBS3Bucket           string        `envconfig:"BLOB_S3_BUCKET" required:"true"`
@@ -82,7 +87,22 @@ func main() {
 		panic(err)
 	}
 
-	postgresqlRepo := postgresql.New(db)
+	repo := postgresql.New(db)
+
+	var cli *memcacheCli.Client
+	if len(cfg.MemcacheServers) > 0 {
+		log.Debugf(
+			"%d memcache servers specified for metadata caching. Initializing read-through cache ...",
+			len(cfg.MemcacheServers),
+		)
+
+		cli = memcacheCli.New(cfg.MemcacheServers...)
+		if err := cli.Ping(); err != nil {
+			panic(err)
+		}
+
+		repo = memcache.New(cli, repo, cfg.MemcacheTTL)
+	}
 
 	awsSession, err := session.NewSession(&aws.Config{
 		Endpoint:         aws.String(cfg.BLOBS3Endpoint),
@@ -96,7 +116,7 @@ func main() {
 
 	blobRepo := awsBlobRepo.New(s3.New(awsSession), cfg.BLOBS3Bucket, cfg.BLOBS3PresignedLinkTTL)
 
-	publisherSvc := service.NewPublisher(postgresqlRepo, blobRepo, cfg.VersionsPerPage, cfg.ObjectsPerPage)
+	publisherSvc := service.NewPublisher(repo, blobRepo, cfg.VersionsPerPage, cfg.ObjectsPerPage)
 
 	p := htmlPresenter.New(publisherSvc, cfg.HTMLTemplateDir, cfg.StaticDir)
 	p.Register(e)
@@ -119,27 +139,45 @@ func main() {
 		})
 
 		http.HandleFunc("/healthz/readiness", func(w http.ResponseWriter, r *http.Request) {
+			if len(cfg.MemcacheServers) > 0 {
+				if err := cli.Ping(); err != nil {
+					log.Warnf("memcache.Ping() error on readiness probe: %s", err)
+
+					w.WriteHeader(http.StatusServiceUnavailable)
+					w.Write([]byte("failed\n"))
+					return
+				}
+			}
 			if err := db.Ping(); err != nil {
 				log.Warnf("db.Ping() error on readiness probe: %s", err)
 
 				w.WriteHeader(http.StatusServiceUnavailable)
 				w.Write([]byte("failed\n"))
-			} else {
-				w.WriteHeader(http.StatusOK)
-				w.Write([]byte("ok\n"))
+				return
 			}
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("ok\n"))
 		})
 
 		http.HandleFunc("/healthz/liveness", func(w http.ResponseWriter, r *http.Request) {
+			if len(cfg.MemcacheServers) > 0 {
+				if err := cli.Ping(); err != nil {
+					log.Warnf("memcache.Ping() error on readiness probe: %s", err)
+
+					w.WriteHeader(http.StatusServiceUnavailable)
+					w.Write([]byte("failed\n"))
+					return
+				}
+			}
 			if err := db.Ping(); err != nil {
-				log.Warnf("db.Ping() error on liveness probe: %s", err)
+				log.Warnf("db.Ping() error on readiness probe: %s", err)
 
 				w.WriteHeader(http.StatusServiceUnavailable)
 				w.Write([]byte("failed\n"))
-			} else {
-				w.WriteHeader(http.StatusOK)
-				w.Write([]byte("ok\n"))
+				return
 			}
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("ok\n"))
 		})
 
 		return http.ListenAndServe(cfg.MetricsAddr, nil)
