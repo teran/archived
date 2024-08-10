@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -54,6 +55,7 @@ var (
 
 	cacheDir = app.Flag("cache-dir", "cache directory for objects").
 			Default("~/.cache/archived/cli/objects").
+			Envar("ARCHIVED_CLI_STAT_CACHE_DIR").
 			String()
 
 	container           = app.Command("container", "container operations")
@@ -104,6 +106,9 @@ var (
 	deleteObjectContainer = deleteObject.Arg("container", "name of the container to delete objects from").Required().String()
 	deleteObjectVersion   = deleteObject.Arg("version", "version to delete object from").Required().String()
 	deleteObjectKey       = deleteObject.Arg("key", "key of the object to delete").Required().String()
+
+	statCache         = app.Command("stat-cache", "stat cache operations")
+	statCacheShowPath = statCache.Command("show-path", "print actual cache path")
 )
 
 func main() {
@@ -178,6 +183,11 @@ func main() {
 	r.Register(objectCreate.FullCommand(), cliSvc.CreateObject(*objectCreateContainer, *objectCreateVersion, *objectCreatePath))
 	r.Register(objectList.FullCommand(), cliSvc.ListObjects(*objectListContainer, *objectListVersion))
 	r.Register(objectURL.FullCommand(), cliSvc.GetObjectURL(*objectURLContainer, *objectURLVersion, *objectURLKey))
+
+	r.Register(statCacheShowPath.FullCommand(), func(ctx context.Context) error {
+		fmt.Println(*cacheDir)
+		return nil
+	})
 
 	if err := r.Call(appCmd); err != nil {
 		panic(err)

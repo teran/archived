@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"os"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -36,7 +37,13 @@ func New(cacheDir string) (cache.CacheRepository, error) {
 func (l *local) Put(ctx context.Context, filename string, info fs.FileInfo, value string) error {
 	cacheKey := cacheKeyFunc(filename, info)
 
-	fp, err := os.Create(path.Join(l.cacheDir, cacheKey))
+	fullCacheObjectPath := path.Join(l.cacheDir, cacheKey)
+
+	if err := os.MkdirAll(path.Dir(fullCacheObjectPath), 0o755); err != nil {
+		return errors.Wrap(err, "error preparing cache path")
+	}
+
+	fp, err := os.Create(fullCacheObjectPath)
 	if err != nil {
 		return errors.Wrap(err, "error creating cache file")
 	}
@@ -89,5 +96,7 @@ func cacheKeyFunc(filename string, info fs.FileInfo) string {
 		panic(errors.Wrap(err, "error writing into hasher buffer. memory corruption?"))
 	}
 
-	return hex.EncodeToString(h.Sum(nil))
+	key := hex.EncodeToString(h.Sum(nil))
+
+	return path.Join(strings.Split(key, "")...)
 }
