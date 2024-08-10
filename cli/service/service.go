@@ -35,10 +35,6 @@ type Service interface {
 	DeleteObject(containerName, versionID, objectKey string) func(ctx context.Context) error
 }
 
-func init() {
-	log.SetLevel(log.TraceLevel)
-}
-
 type service struct {
 	cache cache.CacheRepository
 	cli   v1proto.ManageServiceClient
