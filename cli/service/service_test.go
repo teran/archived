@@ -7,11 +7,16 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/suite"
 	ptr "github.com/teran/go-ptr"
 
 	cacheMock "github.com/teran/archived/cli/service/stat_cache/mock"
 )
+
+func init() {
+	log.SetLevel(log.TraceLevel)
+}
 
 func (s *serviceTestSuite) TestCreateContainer() {
 	s.cliMock.On("CreateContainer", "test-container").Return(nil).Once()
