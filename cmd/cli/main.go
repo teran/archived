@@ -54,6 +54,7 @@ var (
 
 	cacheDir = app.Flag("cache-dir", "cache directory for objects").
 			Default("~/.cache/archived/cli/objects").
+			Envar("ARCHIVED_CLI_STAT_CACHE_DIR").
 			String()
 
 	container           = app.Command("container", "container operations")
