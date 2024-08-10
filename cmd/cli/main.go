@@ -168,6 +168,7 @@ func main() {
 	r := router.New(ctx)
 	r.Register(containerCreate.FullCommand(), cliSvc.CreateContainer(*containerCreateName))
 	r.Register(containerList.FullCommand(), cliSvc.ListContainers())
+	r.Register(containerDelete.FullCommand(), cliSvc.DeleteContainer(*containerDeleteName))
 
 	r.Register(versionList.FullCommand(), cliSvc.ListVersions(*versionListContainer))
 	r.Register(versionCreate.FullCommand(), cliSvc.CreateVersion(*versionCreateContainer, *versionCreatePublish, versionCreateFromDir))

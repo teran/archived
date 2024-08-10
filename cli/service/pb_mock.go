@@ -24,7 +24,8 @@ func (m *protoClientMock) CreateContainer(ctx context.Context, in *v1proto.Creat
 }
 
 func (m *protoClientMock) DeleteContainer(ctx context.Context, in *v1proto.DeleteContainerRequest, opts ...grpc.CallOption) (*v1proto.DeleteContainerResponse, error) {
-	panic("not implemented")
+	args := m.Called(in.GetName())
+	return &v1proto.DeleteContainerResponse{}, args.Error(0)
 }
 
 func (m *protoClientMock) ListContainers(ctx context.Context, in *v1proto.ListContainersRequest, opts ...grpc.CallOption) (*v1proto.ListContainersResponse, error) {

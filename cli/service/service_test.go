@@ -32,6 +32,13 @@ func (s *serviceTestSuite) TestListContainers() {
 	s.Require().NoError(fn(s.ctx))
 }
 
+func (s *serviceTestSuite) TestDeleteContainer() {
+	s.cliMock.On("DeleteContainer", "test-container1").Return(nil).Once()
+
+	fn := s.svc.DeleteContainer("test-container1")
+	s.Require().NoError(fn(s.ctx))
+}
+
 func (s *serviceTestSuite) TestCreateVersion() {
 	s.cliMock.On("CreateVersion", "container1").Return("version_id", nil).Once()
 
