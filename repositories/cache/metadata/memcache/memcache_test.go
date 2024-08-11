@@ -6,6 +6,7 @@ import (
 	"time"
 
 	memcacheCli "github.com/bradfitz/gomemcache/memcache"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/suite"
 
@@ -33,6 +34,14 @@ func (s *memcacheTestSuite) TestListContainers() {
 	s.Require().Equal([]string{"container1"}, containers)
 }
 
+func (s *memcacheTestSuite) TestListContainersError() {
+	s.repoMock.On("ListContainers").Return([]string{}, errors.New("some error")).Once()
+
+	_, err := s.cache.ListContainers(s.ctx)
+	s.Require().Error(err)
+	s.Require().Equal("some error", err.Error())
+}
+
 func (s *memcacheTestSuite) TestGetLatestPublishedVersionByContainer() {
 	s.repoMock.On("GetLatestPublishedVersionByContainer", "test-container").Return("test-version", nil).Once()
 
@@ -43,6 +52,14 @@ func (s *memcacheTestSuite) TestGetLatestPublishedVersionByContainer() {
 	version, err = s.cache.GetLatestPublishedVersionByContainer(s.ctx, "test-container")
 	s.Require().NoError(err)
 	s.Require().Equal("test-version", version)
+}
+
+func (s *memcacheTestSuite) TestGetLatestPublishedVersionByContainerError() {
+	s.repoMock.On("GetLatestPublishedVersionByContainer", "test-container").Return("", errors.New("some error")).Once()
+
+	_, err := s.cache.GetLatestPublishedVersionByContainer(s.ctx, "test-container")
+	s.Require().Error(err)
+	s.Require().Equal("some error", err.Error())
 }
 
 func (s *memcacheTestSuite) TestListAllVersionsByContainer() {
@@ -57,6 +74,14 @@ func (s *memcacheTestSuite) TestListAllVersionsByContainer() {
 	s.Require().Equal([]models.Version{{Name: "test-version"}}, versions)
 }
 
+func (s *memcacheTestSuite) TestListAllVersionsByContainerError() {
+	s.repoMock.On("ListAllVersionsByContainer", "test-container").Return([]models.Version{}, errors.New("some error")).Once()
+
+	_, err := s.cache.ListAllVersionsByContainer(s.ctx, "test-container")
+	s.Require().Error(err)
+	s.Require().Equal("some error", err.Error())
+}
+
 func (s *memcacheTestSuite) TestListPublishedVersionsByContainer() {
 	s.repoMock.On("ListPublishedVersionsByContainer", "test-container").Return([]models.Version{{Name: "test-version"}}, nil).Once()
 
@@ -67,6 +92,14 @@ func (s *memcacheTestSuite) TestListPublishedVersionsByContainer() {
 	versions, err = s.cache.ListPublishedVersionsByContainer(s.ctx, "test-container")
 	s.Require().NoError(err)
 	s.Require().Equal([]models.Version{{Name: "test-version"}}, versions)
+}
+
+func (s *memcacheTestSuite) TestListPublishedVersionsByContainerError() {
+	s.repoMock.On("ListPublishedVersionsByContainer", "test-container").Return([]models.Version{}, errors.New("some error")).Once()
+
+	_, err := s.cache.ListPublishedVersionsByContainer(s.ctx, "test-container")
+	s.Require().Error(err)
+	s.Require().Equal("some error", err.Error())
 }
 
 func (s *memcacheTestSuite) TestListPublishedVersionsByContainerAndPage() {
@@ -83,6 +116,14 @@ func (s *memcacheTestSuite) TestListPublishedVersionsByContainerAndPage() {
 	s.Require().Equal(uint64(500), total)
 }
 
+func (s *memcacheTestSuite) TestListPublishedVersionsByContainerAndPageError() {
+	s.repoMock.On("ListPublishedVersionsByContainerAndPage", "test-container", uint64(0), uint64(15)).Return(uint64(0), []models.Version{}, errors.New("some error")).Once()
+
+	_, _, err := s.cache.ListPublishedVersionsByContainerAndPage(s.ctx, "test-container", 0, 15)
+	s.Require().Error(err)
+	s.Require().Equal("some error", err.Error())
+}
+
 func (s *memcacheTestSuite) TestListObjects() {
 	s.repoMock.On("ListObjects", "test-container", "test-version", uint64(0), uint64(30)).Return(uint64(500), []string{"obj1"}, nil).Once()
 
@@ -97,6 +138,14 @@ func (s *memcacheTestSuite) TestListObjects() {
 	s.Require().Equal(uint64(500), total)
 }
 
+func (s *memcacheTestSuite) TestListObjectsError() {
+	s.repoMock.On("ListObjects", "test-container", "test-version", uint64(0), uint64(30)).Return(uint64(0), []string{}, errors.New("some error")).Once()
+
+	_, _, err := s.cache.ListObjects(s.ctx, "test-container", "test-version", 0, 30)
+	s.Require().Error(err)
+	s.Require().Equal("some error", err.Error())
+}
+
 func (s *memcacheTestSuite) TestGetBlobKeyByObject() {
 	s.repoMock.On("GetBlobKeyByObject", "container", "version", "key").Return("deadbeef", nil).Once()
 
@@ -107,6 +156,14 @@ func (s *memcacheTestSuite) TestGetBlobKeyByObject() {
 	casKey, err = s.cache.GetBlobKeyByObject(s.ctx, "container", "version", "key")
 	s.Require().NoError(err)
 	s.Require().Equal("deadbeef", casKey)
+}
+
+func (s *memcacheTestSuite) TestGetBlobKeyByObjectError() {
+	s.repoMock.On("GetBlobKeyByObject", "container", "version", "key").Return("", errors.New("some error")).Once()
+
+	_, err := s.cache.GetBlobKeyByObject(s.ctx, "container", "version", "key")
+	s.Require().Error(err)
+	s.Require().Equal("some error", err.Error())
 }
 
 // Non-cached methods ...
@@ -264,7 +321,7 @@ func (s *memcacheTestSuite) SetupTest() {
 	s.Require().NoError(err)
 
 	cli := memcacheCli.New(url)
-	s.cache = New(cli, s.repoMock, 3*time.Second)
+	s.cache = New(cli, s.repoMock, 3*time.Second, s.T().Name())
 }
 
 func (s *memcacheTestSuite) TearDownTest() {

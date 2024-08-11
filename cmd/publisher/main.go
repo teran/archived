@@ -101,7 +101,7 @@ func main() {
 			panic(err)
 		}
 
-		repo = memcache.New(cli, repo, cfg.MemcacheTTL)
+		repo = memcache.New(cli, repo, cfg.MemcacheTTL, "publisher")
 	}
 
 	awsSession, err := session.NewSession(&aws.Config{
