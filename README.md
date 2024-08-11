@@ -76,6 +76,8 @@ The main things are required to know before deployment:
 * there's no authentication on any stage at the moment (yes, even for
     cli/manager)
 
+![diagram](docs/_assets/components.png)
+
 An example for Kubernetes deployment specs is available in
 [docs/examples/deploy/k8s](docs/examples/deploy/k8s) directory.
 
