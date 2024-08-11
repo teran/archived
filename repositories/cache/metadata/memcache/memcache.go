@@ -8,7 +8,6 @@ import (
 	"time"
 
 	memcacheCli "github.com/bradfitz/gomemcache/memcache"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
 	emodels "github.com/teran/archived/exporter/models"
@@ -19,16 +18,22 @@ import (
 var _ metadata.Repository = (*memcache)(nil)
 
 type memcache struct {
-	cli  *memcacheCli.Client
-	repo metadata.Repository
-	ttl  time.Duration
+	cli       *memcacheCli.Client
+	keyPrefix string
+	repo      metadata.Repository
+	ttl       time.Duration
 }
 
-func New(cli *memcacheCli.Client, repo metadata.Repository, ttl time.Duration) metadata.Repository {
+func New(cli *memcacheCli.Client, repo metadata.Repository, ttl time.Duration, keyPrefix string) metadata.Repository {
+	if keyPrefix == "" {
+		keyPrefix = "_"
+	}
+
 	return &memcache{
-		cli:  cli,
-		repo: repo,
-		ttl:  ttl,
+		cli:       cli,
+		keyPrefix: keyPrefix,
+		repo:      repo,
+		ttl:       ttl,
 	}
 }
 
@@ -37,7 +42,11 @@ func (m *memcache) CreateContainer(ctx context.Context, name string) error {
 }
 
 func (m *memcache) ListContainers(ctx context.Context) ([]string, error) {
-	cacheKey := "_ListContainers"
+	cacheKey := strings.Join([]string{
+		m.keyPrefix,
+		"ListContainers",
+	}, ":")
+
 	item, err := m.cli.Get(cacheKey)
 	if err != nil {
 		if err == memcacheCli.ErrCacheMiss {
@@ -47,7 +56,7 @@ func (m *memcache) ListContainers(ctx context.Context) ([]string, error) {
 
 			containers, err := m.repo.ListContainers(ctx)
 			if err != nil {
-				return nil, errors.Wrap(err, "error retrieving container list")
+				return nil, err
 			}
 
 			if err := store(m, cacheKey, containers); err != nil {
@@ -66,7 +75,7 @@ func (m *memcache) ListContainers(ctx context.Context) ([]string, error) {
 	var retrievedValue []string
 	err = json.Unmarshal(item.Value, &retrievedValue)
 	if err != nil {
-		return nil, errors.Wrap(err, "error unmarshaling cached value")
+		return nil, err
 	}
 
 	return retrievedValue, nil
@@ -81,7 +90,12 @@ func (m *memcache) CreateVersion(ctx context.Context, container string) (string,
 }
 
 func (m *memcache) GetLatestPublishedVersionByContainer(ctx context.Context, container string) (string, error) {
-	cacheKey := "_GetLatestPublishedVersionByContainer:" + container
+	cacheKey := strings.Join([]string{
+		m.keyPrefix,
+		"GetLatestPublishedVersionByContainer",
+		container,
+	}, ":")
+
 	item, err := m.cli.Get(cacheKey)
 	if err != nil {
 		if err == memcacheCli.ErrCacheMiss {
@@ -91,7 +105,7 @@ func (m *memcache) GetLatestPublishedVersionByContainer(ctx context.Context, con
 
 			version, err := m.repo.GetLatestPublishedVersionByContainer(ctx, container)
 			if err != nil {
-				return "", errors.Wrapf(err, "error retrieving latest version for container `%s`", container)
+				return "", err
 			}
 
 			if err := store(m, cacheKey, version); err != nil {
@@ -110,14 +124,19 @@ func (m *memcache) GetLatestPublishedVersionByContainer(ctx context.Context, con
 	var retrievedValue string
 	err = json.Unmarshal(item.Value, &retrievedValue)
 	if err != nil {
-		return "", errors.Wrap(err, "error unmarshaling cached value")
+		return "", err
 	}
 
 	return retrievedValue, nil
 }
 
 func (m *memcache) ListAllVersionsByContainer(ctx context.Context, container string) ([]models.Version, error) {
-	cacheKey := "_ListAllVersionsByContainer:" + container
+	cacheKey := strings.Join([]string{
+		m.keyPrefix,
+		"ListAllVersionsByContainer",
+		container,
+	}, ":")
+
 	item, err := m.cli.Get(cacheKey)
 	if err != nil {
 		if err == memcacheCli.ErrCacheMiss {
@@ -127,7 +146,7 @@ func (m *memcache) ListAllVersionsByContainer(ctx context.Context, container str
 
 			versions, err := m.repo.ListAllVersionsByContainer(ctx, container)
 			if err != nil {
-				return nil, errors.Wrapf(err, "error retrieving latest version for container `%s`", container)
+				return nil, err
 			}
 
 			if err := store(m, cacheKey, versions); err != nil {
@@ -146,14 +165,19 @@ func (m *memcache) ListAllVersionsByContainer(ctx context.Context, container str
 	var retrievedValue []models.Version
 	err = json.Unmarshal(item.Value, &retrievedValue)
 	if err != nil {
-		return nil, errors.Wrap(err, "error unmarshaling cached value")
+		return nil, err
 	}
 
 	return retrievedValue, nil
 }
 
 func (m *memcache) ListPublishedVersionsByContainer(ctx context.Context, container string) ([]models.Version, error) {
-	cacheKey := "_ListPublishedVersionsByContainer:" + container
+	cacheKey := strings.Join([]string{
+		m.keyPrefix,
+		"ListPublishedVersionsByContainer",
+		container,
+	}, ":")
+
 	item, err := m.cli.Get(cacheKey)
 	if err != nil {
 		if err == memcacheCli.ErrCacheMiss {
@@ -163,7 +187,7 @@ func (m *memcache) ListPublishedVersionsByContainer(ctx context.Context, contain
 
 			versions, err := m.repo.ListPublishedVersionsByContainer(ctx, container)
 			if err != nil {
-				return nil, errors.Wrapf(err, "error retrieving latest version for container `%s`", container)
+				return nil, err
 			}
 
 			if err := store(m, cacheKey, versions); err != nil {
@@ -182,7 +206,7 @@ func (m *memcache) ListPublishedVersionsByContainer(ctx context.Context, contain
 	var retrievedValue []models.Version
 	err = json.Unmarshal(item.Value, &retrievedValue)
 	if err != nil {
-		return nil, errors.Wrap(err, "error unmarshaling cached value")
+		return nil, err
 	}
 
 	return retrievedValue, nil
@@ -195,7 +219,8 @@ func (m *memcache) ListPublishedVersionsByContainerAndPage(ctx context.Context, 
 	}
 
 	cacheKey := strings.Join([]string{
-		"_ListPublishedVersionsByContainerAndPage",
+		m.keyPrefix,
+		"ListPublishedVersionsByContainerAndPage",
 		container,
 		strconv.FormatUint(offset, 10),
 		strconv.FormatUint(limit, 10),
@@ -210,7 +235,7 @@ func (m *memcache) ListPublishedVersionsByContainerAndPage(ctx context.Context, 
 
 			n, versions, err := m.repo.ListPublishedVersionsByContainerAndPage(ctx, container, offset, limit)
 			if err != nil {
-				return 0, nil, errors.Wrapf(err, "error retrieving published versions for container `%s` (offset=%d; limit=%d)", container, offset, limit)
+				return 0, nil, err
 			}
 
 			if err := store(m, cacheKey, proxy{Total: n, Versions: versions}); err != nil {
@@ -229,7 +254,7 @@ func (m *memcache) ListPublishedVersionsByContainerAndPage(ctx context.Context, 
 	var retrievedValue proxy
 	err = json.Unmarshal(item.Value, &retrievedValue)
 	if err != nil {
-		return 0, nil, errors.Wrap(err, "error unmarshaling cached value")
+		return 0, nil, err
 	}
 
 	return retrievedValue.Total, retrievedValue.Versions, nil
@@ -258,7 +283,8 @@ func (m *memcache) ListObjects(ctx context.Context, container, version string, o
 	}
 
 	cacheKey := strings.Join([]string{
-		"_ListObjects",
+		m.keyPrefix,
+		"ListObjects",
 		container,
 		version,
 		strconv.FormatUint(offset, 10),
@@ -274,7 +300,7 @@ func (m *memcache) ListObjects(ctx context.Context, container, version string, o
 
 			n, objects, err := m.repo.ListObjects(ctx, container, version, offset, limit)
 			if err != nil {
-				return 0, nil, errors.Wrapf(err, "error retrieving objects for `%s/%s`, offset=%d; limit=%d", container, version, offset, limit)
+				return 0, nil, err
 			}
 
 			if err := store(m, cacheKey, proxy{Total: n, Objects: objects}); err != nil {
@@ -293,7 +319,7 @@ func (m *memcache) ListObjects(ctx context.Context, container, version string, o
 	var retrievedValue proxy
 	err = json.Unmarshal(item.Value, &retrievedValue)
 	if err != nil {
-		return 0, nil, errors.Wrap(err, "error unmarshaling cached value")
+		return 0, nil, err
 	}
 
 	return retrievedValue.Total, retrievedValue.Objects, nil
@@ -313,7 +339,8 @@ func (m *memcache) CreateBLOB(ctx context.Context, checksum string, size uint64,
 
 func (m *memcache) GetBlobKeyByObject(ctx context.Context, container, version, key string) (string, error) {
 	cacheKey := strings.Join([]string{
-		"_GetBlobKeyByObject",
+		m.keyPrefix,
+		"GetBlobKeyByObject",
 		container,
 		version,
 		key,
@@ -328,7 +355,7 @@ func (m *memcache) GetBlobKeyByObject(ctx context.Context, container, version, k
 
 			key, err := m.repo.GetBlobKeyByObject(ctx, container, version, key)
 			if err != nil {
-				return "", errors.Wrapf(err, "error retrieving object key for `%s/%s/%s`", container, version, key)
+				return "", err
 			}
 
 			if err = store(m, cacheKey, key); err != nil {
@@ -347,7 +374,7 @@ func (m *memcache) GetBlobKeyByObject(ctx context.Context, container, version, k
 	var retrievedValue string
 	err = json.Unmarshal(item.Value, &retrievedValue)
 	if err != nil {
-		return "", errors.Wrap(err, "error unmarshaling cached value")
+		return "", err
 	}
 
 	return retrievedValue, nil
