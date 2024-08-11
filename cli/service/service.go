@@ -17,6 +17,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	cache "github.com/teran/archived/cli/service/stat_cache"
+	"github.com/teran/archived/cli/yum"
 	v1proto "github.com/teran/archived/presenter/manager/grpc/proto/v1"
 )
 
@@ -25,7 +26,7 @@ type Service interface {
 	ListContainers() func(ctx context.Context) error
 	DeleteContainer(containerName string) func(ctx context.Context) error
 
-	CreateVersion(containerName string, shouldPublish bool, fromDir *string) func(ctx context.Context) error
+	CreateVersion(containerName string, shouldPublish bool, fromDir, fromYumRepo *string) func(ctx context.Context) error
 	DeleteVersion(containerName, versionID string) func(ctx context.Context) error
 	ListVersions(containerName string) func(ctx context.Context) error
 	PublishVersion(containerName, versionID string) func(ctx context.Context) error
@@ -89,7 +90,7 @@ func (s *service) DeleteContainer(containerName string) func(ctx context.Context
 	}
 }
 
-func (s *service) CreateVersion(containerName string, shouldPublish bool, fromDir *string) func(ctx context.Context) error {
+func (s *service) CreateVersion(containerName string, shouldPublish bool, fromDir, fromYumRepo *string) func(ctx context.Context) error {
 	return func(ctx context.Context) error {
 		resp, err := s.cli.CreateVersion(ctx, &v1proto.CreateVersionRequest{
 			Container: containerName,
@@ -103,6 +104,12 @@ func (s *service) CreateVersion(containerName string, shouldPublish bool, fromDi
 		if fromDir != nil && *fromDir != "" {
 			log.Tracef("--from-dir is requested with `%s`", *fromDir)
 			err = s.CreateObject(containerName, versionID, *fromDir)(ctx)
+			if err != nil {
+				return errors.Wrap(err, "error creating objects")
+			}
+		} else if fromYumRepo != nil && *fromYumRepo != "" {
+			log.Tracef("--from-yum-repo is requested with `%s`", *fromYumRepo)
+			err := s.createVersionFromYUMRepository(ctx, containerName, versionID, *fromYumRepo)
 			if err != nil {
 				return errors.Wrap(err, "error creating objects")
 			}
@@ -124,6 +131,138 @@ func (s *service) CreateVersion(containerName string, shouldPublish bool, fromDi
 
 		return nil
 	}
+}
+
+func (s *service) createVersionFromYUMRepository(ctx context.Context, containerName, versionID, url string) error {
+	repo := yum.New(url)
+
+	packages, err := repo.Packages(ctx)
+	if err != nil {
+		return errors.Wrap(err, "error getting repository data")
+	}
+
+	for k, v := range repo.Metadata() {
+		size := len(v)
+
+		hasher := sha256.New()
+		n, err := hasher.Write(v)
+		if err != nil {
+			return err
+		}
+
+		if n != size {
+			return io.ErrShortWrite
+		}
+
+		checksum := hex.EncodeToString(hasher.Sum(nil))
+
+		log.Tracef("rpc CreateObject(%s, %s, %s, %s, %d)", containerName, versionID, k, checksum, size)
+		resp, err := s.cli.CreateObject(ctx, &v1proto.CreateObjectRequest{
+			Container: containerName,
+			Version:   versionID,
+			Key:       k,
+			Checksum:  checksum,
+			Size:      int64(size),
+		})
+		if err != nil {
+			return errors.Wrap(err, "error creating object")
+		}
+
+		if uploadURL := resp.GetUploadUrl(); uploadURL != "" {
+			err := func(url, uploadURL string, rd io.Reader) error {
+				log.Tracef("Upload URL: `%s`", uploadURL)
+				return uploadBlob(ctx, uploadURL, rd)
+			}(url, uploadURL, bytes.NewReader(v))
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	for _, pkg := range packages {
+		name := pkg.Name
+		checksum := pkg.Checksum
+		size := int64(pkg.Size)
+		sourceURL := strings.TrimSuffix(url, "/") + "/" + strings.TrimPrefix(pkg.Name, "/")
+
+		if pkg.ChecksumType != "sha256" {
+			err := func(sourceURL string) error {
+				log.Tracef("Fetching source artefact: %s ...", sourceURL)
+				req, err := http.NewRequestWithContext(ctx, http.MethodGet, sourceURL, nil)
+				if err != nil {
+					return errors.Wrap(err, "error constructing request object")
+				}
+
+				resp, err := http.DefaultClient.Do(req)
+				if err != nil {
+					return errors.Wrap(err, "error requesting object")
+				}
+				defer resp.Body.Close()
+
+				buf := bytes.NewBuffer(nil)
+				if _, err := io.Copy(buf, resp.Body); err != nil {
+					return errors.Wrap(err, "error on data copy")
+				}
+
+				h := sha256.New()
+				n, err := io.Copy(h, buf)
+				if err != nil {
+					return errors.Wrap(err, "error calculating checksum")
+				}
+
+				if n != int64(pkg.Size) {
+					return io.ErrShortWrite
+				}
+
+				checksum = hex.EncodeToString(h.Sum(nil))
+
+				return nil
+			}(sourceURL)
+			if err != nil {
+				return err
+			}
+		}
+
+		log.Tracef("rpc CreateObject(%s, %s, %s, %s, %d)", containerName, versionID, name, checksum, size)
+		resp, err := s.cli.CreateObject(ctx, &v1proto.CreateObjectRequest{
+			Container: containerName,
+			Version:   versionID,
+			Key:       name,
+			Checksum:  checksum,
+			Size:      size,
+		})
+		if err != nil {
+			return errors.Wrap(err, "error creating object")
+		}
+
+		if uploadURL := resp.GetUploadUrl(); uploadURL != "" {
+			err := func(url, uploadURL string) error {
+				log.Tracef("Upload URL: `%s`", uploadURL)
+
+				req, err := http.NewRequestWithContext(ctx, http.MethodGet, sourceURL, nil)
+				if err != nil {
+					return errors.Wrap(err, "error constructing request object")
+				}
+
+				resp, err := http.DefaultClient.Do(req)
+				if err != nil {
+					return errors.Wrap(err, "error requesting object")
+				}
+				defer resp.Body.Close()
+
+				buf := bytes.NewBuffer(nil)
+				if _, err := io.Copy(buf, resp.Body); err != nil {
+					return errors.Wrap(err, "error on data copy")
+				}
+
+				return uploadBlob(ctx, uploadURL, buf)
+			}(url, uploadURL)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func (s *service) DeleteVersion(containerName, versionID string) func(ctx context.Context) error {
@@ -251,19 +390,9 @@ func (s *service) CreateObject(containerName, versionID, directoryPath string) f
 					return errors.Wrap(err, "error on data copy")
 				}
 
-				req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, buf)
-				if err != nil {
-					return errors.Wrap(err, "error constructing request")
+				if err := uploadBlob(ctx, url, buf); err != nil {
+					return err
 				}
-
-				req.Header.Set("Content-Type", "multipart/form-data")
-
-				c := &http.Client{}
-				uploadResp, err := c.Do(req)
-				if err != nil {
-					return errors.Wrap(err, "error uploading file")
-				}
-				log.Debugf("upload HTTP response code: %s", uploadResp.Status)
 			}
 
 			return nil
@@ -343,4 +472,27 @@ func checksumFile(filename string) (string, error) {
 	}
 
 	return hex.EncodeToString(h.Sum(nil)), nil
+}
+
+func uploadBlob(ctx context.Context, url string, rd io.Reader) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, rd)
+	if err != nil {
+		return errors.Wrap(err, "error constructing request")
+	}
+
+	req.Header.Set("Content-Type", "multipart/form-data")
+
+	c := &http.Client{}
+	uploadResp, err := c.Do(req)
+	if err != nil {
+		return errors.Wrap(err, "error uploading file")
+	}
+
+	log.Debugf("upload HTTP response code: %s", uploadResp.Status)
+
+	if uploadResp.StatusCode > 299 {
+		return errors.Errorf("unexpected status code on upload: %s", uploadResp.Status)
+	}
+
+	return nil
 }
