@@ -22,6 +22,8 @@ github.com/aws/aws-sdk-go v1.55.5 h1:KKUZBfBoyqy5d3swXyiC7Q76ic40rYcbqH7qjh59kzU
 github.com/aws/aws-sdk-go v1.55.5/go.mod h1:eRwEWoyTWFMVYVQzKMNHWP5/RV4xIUGMQfXQHfHkpNU=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
+github.com/bradfitz/gomemcache v0.0.0-20230905024940-24af94b03874 h1:N7oVaKyGp8bttX0bfZGmcGkjz7DLQXhAn3DNd3T0ous=
+github.com/bradfitz/gomemcache v0.0.0-20230905024940-24af94b03874/go.mod h1:r5xuitiExdLAJ09PR7vBVENGvp4ZuTBeWTGtxuX3K+c=
 github.com/cenkalti/backoff/v4 v4.2.1 h1:y4OZtCnogmCPw98Zjyt5a6+QwPLGkiQsYW5oUqylYbM=
 github.com/cenkalti/backoff/v4 v4.2.1/go.mod h1:Y3VNntkOUPxTVeUxJ/G5vcM//AlwfmyYozVcomhLiZE=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
@@ -250,8 +252,8 @@ github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsT
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 github.com/teran/echo-grpc-server v0.0.2 h1:2+5zgDdRvYY2eXv4Z6o5Ku72NFKRMNAe9W3/i9YKzyo=
 github.com/teran/echo-grpc-server v0.0.2/go.mod h1:chEwqVEY4z4awjWY3+GR4iXOcB0iq0fZk/lkzdzy/nk=
-github.com/teran/go-docker-testsuite v0.0.7 h1:MJUpgCg20T2q3QSidQiE/WbaxsnHR0ZAGJr5rvKok4c=
-github.com/teran/go-docker-testsuite v0.0.7/go.mod h1:NsMzat79U8UCE51GkSPzzIsHdNPczYqReeeYizgn5H0=
+github.com/teran/go-docker-testsuite v0.0.8 h1:xNrU3XLeSnFyN4164hzTnZqnjCX6FeQH0GDjqRHPmhg=
+github.com/teran/go-docker-testsuite v0.0.8/go.mod h1:X8PV8C6ym1X5ig7cqi0Fqju7/5W0e1KTbqnNKIiExEY=
 github.com/teran/go-grpctest v0.0.6 h1:q34p64c8icQq5TFgLsDa9VM8BThhesN43XTS8PJAh38=
 github.com/teran/go-grpctest v0.0.6/go.mod h1:rNcMrEhPlNH7DFpQbcyl2vFzvfrx4UsxGuf3i/W77d0=
 github.com/teran/go-ptr v1.1.0 h1:c/5SPr+FB4zfmmKVB+KTCNKpgC/zWKBY5JHReL84lKU=
