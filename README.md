@@ -1,5 +1,8 @@
 # archived
 
+[![Verify](https://github.com/teran/archived/actions/workflows/verify.yml/badge.svg?branch=master)](https://github.com/teran/archived/actions/workflows/verify.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/teran/archived)](https://goreportcard.com/report/github.com/teran/archived)
+
 Cloud native service to store versioned data in space-efficient manner
 
 archived is applicable if you have amount of low-cardinality data to share
