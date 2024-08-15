@@ -33,6 +33,7 @@ spec:
                 - archived-publisher
             topologyKey: "kubernetes.io/node"
       terminationGracePeriodSeconds: 30
+      automountServiceAccountToken: false
       containers:
         - name: publisher
           image: ghcr.io/teran/archived/publisher:latest
