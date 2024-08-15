@@ -27,3 +27,6 @@ go.work.sum
 
 # Protobuf compiled files
 *.pb.go
+
+# SonarQube artefacts
+.scannerwork/
