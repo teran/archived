@@ -16,6 +16,11 @@ import (
 	"github.com/teran/archived/service"
 )
 
+const (
+	notFoundTemplateFilename    = "404.html"
+	serverErrorTemplateFilename = "5xx.html"
+)
+
 type Handlers interface {
 	ContainerIndex(c echo.Context) error
 	VersionIndex(c echo.Context) error
@@ -72,7 +77,7 @@ func (h *handlers) VersionIndex(c echo.Context) error {
 	pagesCount, versions, err := h.svc.ListPublishedVersionsByPage(c.Request().Context(), container, page)
 	if err != nil {
 		if err == service.ErrNotFound {
-			return c.Render(http.StatusNotFound, "404.html", nil)
+			return c.Render(http.StatusNotFound, notFoundTemplateFilename, nil)
 		}
 		return err
 	}
@@ -113,7 +118,7 @@ func (h *handlers) ObjectIndex(c echo.Context) error {
 	pagesCount, objects, err := h.svc.ListObjectsByPage(c.Request().Context(), container, version, page)
 	if err != nil {
 		if err == service.ErrNotFound {
-			return c.Render(http.StatusNotFound, "404.html", nil)
+			return c.Render(http.StatusNotFound, notFoundTemplateFilename, nil)
 		}
 		return err
 	}
@@ -149,7 +154,7 @@ func (h *handlers) GetObject(c echo.Context) error {
 	url, err := h.svc.GetObjectURL(c.Request().Context(), container, version, key)
 	if err != nil {
 		if err == service.ErrNotFound {
-			return c.Render(http.StatusNotFound, "404.html", nil)
+			return c.Render(http.StatusNotFound, notFoundTemplateFilename, nil)
 		}
 		return err
 	}
@@ -159,7 +164,7 @@ func (h *handlers) GetObject(c echo.Context) error {
 
 func (h *handlers) ErrorHandler(err error, c echo.Context) {
 	code := 500
-	templateFilename := "5xx.html"
+	templateFilename := serverErrorTemplateFilename
 
 	v, ok := err.(*echo.HTTPError)
 	if ok {
@@ -168,7 +173,7 @@ func (h *handlers) ErrorHandler(err error, c echo.Context) {
 		switch v.Code {
 		case http.StatusNotFound:
 			code = http.StatusNotFound
-			templateFilename = "404.html"
+			templateFilename = notFoundTemplateFilename
 		}
 	}
 
