@@ -33,6 +33,7 @@ spec:
                 - archived-manager
             topologyKey: "kubernetes.io/node"
       terminationGracePeriodSeconds: 30
+      automountServiceAccountToken: false
       containers:
         - name: manager
           image: ghcr.io/teran/archived/manager:latest

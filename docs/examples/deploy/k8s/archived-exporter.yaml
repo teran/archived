@@ -33,6 +33,7 @@ spec:
                 - archived-exporter
             topologyKey: "kubernetes.io/node"
       terminationGracePeriodSeconds: 30
+      automountServiceAccountToken: false
       containers:
         - name: exporter
           image: ghcr.io/teran/archived/exporter:latest
