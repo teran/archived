@@ -84,7 +84,7 @@ The main things are required to know before deployment:
 An example for Kubernetes deployment specs is available in
 [docs/examples/deploy/k8s](docs/examples/deploy/k8s) directory.
 
-Full configuration reference is available at [docs/configuration.md](configuration)
+Full configuration reference is available at [docs/configuration.md](docs/configuration.md)
 reference.
 
 ## CLI
