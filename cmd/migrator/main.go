@@ -17,9 +17,6 @@ var (
 )
 
 type config struct {
-	Addr        string `envconfig:"ADDR" default:":5555"`
-	MetricsAddr string `envconfig:"METRICS_ADDR" default:":8081"`
-
 	LogLevel log.Level `envconfig:"LOG_LEVEL" default:"info"`
 
 	MetadataDSN string `envconfig:"METADATA_DSN" required:"true"`
