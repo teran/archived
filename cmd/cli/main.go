@@ -40,7 +40,7 @@ var (
 		Bool()
 
 	manageEndpoint = app.
-			Flag("endpoint", "Manage API endpoint address").
+			Flag("endpoint", "Manager API endpoint address").
 			Short('s').
 			Envar("ARCHIVED_CLI_ENDPOINT").
 			Required().
@@ -53,7 +53,7 @@ var (
 				Default("false").
 				Bool()
 
-	cacheDir = app.Flag("cache-dir", "cache directory for objects").
+	cacheDir = app.Flag("cache-dir", "Stat-cache directory for objects").
 			Default("~/.cache/archived/cli/objects").
 			Envar("ARCHIVED_CLI_STAT_CACHE_DIR").
 			String()
