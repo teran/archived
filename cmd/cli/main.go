@@ -75,6 +75,8 @@ var (
 				Bool()
 	versionCreateFromDir = versionCreate.Flag("from-dir", "create version right from directory").
 				String()
+	versionCreateFromYumRepo = versionCreate.Flag("from-yum-repo", "create version right from yum repository").
+					String()
 
 	versionDelete          = version.Command("delete", "delete the given version")
 	versionDeleteContainer = versionDelete.Arg("container", "name of the container to delete version of").Required().String()
@@ -176,7 +178,7 @@ func main() {
 	r.Register(containerDelete.FullCommand(), cliSvc.DeleteContainer(*containerDeleteName))
 
 	r.Register(versionList.FullCommand(), cliSvc.ListVersions(*versionListContainer))
-	r.Register(versionCreate.FullCommand(), cliSvc.CreateVersion(*versionCreateContainer, *versionCreatePublish, versionCreateFromDir))
+	r.Register(versionCreate.FullCommand(), cliSvc.CreateVersion(*versionCreateContainer, *versionCreatePublish, versionCreateFromDir, versionCreateFromYumRepo))
 	r.Register(versionDelete.FullCommand(), cliSvc.DeleteVersion(*versionDeleteContainer, *versionDeleteVersion))
 	r.Register(versionPublish.FullCommand(), cliSvc.PublishVersion(*versionPublishContainer, *versionPublishVersion))
 
