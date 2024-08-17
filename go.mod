@@ -1,10 +1,11 @@
 module github.com/teran/archived
 
-go 1.23
+go 1.23.0
 
 require (
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/Masterminds/squirrel v1.5.4
+	github.com/ProtonMail/go-crypto v1.0.0
 	github.com/alecthomas/kingpin/v2 v2.4.0
 	github.com/aws/aws-sdk-go v1.55.5
 	github.com/bradfitz/gomemcache v0.0.0-20230905024940-24af94b03874
@@ -17,6 +18,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.19.1
+	github.com/sassoftware/go-rpmutils v0.4.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.9.0
 	github.com/teran/go-docker-testsuite v0.0.8
@@ -29,6 +31,7 @@ require (
 )
 
 require (
+	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.2.0 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
@@ -36,6 +39,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
+	github.com/cloudflare/circl v1.3.8 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/docker/docker v27.1.1+incompatible // indirect
@@ -60,7 +64,7 @@ require (
 	github.com/jackc/pgtype v1.14.0 // indirect
 	github.com/jackc/pgx/v4 v4.18.3 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/kr/text v0.2.0 // indirect
+	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
@@ -79,9 +83,11 @@ require (
 	github.com/spf13/cast v1.3.1 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/teran/go-random v0.0.1 // indirect
+	github.com/ulikunitz/xz v0.5.12 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/xhit/go-str2duration/v2 v2.1.0 // indirect
+	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.51.0 // indirect
 	go.opentelemetry.io/otel v1.26.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.19.0 // indirect
