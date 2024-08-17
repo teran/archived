@@ -88,6 +88,9 @@ func main() {
 			cfg.BLOBS3AccessKeyID, cfg.BLOBS3SecretKey, "",
 		),
 	})
+	if err != nil {
+		panic(err)
+	}
 
 	s3client := s3.New(awsSession)
 
