@@ -7,7 +7,7 @@ FROM scratch
 
 COPY --from=certificates /etc/ssl/cert.pem /etc/ssl/cert.pem
 COPY --chmod=0755 --chown=root:root dist/archived-publisher_linux_amd64_v3/archived-publisher /archived-publisher
-COPY --chmod=0644 --chown=root:root presenter/publisher/html/templates /templates
+COPY --chmod=0644 --chown=root:root publisher/presenter/html/templates /templates
 
 ENV HTML_TEMPLATE_DIR=/templates
 ENV STATIC_DIR=/static

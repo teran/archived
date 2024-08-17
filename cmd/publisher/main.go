@@ -20,7 +20,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 
-	htmlPresenter "github.com/teran/archived/presenter/publisher/html"
+	htmlPresenter "github.com/teran/archived/publisher/presenter/html"
 	awsBlobRepo "github.com/teran/archived/repositories/blob/aws"
 	"github.com/teran/archived/repositories/cache/metadata/memcache"
 	"github.com/teran/archived/repositories/metadata/postgresql"

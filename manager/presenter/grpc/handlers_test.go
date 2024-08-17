@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	grpctest "github.com/teran/go-grpctest"
 
+	v1pb "github.com/teran/archived/manager/presenter/grpc/proto/v1"
 	"github.com/teran/archived/models"
-	v1pb "github.com/teran/archived/presenter/manager/grpc/proto/v1"
 	"github.com/teran/archived/service"
 )
 
