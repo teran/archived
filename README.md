@@ -11,15 +11,10 @@ with amount of users/systems. Good example of that task: APT/RPM repository.
 ## Project status & roadmap
 
 archived is under active development and almost everything is a subject
-to change. MVP will be available on first release v0.0.1
+to change. MVP was already implemented as of v0.0.1 to prove all the concepts
+used in archived.
 
-The following things are going to be implemented in further releases:
-
-* [ ] authentication for manage API
-* [ ] authentication for access API
-* [X] garbage collector
-* [ ] additional metadata repositories (like MongoDB, CockroachDB, etc.)
-* [ ] additional version creators for CLI (like RPM repo, APR repo, etc.)
+The complete feature list is available in the [repository issues](https://github.com/teran/archived/issues)
 
 ## How it works
 
@@ -58,6 +53,7 @@ components:
 * archived-exporter - Prometheus metrics exporter for metadata entities
 * CLI - CLI application to interact with manage component
 * migrator - metadata migration tool
+* archived-gc - garbage collector
 
 ## Deploy
 
@@ -199,3 +195,15 @@ docker-compose up || docker-compose down
 
 Please note `docker-compose down` at the will automatically remove
 containers on stop. Please remove it if you don't need such behavior.
+
+## Run tests locally
+
+Simply
+
+```shell
+go test ./...
+```
+
+Please note running the tests will required docker to run since the tests are
+using [go-docker-testsuite](https://github.com/teran/go-docker-testsuite)
+to run components dependencies in tests like PostgreSQL or memcached.
