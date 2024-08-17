@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package presenter.manager.grpc.proto.v1;
+package manager.presenter.grpc.proto.v1;
 
-option go_package = "github.com/teran/archived/presenter/manager/grpc/proto/v1";
+option go_package = "github.com/teran/archived/manager/presenter/grpc/proto/v1";
 
 message CreateContainerRequest {
   string name = 1;

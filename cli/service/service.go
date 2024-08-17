@@ -18,7 +18,7 @@ import (
 
 	cache "github.com/teran/archived/cli/service/stat_cache"
 	"github.com/teran/archived/cli/yum"
-	v1proto "github.com/teran/archived/presenter/manager/grpc/proto/v1"
+	v1proto "github.com/teran/archived/manager/presenter/grpc/proto/v1"
 )
 
 type Service interface {

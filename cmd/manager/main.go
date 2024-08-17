@@ -24,7 +24,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	grpcManagePresenter "github.com/teran/archived/presenter/manager/grpc"
+	grpcManagePresenter "github.com/teran/archived/manager/presenter/grpc"
 	awsBlobRepo "github.com/teran/archived/repositories/blob/aws"
 	"github.com/teran/archived/repositories/metadata/postgresql"
 	"github.com/teran/archived/service"
