@@ -113,6 +113,9 @@ func main() {
 			cfg.BLOBS3AccessKeyID, cfg.BLOBS3SecretKey, "",
 		),
 	})
+	if err != nil {
+		panic(err)
+	}
 
 	blobRepo := awsBlobRepo.New(s3.New(awsSession), cfg.BLOBS3Bucket, cfg.BLOBS3PresignedLinkTTL)
 

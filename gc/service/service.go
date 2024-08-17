@@ -65,8 +65,8 @@ func (s *service) Run(ctx context.Context) error {
 			}
 
 			var (
-				total  uint64 = 0
-				offset uint64 = 0
+				total  uint64
+				offset uint64
 			)
 
 			for {
@@ -77,8 +77,7 @@ func (s *service) Run(ctx context.Context) error {
 					"limit":     defaultLimit,
 				}).Tracef("list objects loop iteration ...")
 
-				var objects []string = []string{}
-
+				var objects []string
 				total, objects, err = s.cfg.MdRepo.ListObjects(ctx, container, version.Name, offset, defaultLimit)
 				if err != nil {
 					return errors.Wrapf(err, "error listing objects for container `%s`; version `%s`", container, version.Name)

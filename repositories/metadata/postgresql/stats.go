@@ -96,6 +96,9 @@ func (r *repository) CountStats(ctx context.Context) (*models.Stats, error) {
 		GroupBy("c.name", "v.name", "v.is_published").
 		OrderBy("c.name", "v.name", "v.is_published"),
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	for rows.Next() {
 		brsb := models.BlobsRawSizeBytes{}
