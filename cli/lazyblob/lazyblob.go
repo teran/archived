@@ -127,7 +127,7 @@ func (l *lazyblob) Close() error {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 
-	if err := os.RemoveAll(l.tempDir); err != nil {
+	if err := os.Remove(l.tempFilename); err != nil {
 		return err
 	}
 
