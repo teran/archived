@@ -13,9 +13,12 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/ProtonMail/go-crypto/openpgp"
 	"github.com/pkg/errors"
+	rpmutils "github.com/sassoftware/go-rpmutils"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/teran/archived/cli/lazyblob"
 	cache "github.com/teran/archived/cli/service/stat_cache"
 	"github.com/teran/archived/cli/yum"
 	v1proto "github.com/teran/archived/manager/presenter/grpc/proto/v1"
@@ -26,7 +29,7 @@ type Service interface {
 	ListContainers() func(ctx context.Context) error
 	DeleteContainer(containerName string) func(ctx context.Context) error
 
-	CreateVersion(containerName string, shouldPublish bool, fromDir, fromYumRepo *string) func(ctx context.Context) error
+	CreateVersion(containerName string, shouldPublish bool, fromDir, fromYumRepo, rpmGPGKey *string) func(ctx context.Context) error
 	DeleteVersion(containerName, versionID string) func(ctx context.Context) error
 	ListVersions(containerName string) func(ctx context.Context) error
 	PublishVersion(containerName, versionID string) func(ctx context.Context) error
@@ -90,7 +93,7 @@ func (s *service) DeleteContainer(containerName string) func(ctx context.Context
 	}
 }
 
-func (s *service) CreateVersion(containerName string, shouldPublish bool, fromDir, fromYumRepo *string) func(ctx context.Context) error {
+func (s *service) CreateVersion(containerName string, shouldPublish bool, fromDir, fromYumRepo, rpmGPGKey *string) func(ctx context.Context) error {
 	return func(ctx context.Context) error {
 		resp, err := s.cli.CreateVersion(ctx, &v1proto.CreateVersionRequest{
 			Container: containerName,
@@ -109,7 +112,15 @@ func (s *service) CreateVersion(containerName string, shouldPublish bool, fromDi
 			}
 		} else if fromYumRepo != nil && *fromYumRepo != "" {
 			log.Tracef("--from-yum-repo is requested with `%s`", *fromYumRepo)
-			err := s.createVersionFromYUMRepository(ctx, containerName, versionID, *fromYumRepo)
+			var gpgKeyring openpgp.EntityList = nil
+			if *rpmGPGKey != "" {
+				gpgKeyring, err = getGPGKey(ctx, *rpmGPGKey)
+				if err != nil {
+					return err
+				}
+			}
+
+			err := s.createVersionFromYUMRepository(ctx, containerName, versionID, *fromYumRepo, gpgKeyring)
 			if err != nil {
 				return errors.Wrap(err, "error creating objects")
 			}
@@ -133,7 +144,7 @@ func (s *service) CreateVersion(containerName string, shouldPublish bool, fromDi
 	}
 }
 
-func (s *service) createVersionFromYUMRepository(ctx context.Context, containerName, versionID, url string) error {
+func (s *service) createVersionFromYUMRepository(ctx context.Context, containerName, versionID, url string, gpgKeyring openpgp.EntityList) error {
 	repo := yum.New(url)
 
 	packages, err := repo.Packages(ctx)
@@ -169,10 +180,7 @@ func (s *service) createVersionFromYUMRepository(ctx context.Context, containerN
 		}
 
 		if uploadURL := resp.GetUploadUrl(); uploadURL != "" {
-			err := func(url, uploadURL string, rd io.Reader) error {
-				log.Tracef("Upload URL: `%s`", uploadURL)
-				return uploadBlob(ctx, uploadURL, rd)
-			}(url, uploadURL, bytes.NewReader(v))
+			err := uploadBlob(ctx, uploadURL, bytes.NewReader(v), int64(size))
 			if err != nil {
 				return err
 			}
@@ -180,86 +188,79 @@ func (s *service) createVersionFromYUMRepository(ctx context.Context, containerN
 	}
 
 	for _, pkg := range packages {
-		name := pkg.Name
-		checksum := pkg.Checksum
-		size := int64(pkg.Size)
-		sourceURL := strings.TrimSuffix(url, "/") + "/" + strings.TrimPrefix(pkg.Name, "/")
+		err := func(name, checksum, sourceURL string, size int64) error {
+			lb := lazyblob.New(sourceURL, os.TempDir(), size)
+			defer func() {
+				if err := lb.Close(); err != nil {
+					log.Warnf("error removing scratch data: %s", err)
+				}
+			}()
 
-		if pkg.ChecksumType != "sha256" {
-			err := func(sourceURL string) error {
-				log.Tracef("Fetching source artefact: %s ...", sourceURL)
-				req, err := http.NewRequestWithContext(ctx, http.MethodGet, sourceURL, nil)
+			if pkg.ChecksumType != "sha256" {
+				filename, err := lb.Filename(ctx)
 				if err != nil {
-					return errors.Wrap(err, "error constructing request object")
+					return errors.Wrap(err, "error getting package filename")
 				}
 
-				resp, err := http.DefaultClient.Do(req)
-				if err != nil {
-					return errors.Wrap(err, "error requesting object")
-				}
-				defer resp.Body.Close()
-
-				buf := bytes.NewBuffer(nil)
-				if _, err := io.Copy(buf, resp.Body); err != nil {
-					return errors.Wrap(err, "error on data copy")
-				}
-
-				h := sha256.New()
-				n, err := io.Copy(h, buf)
+				checksum, err = checksumFile(filename)
 				if err != nil {
 					return errors.Wrap(err, "error calculating checksum")
 				}
+			}
 
-				if n != int64(pkg.Size) {
-					return io.ErrShortWrite
+			log.Tracef("rpc CreateObject(%s, %s, %s, %s, %d)", containerName, versionID, name, checksum, size)
+			resp, err := s.cli.CreateObject(ctx, &v1proto.CreateObjectRequest{
+				Container: containerName,
+				Version:   versionID,
+				Key:       name,
+				Checksum:  checksum,
+				Size:      size,
+			})
+			if err != nil {
+				return errors.Wrap(err, "error creating object")
+			}
+
+			if uploadURL := resp.GetUploadUrl(); uploadURL != "" {
+				if gpgKeyring != nil {
+
+					log.Debug("verifying RPM GPG signature ...")
+
+					fp, err := lb.File(ctx)
+					if err != nil {
+						return errors.Wrap(err, "error opening package file")
+					}
+					defer fp.Close()
+
+					_, sigs, err := rpmutils.Verify(fp, gpgKeyring)
+					if err != nil {
+						return errors.Wrapf(err, "error verifying package signature: %s", name)
+					}
+
+					if len(sigs) == 0 {
+						log.Warnf("package `%s` does not contain signature", name)
+					}
 				}
 
-				checksum = hex.EncodeToString(h.Sum(nil))
+				err := func(url, uploadURL string) error {
+					log.Tracef("Upload URL: `%s`", uploadURL)
 
-				return nil
-			}(sourceURL)
-			if err != nil {
-				return err
+					fp, err := lb.File(ctx)
+					if err != nil {
+						return errors.Wrap(err, "error opening package file")
+					}
+					defer fp.Close()
+
+					return uploadBlob(ctx, uploadURL, fp, size)
+				}(url, uploadURL)
+				if err != nil {
+					return err
+				}
 			}
-		}
 
-		log.Tracef("rpc CreateObject(%s, %s, %s, %s, %d)", containerName, versionID, name, checksum, size)
-		resp, err := s.cli.CreateObject(ctx, &v1proto.CreateObjectRequest{
-			Container: containerName,
-			Version:   versionID,
-			Key:       name,
-			Checksum:  checksum,
-			Size:      size,
-		})
+			return nil
+		}(pkg.Name, pkg.Checksum, strings.TrimSuffix(url, "/")+"/"+strings.TrimPrefix(pkg.Name, "/"), int64(pkg.Size))
 		if err != nil {
-			return errors.Wrap(err, "error creating object")
-		}
-
-		if uploadURL := resp.GetUploadUrl(); uploadURL != "" {
-			err := func(url, uploadURL string) error {
-				log.Tracef("Upload URL: `%s`", uploadURL)
-
-				req, err := http.NewRequestWithContext(ctx, http.MethodGet, sourceURL, nil)
-				if err != nil {
-					return errors.Wrap(err, "error constructing request object")
-				}
-
-				resp, err := http.DefaultClient.Do(req)
-				if err != nil {
-					return errors.Wrap(err, "error requesting object")
-				}
-				defer resp.Body.Close()
-
-				buf := bytes.NewBuffer(nil)
-				if _, err := io.Copy(buf, resp.Body); err != nil {
-					return errors.Wrap(err, "error on data copy")
-				}
-
-				return uploadBlob(ctx, uploadURL, buf)
-			}(url, uploadURL)
-			if err != nil {
-				return err
-			}
+			return err
 		}
 	}
 	return nil
@@ -390,7 +391,7 @@ func (s *service) CreateObject(containerName, versionID, directoryPath string) f
 					return errors.Wrap(err, "error on data copy")
 				}
 
-				if err := uploadBlob(ctx, url, buf); err != nil {
+				if err := uploadBlob(ctx, url, buf, size); err != nil {
 					return err
 				}
 			}
@@ -474,16 +475,27 @@ func checksumFile(filename string) (string, error) {
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
-func uploadBlob(ctx context.Context, url string, rd io.Reader) error {
-	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, rd)
+func uploadBlob(ctx context.Context, url string, rd io.Reader, size int64) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, io.NopCloser(rd))
 	if err != nil {
 		return errors.Wrap(err, "error constructing request")
 	}
 
 	req.Header.Set("Content-Type", "multipart/form-data")
+	if req.ContentLength == 0 || req.ContentLength == -1 {
+		log.WithFields(log.Fields{
+			"url":    url,
+			"length": size,
+		}).Tracef("size is set")
 
-	c := &http.Client{}
-	uploadResp, err := c.Do(req)
+		req.ContentLength = size
+	}
+
+	log.WithFields(log.Fields{
+		"length": req.ContentLength,
+	}).Tracef("running HTTP PUT request ...")
+
+	uploadResp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return errors.Wrap(err, "error uploading file")
 	}
