@@ -102,7 +102,7 @@ func (s *service) ListPublishedVersionsByPage(ctx context.Context, container str
 	limit := s.versionsPageSize
 	totalVersions, versions, err := s.mdRepo.ListPublishedVersionsByContainerAndPage(ctx, container, offset, limit)
 	if err != nil {
-		return 0, nil, err
+		return 0, nil, mapMetadataErrors(err)
 	}
 
 	totalPages := (totalVersions / s.versionsPageSize)
