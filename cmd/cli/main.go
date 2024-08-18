@@ -77,6 +77,8 @@ var (
 				String()
 	versionCreateFromYumRepo = versionCreate.Flag("from-yum-repo", "create version right from yum repository").
 					String()
+	versionCreateFromYumRepoGPGKey = versionCreate.Flag("rpm-gpg-key-path", "path to the GPG key for RPM packages verification").
+					String()
 
 	versionDelete          = version.Command("delete", "delete the given version")
 	versionDeleteContainer = versionDelete.Arg("container", "name of the container to delete version of").Required().String()
@@ -178,7 +180,8 @@ func main() {
 	r.Register(containerDelete.FullCommand(), cliSvc.DeleteContainer(*containerDeleteName))
 
 	r.Register(versionList.FullCommand(), cliSvc.ListVersions(*versionListContainer))
-	r.Register(versionCreate.FullCommand(), cliSvc.CreateVersion(*versionCreateContainer, *versionCreatePublish, versionCreateFromDir, versionCreateFromYumRepo))
+	r.Register(versionCreate.FullCommand(), cliSvc.CreateVersion(
+		*versionCreateContainer, *versionCreatePublish, versionCreateFromDir, versionCreateFromYumRepo, versionCreateFromYumRepoGPGKey))
 	r.Register(versionDelete.FullCommand(), cliSvc.DeleteVersion(*versionDeleteContainer, *versionDeleteVersion))
 	r.Register(versionPublish.FullCommand(), cliSvc.PublishVersion(*versionPublishContainer, *versionPublishVersion))
 

@@ -44,7 +44,7 @@ func (s *serviceTestSuite) TestDeleteContainer() {
 func (s *serviceTestSuite) TestCreateVersion() {
 	s.cliMock.On("CreateVersion", "container1").Return("version_id", nil).Once()
 
-	fn := s.svc.CreateVersion("container1", false, nil, nil)
+	fn := s.svc.CreateVersion("container1", false, nil, nil, nil)
 	s.Require().NoError(fn(s.ctx))
 }
 
@@ -52,7 +52,7 @@ func (s *serviceTestSuite) TestCreateVersionAndPublish() {
 	s.cliMock.On("CreateVersion", "container1").Return("version_id", nil).Once()
 	s.cliMock.On("PublishVersion", "container1", "version_id").Return(nil).Once()
 
-	fn := s.svc.CreateVersion("container1", true, nil, nil)
+	fn := s.svc.CreateVersion("container1", true, nil, nil, nil)
 	s.Require().NoError(fn(s.ctx))
 }
 
@@ -60,15 +60,15 @@ func (s *serviceTestSuite) TestCreateVersionAndPublishWithEmptyPath() {
 	s.cliMock.On("CreateVersion", "container1").Return("version_id", nil).Once()
 	s.cliMock.On("PublishVersion", "container1", "version_id").Return(nil).Once()
 
-	fn := s.svc.CreateVersion("container1", true, ptr.String(""), nil)
+	fn := s.svc.CreateVersion("container1", true, ptr.String(""), nil, nil)
 	s.Require().NoError(fn(s.ctx))
 }
 
 func (s *serviceTestSuite) TestCreateVersionFromDirAndPublish() {
-	s.cacheMock.On("Get", "testdata/somefile1").Return("", nil).Once()
-	s.cacheMock.On("Get", "testdata/somefile2").Return("", nil).Once()
-	s.cacheMock.On("Put", "testdata/somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4").Return(nil).Once()
-	s.cacheMock.On("Put", "testdata/somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61").Return(nil).Once()
+	s.cacheMock.On("Get", "testdata/repo/somefile1").Return("", nil).Once()
+	s.cacheMock.On("Get", "testdata/repo/somefile2").Return("", nil).Once()
+	s.cacheMock.On("Put", "testdata/repo/somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4").Return(nil).Once()
+	s.cacheMock.On("Put", "testdata/repo/somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61").Return(nil).Once()
 
 	s.cliMock.On("CreateVersion", "container1").Return("version_id", nil, nil).Once()
 	s.cliMock.
@@ -81,7 +81,7 @@ func (s *serviceTestSuite) TestCreateVersionFromDirAndPublish() {
 		Once()
 	s.cliMock.On("PublishVersion", "container1", "version_id").Return(nil).Once()
 
-	fn := s.svc.CreateVersion("container1", true, ptr.String("testdata"), nil)
+	fn := s.svc.CreateVersion("container1", true, ptr.String("testdata/repo"), nil, nil)
 	s.Require().NoError(fn(s.ctx))
 }
 
@@ -99,11 +99,11 @@ func (s *serviceTestSuite) TestCreateVersionFromYumRepoAndPublish() {
 	e2.Use(middleware.Recover())
 	e2.PUT("/upload", func(c echo.Context) error {
 		if c.Request().Header.Get("Content-Length") != "6156" {
-			return c.NoContent(http.StatusConflict)
+			return c.NoContent(http.StatusLengthRequired)
 		}
 
 		if c.Request().Header.Get("Content-Type") != "multipart/form-data" {
-			return c.NoContent(http.StatusConflict)
+			return c.NoContent(http.StatusUnsupportedMediaType)
 		}
 		return nil
 	})
@@ -151,7 +151,7 @@ func (s *serviceTestSuite) TestCreateVersionFromYumRepoAndPublish() {
 		Once()
 	s.cliMock.On("PublishVersion", "container1", "version_id").Return(nil).Once()
 
-	fn := s.svc.CreateVersion("container1", true, ptr.String(""), ptr.String(srv.URL))
+	fn := s.svc.CreateVersion("container1", true, ptr.String(""), ptr.String(srv.URL), ptr.String(""))
 	s.Require().NoError(fn(s.ctx))
 }
 
@@ -169,11 +169,11 @@ func (s *serviceTestSuite) TestCreateVersionFromYumRepoAndPublishSHA1() {
 	e2.Use(middleware.Recover())
 	e2.PUT("/upload", func(c echo.Context) error {
 		if c.Request().Header.Get("Content-Length") != "6156" {
-			return c.NoContent(http.StatusConflict)
+			return c.NoContent(http.StatusLengthRequired)
 		}
 
 		if c.Request().Header.Get("Content-Type") != "multipart/form-data" {
-			return c.NoContent(http.StatusConflict)
+			return c.NoContent(http.StatusUnsupportedMediaType)
 		}
 		return nil
 	})
@@ -221,7 +221,147 @@ func (s *serviceTestSuite) TestCreateVersionFromYumRepoAndPublishSHA1() {
 		Once()
 	s.cliMock.On("PublishVersion", "container1", "version_id").Return(nil).Once()
 
-	fn := s.svc.CreateVersion("container1", true, ptr.String(""), ptr.String(srv.URL))
+	fn := s.svc.CreateVersion("container1", true, ptr.String(""), ptr.String(srv.URL), ptr.String(""))
+	s.Require().NoError(fn(s.ctx))
+}
+
+func (s *serviceTestSuite) TestCreateVersionFromYumRepoAndPublishGPGNoSignature() {
+	e := echo.New()
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+	e.Static("/", "../yum/testdata/repo")
+
+	srv := httptest.NewServer(e)
+	defer srv.Close()
+
+	e2 := echo.New()
+	e2.Use(middleware.Logger())
+	e2.Use(middleware.Recover())
+	e2.PUT("/upload", func(c echo.Context) error {
+		if c.Request().Header.Get("Content-Length") != "6156" {
+			return c.NoContent(http.StatusLengthRequired)
+		}
+
+		if c.Request().Header.Get("Content-Type") != "multipart/form-data" {
+			return c.NoContent(http.StatusUnsupportedMediaType)
+		}
+		return nil
+	})
+
+	uploadSrv := httptest.NewServer(e2)
+	defer uploadSrv.Close()
+
+	s.cliMock.On("CreateVersion", "container1").Return("version_id", nil, nil).Once()
+	s.cliMock.
+		On("CreateObject", "container1", "version_id", "repodata/2267234d92017b049818be743f720f37c176a3b3bb3e802ee4d5cd0090651091-primary.xml.gz", "2267234d92017b049818be743f720f37c176a3b3bb3e802ee4d5cd0090651091", int64(720)).
+		Return(ptr.String(""), nil).
+		Once()
+	s.cliMock.
+		On("CreateObject", "container1", "version_id", "repodata/1b4aca205bffe8d65f33b066e3f9965cb4c009e3c94b3f296cce8bff166ad8ed-primary.sqlite.bz2", "1b4aca205bffe8d65f33b066e3f9965cb4c009e3c94b3f296cce8bff166ad8ed", int64(1995)).
+		Return(ptr.String(""), nil).
+		Once()
+	s.cliMock.
+		On("CreateObject", "container1", "version_id", "repodata/314e73564000b8a68848551ce0fa9b36e11ed609698f232fa9ab5810ec531de1-filelists.xml.gz", "314e73564000b8a68848551ce0fa9b36e11ed609698f232fa9ab5810ec531de1", int64(313)).
+		Return(ptr.String(""), nil).
+		Once()
+	s.cliMock.
+		On("CreateObject", "container1", "version_id", "repodata/2623c0a1472f574989dcba85417e8ce27b87983bba12922a6d91d574e617d2f6-filelists.sqlite.bz2", "2623c0a1472f574989dcba85417e8ce27b87983bba12922a6d91d574e617d2f6", int64(858)).
+		Return(ptr.String(""), nil).
+		Once()
+	s.cliMock.
+		On("CreateObject", "container1", "version_id", "repodata/e3984def0f3b5ce1b174fad2f6eb3c05829633d2d5d5d8ba05c9720ad59046e7-other.xml.gz", "e3984def0f3b5ce1b174fad2f6eb3c05829633d2d5d5d8ba05c9720ad59046e7", int64(281)).
+		Return(ptr.String(""), nil).
+		Once()
+	s.cliMock.
+		On("CreateObject", "container1", "version_id", "repodata/64f4875d92a3672f62a2d15d5f0ae6f0806451f42403bd07105214e1c9f4f0d7-other.sqlite.bz2", "64f4875d92a3672f62a2d15d5f0ae6f0806451f42403bd07105214e1c9f4f0d7", int64(749)).
+		Return(ptr.String(""), nil).
+		Once()
+	s.cliMock.
+		On("CreateObject", "container1", "version_id", "repodata/repomd.xml", "ad1ff2a7e93b614596a9c432f85b141df86e2c010b6591a04c8b011051bd739c", int64(3069)).
+		Return(ptr.String(""), nil).
+		Once()
+
+	s.cliMock.
+		On("CreateObject", "container1", "version_id", "Packages/testpkg-1-1.src.rpm", "684303227d799ffe1f0b39e030a12ad249931a11ec1690e2079f981cc16d8c52", int64(6156)).
+		Return(ptr.String(uploadSrv.URL+"/upload"), nil).
+		Once()
+	s.cliMock.
+		On("CreateObject", "container1", "version_id", "Packages/testpkg-1-1.x86_64.rpm", "d9ae5e56ea38d2ac470f320cade63663dae6ab8b8e1630b2fd5a3c607f45e2ee", int64(6722)).
+		Return(ptr.String(""), nil).
+		Once()
+	s.cliMock.On("PublishVersion", "container1", "version_id").Return(nil).Once()
+
+	fn := s.svc.CreateVersion("container1", true, ptr.String(""), ptr.String(srv.URL), ptr.String("file://./testdata/gpg/somekey.gpg"))
+	s.Require().NoError(fn(s.ctx))
+}
+
+func (s *serviceTestSuite) TestCreateVersionFromYumRepoAndPublishGPGSigned() {
+	e := echo.New()
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+	e.Static("/", "../yum/testdata/repo-signed")
+
+	srv := httptest.NewServer(e)
+	defer srv.Close()
+
+	e2 := echo.New()
+	e2.Use(middleware.Logger())
+	e2.Use(middleware.Recover())
+	e2.PUT("/upload", func(c echo.Context) error {
+		if c.Request().Header.Get("Content-Length") != "6115" {
+			return c.NoContent(http.StatusLengthRequired)
+		}
+
+		if c.Request().Header.Get("Content-Type") != "multipart/form-data" {
+			return c.NoContent(http.StatusUnsupportedMediaType)
+		}
+		return nil
+	})
+
+	uploadSrv := httptest.NewServer(e2)
+	defer uploadSrv.Close()
+
+	s.cliMock.On("CreateVersion", "container1").Return("version_id", nil, nil).Once()
+	s.cliMock.
+		On("CreateObject", "container1", "version_id", "repodata/c99064d5c98a01f3720c735431ab1f449c56a1c4e233efd99353716d856c245f-primary.xml.gz", "c99064d5c98a01f3720c735431ab1f449c56a1c4e233efd99353716d856c245f", int64(718)).
+		Return(ptr.String(""), nil).
+		Once()
+	s.cliMock.
+		On("CreateObject", "container1", "version_id", "repodata/0586c412097e75a9420880bb8256802008e79f2cbe7d7d34cebeb55abce6ad40-primary.sqlite.bz2", "0586c412097e75a9420880bb8256802008e79f2cbe7d7d34cebeb55abce6ad40", int64(1985)).
+		Return(ptr.String(""), nil).
+		Once()
+	s.cliMock.
+		On("CreateObject", "container1", "version_id", "repodata/64f76a79439371fc632b7cac21b68f322142bc183b706332314e97d1007f8f0c-filelists.xml.gz", "64f76a79439371fc632b7cac21b68f322142bc183b706332314e97d1007f8f0c", int64(314)).
+		Return(ptr.String(""), nil).
+		Once()
+	s.cliMock.
+		On("CreateObject", "container1", "version_id", "repodata/464b3eff37b3eee86b7e4f78efcf0e8911afa496a57753ac42a67c2afbdd2d48-filelists.sqlite.bz2", "464b3eff37b3eee86b7e4f78efcf0e8911afa496a57753ac42a67c2afbdd2d48", int64(859)).
+		Return(ptr.String(""), nil).
+		Once()
+	s.cliMock.
+		On("CreateObject", "container1", "version_id", "repodata/4c25d51dbded8086515c32ce5753f7bd22d4b0d0ee9c45d3f580751fbd26e05a-other.xml.gz", "4c25d51dbded8086515c32ce5753f7bd22d4b0d0ee9c45d3f580751fbd26e05a", int64(282)).
+		Return(ptr.String(""), nil).
+		Once()
+	s.cliMock.
+		On("CreateObject", "container1", "version_id", "repodata/f16e9edf15ee11cb5a79dd9466f58bbe2a481db47cfad8f6287540beda0779f6-other.sqlite.bz2", "f16e9edf15ee11cb5a79dd9466f58bbe2a481db47cfad8f6287540beda0779f6", int64(743)).
+		Return(ptr.String(""), nil).
+		Once()
+	s.cliMock.
+		On("CreateObject", "container1", "version_id", "repodata/repomd.xml", "4d207e2d80ec3aefb6f9e08f744f547f7171c94dc451d01fa24fe5c57ffb01a0", int64(3069)).
+		Return(ptr.String(""), nil).
+		Once()
+
+	s.cliMock.
+		On("CreateObject", "container1", "version_id", "SRPMS/testpkg-1-1.src.rpm", "cbce80483872b31a4b92a9ef0aea11f38e0f06db301781db53ba88a365bffd8e", int64(6115)).
+		Return(ptr.String(uploadSrv.URL+"/upload"), nil).
+		Once()
+	s.cliMock.
+		On("CreateObject", "container1", "version_id", "RPMS/x86_64/testpkg-1-1.x86_64.rpm", "3ea740db3d27481b38231c9bd987c46bb6bdda480c60fbfcce84d7d88abf5051", int64(6734)).
+		Return(ptr.String(""), nil).
+		Once()
+	s.cliMock.On("PublishVersion", "container1", "version_id").Return(nil).Once()
+
+	fn := s.svc.CreateVersion("container1", true, ptr.String(""), ptr.String(srv.URL), ptr.String("file://./testdata/gpg/somekey.gpg"))
 	s.Require().NoError(fn(s.ctx))
 }
 
@@ -247,10 +387,10 @@ func (s *serviceTestSuite) TestPublishVersion() {
 }
 
 func (s *serviceTestSuite) TestCreateObjectWithoutEndingSlashInThePath() {
-	s.cacheMock.On("Get", "testdata/somefile1").Return("", nil).Once()
-	s.cacheMock.On("Get", "testdata/somefile2").Return("", nil).Once()
-	s.cacheMock.On("Put", "testdata/somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4").Return(nil).Once()
-	s.cacheMock.On("Put", "testdata/somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61").Return(nil).Once()
+	s.cacheMock.On("Get", "testdata/repo/somefile1").Return("", nil).Once()
+	s.cacheMock.On("Get", "testdata/repo/somefile2").Return("", nil).Once()
+	s.cacheMock.On("Put", "testdata/repo/somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4").Return(nil).Once()
+	s.cacheMock.On("Put", "testdata/repo/somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61").Return(nil).Once()
 
 	s.cliMock.
 		On("CreateObject", "container1", "version1", "somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", int64(5)).
@@ -261,15 +401,15 @@ func (s *serviceTestSuite) TestCreateObjectWithoutEndingSlashInThePath() {
 		Return(ptr.String(""), nil).
 		Once()
 
-	fn := s.svc.CreateObject("container1", "version1", "testdata")
+	fn := s.svc.CreateObject("container1", "version1", "testdata/repo")
 	s.Require().NoError(fn(s.ctx))
 }
 
 func (s *serviceTestSuite) TestCreateObjectWithEndingSlashInThePath() {
-	s.cacheMock.On("Get", "testdata/somefile1").Return("", nil).Once()
-	s.cacheMock.On("Get", "testdata/somefile2").Return("", nil).Once()
-	s.cacheMock.On("Put", "testdata/somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4").Return(nil).Once()
-	s.cacheMock.On("Put", "testdata/somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61").Return(nil).Once()
+	s.cacheMock.On("Get", "testdata/repo/somefile1").Return("", nil).Once()
+	s.cacheMock.On("Get", "testdata/repo/somefile2").Return("", nil).Once()
+	s.cacheMock.On("Put", "testdata/repo/somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4").Return(nil).Once()
+	s.cacheMock.On("Put", "testdata/repo/somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61").Return(nil).Once()
 
 	s.cliMock.
 		On("CreateObject", "container1", "version1", "somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", int64(5)).
@@ -280,13 +420,13 @@ func (s *serviceTestSuite) TestCreateObjectWithEndingSlashInThePath() {
 		Return(ptr.String(""), nil).
 		Once()
 
-	fn := s.svc.CreateObject("container1", "version1", "testdata/")
+	fn := s.svc.CreateObject("container1", "version1", "testdata/repo/")
 	s.Require().NoError(fn(s.ctx))
 }
 
 func (s *serviceTestSuite) TestCreateObjectWithCache() {
-	s.cacheMock.On("Get", "testdata/somefile1").Return("a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", nil).Once()
-	s.cacheMock.On("Get", "testdata/somefile2").Return("ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61", nil).Once()
+	s.cacheMock.On("Get", "testdata/repo/somefile1").Return("a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", nil).Once()
+	s.cacheMock.On("Get", "testdata/repo/somefile2").Return("ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61", nil).Once()
 
 	s.cliMock.
 		On("CreateObject", "container1", "version1", "somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", int64(5)).
@@ -297,13 +437,13 @@ func (s *serviceTestSuite) TestCreateObjectWithCache() {
 		Return(ptr.String(""), nil).
 		Once()
 
-	fn := s.svc.CreateObject("container1", "version1", "testdata")
+	fn := s.svc.CreateObject("container1", "version1", "testdata/repo/")
 	s.Require().NoError(fn(s.ctx))
 }
 
 func (s *serviceTestSuite) TestCreateObjectWithUploadURL() {
-	s.cacheMock.On("Get", "testdata/somefile1").Return("a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", nil).Once()
-	s.cacheMock.On("Get", "testdata/somefile2").Return("ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61", nil).Once()
+	s.cacheMock.On("Get", "testdata/repo/somefile1").Return("a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", nil).Once()
+	s.cacheMock.On("Get", "testdata/repo/somefile2").Return("ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61", nil).Once()
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		data, err := io.ReadAll(r.Body)
@@ -326,7 +466,7 @@ func (s *serviceTestSuite) TestCreateObjectWithUploadURL() {
 		Return(ptr.String(""), nil).
 		Once()
 
-	fn := s.svc.CreateObject("container1", "version1", "testdata")
+	fn := s.svc.CreateObject("container1", "version1", "testdata/repo/")
 	s.Require().NoError(fn(s.ctx))
 }
 
