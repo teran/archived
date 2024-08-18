@@ -10,9 +10,14 @@ import (
 
 	echo "github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
+
+func init() {
+	log.SetLevel(log.TraceLevel)
+}
 
 func TestLazyblob(t *testing.T) {
 	ctx := context.TODO()

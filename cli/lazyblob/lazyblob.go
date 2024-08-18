@@ -21,11 +21,12 @@ type LazyBLOB interface {
 }
 
 type lazyblob struct {
-	url          string
-	tempDir      string
-	length       int64
-	mutex        *sync.RWMutex
-	tempFilename string
+	url      string
+	tempDir  string
+	length   int64
+	tempFile *os.File
+
+	mutex *sync.RWMutex
 }
 
 func New(url, tempDir string, length int64) LazyBLOB {
@@ -36,10 +37,11 @@ func New(url, tempDir string, length int64) LazyBLOB {
 	}).Debug("lazyblob initialized")
 
 	return &lazyblob{
-		url:     url,
-		tempDir: tempDir,
-		length:  length,
-		mutex:   &sync.RWMutex{},
+		url:      url,
+		tempDir:  tempDir,
+		length:   length,
+		tempFile: nil,
+		mutex:    &sync.RWMutex{},
 	}
 }
 
@@ -47,9 +49,16 @@ func (l *lazyblob) download(ctx context.Context) error {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 
-	if l.tempFilename != "" {
+	if l.tempFile != nil {
+		log.WithFields(log.Fields{
+			"filename": l.tempFile.Name(),
+		}).Tracef("file is already downloaded. Skipping ...")
 		return nil
 	}
+
+	log.WithFields(log.Fields{
+		"url": l.url,
+	}).Trace("downloading file ...")
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, l.url, nil)
 	if err != nil {
@@ -68,22 +77,28 @@ func (l *lazyblob) download(ctx context.Context) error {
 		return err
 	}
 
-	tempFile, err := os.CreateTemp(l.tempDir, "package_*.rpm.tmp")
+	l.tempFile, err = os.CreateTemp(l.tempDir, "package_*.rpm.tmp")
 	if err != nil {
 		return err
 	}
-	defer tempFile.Close()
 
-	n, err := io.Copy(tempFile, resp.Body)
+	log.WithFields(log.Fields{
+		"filename": l.tempFile.Name(),
+	}).Debug("temporary file created")
+
+	n, err := io.Copy(l.tempFile, resp.Body)
 	if err != nil {
 		return err
 	}
+
+	log.WithFields(log.Fields{
+		"filename": l.tempFile.Name(),
+		"length":   n,
+	}).Trace("bytes copied")
 
 	if n != l.length {
 		return io.ErrShortWrite
 	}
-
-	l.tempFilename = tempFile.Name()
 
 	return nil
 }
@@ -92,15 +107,20 @@ func (l *lazyblob) newReadCloser() (*os.File, error) {
 	l.mutex.RLock()
 	defer l.mutex.RUnlock()
 
-	if l.tempFilename == "" {
+	if l.tempFile == nil {
 		return nil, errors.New("file is not downloaded yet")
 	}
 
-	return os.Open(l.tempFilename)
+	log.WithFields(log.Fields{
+		"filename": l.tempFile.Name(),
+	}).Trace("file is downloaded, providing the file handler by request")
+
+	_, err := l.tempFile.Seek(0, 0)
+	return l.tempFile, err
 }
 
 func (l *lazyblob) File(ctx context.Context) (*os.File, error) {
-	if l.tempFilename == "" {
+	if l.tempFile == nil {
 		if err := l.download(ctx); err != nil {
 			return nil, err
 		}
@@ -110,13 +130,13 @@ func (l *lazyblob) File(ctx context.Context) (*os.File, error) {
 }
 
 func (l *lazyblob) Filename(ctx context.Context) (string, error) {
-	if l.tempFilename == "" {
+	if l.tempFile == nil {
 		if err := l.download(ctx); err != nil {
 			return "", err
 		}
 	}
 
-	return l.tempFilename, nil
+	return l.tempFile.Name(), nil
 }
 
 func (l *lazyblob) URL() string {
@@ -127,10 +147,14 @@ func (l *lazyblob) Close() error {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 
-	if err := os.Remove(l.tempFilename); err != nil {
-		return err
+	if l.tempFile != nil {
+		err := l.tempFile.Close()
+		if err != nil && !errors.Is(err, os.ErrClosed) {
+			return err
+		}
+		l.tempFile = nil
+		return nil
 	}
 
-	l.tempFilename = ""
-	return nil
+	return os.ErrClosed
 }
