@@ -40,6 +40,8 @@ type Service interface {
 	DeleteObject(containerName, versionID, objectKey string) func(ctx context.Context) error
 }
 
+const processStatusInterval int = 100
+
 type service struct {
 	cache cache.CacheRepository
 	cli   v1proto.ManageServiceClient
@@ -145,13 +147,19 @@ func (s *service) CreateVersion(containerName string, shouldPublish bool, fromDi
 }
 
 func (s *service) createVersionFromYUMRepository(ctx context.Context, containerName, versionID, url string, gpgKeyring openpgp.EntityList) error {
-	repo := yum.New(url)
+	log.WithFields(log.Fields{
+		"repository_url": url,
+	}).Info("running creating version from YUM repository ...")
 
+	repo := yum.New(url)
 	packages, err := repo.Packages(ctx)
 	if err != nil {
 		return errors.Wrap(err, "error getting repository data")
 	}
 
+	log.WithFields(log.Fields{
+		"repository_url": url,
+	}).Info("handling YUM repository metadata files ...")
 	for k, v := range repo.Metadata() {
 		size := len(v)
 
@@ -187,7 +195,11 @@ func (s *service) createVersionFromYUMRepository(ctx context.Context, containerN
 		}
 	}
 
-	for _, pkg := range packages {
+	log.WithFields(log.Fields{
+		"repository_url": url,
+		"packages_count": len(packages),
+	}).Info("handling package files ...")
+	for cnt, pkg := range packages {
 		err := func(name, checksum, sourceURL string, size int64) error {
 			lb := lazyblob.New(sourceURL, os.TempDir(), size)
 			defer func() {
@@ -254,6 +266,12 @@ func (s *service) createVersionFromYUMRepository(ctx context.Context, containerN
 				}
 			}
 
+			if cnt%processStatusInterval == 0 {
+				log.WithFields(log.Fields{
+					"repository_url": url,
+				}).Infof("%d files processed ...", cnt)
+			}
+
 			return nil
 		}(pkg.Name, pkg.Checksum, strings.TrimSuffix(url, "/")+"/"+strings.TrimPrefix(pkg.Name, "/"), int64(pkg.Size))
 		if err != nil {
@@ -313,8 +331,19 @@ func (s *service) PublishVersion(containerName, versionID string) func(ctx conte
 
 func (s *service) CreateObject(containerName, versionID, directoryPath string) func(ctx context.Context) error {
 	return func(ctx context.Context) error {
-		log.Debugf("running filepath.Walk on `%s`", directoryPath)
+		log.WithFields(log.Fields{
+			"directory": directoryPath,
+		}).Info("scanning directory ...")
+		var cnt int
 		return filepath.Walk(directoryPath, func(path string, info fs.FileInfo, err error) error {
+			defer func() { cnt++ }()
+
+			if cnt%processStatusInterval == 0 {
+				log.WithFields(log.Fields{
+					"directory": directoryPath,
+				}).Infof("%d files processed ...", cnt)
+			}
+
 			if err != nil {
 				return errors.Wrap(err, "walk: internal error")
 			}
