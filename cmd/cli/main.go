@@ -132,6 +132,7 @@ func main() {
 		})
 		log.Debug("Debug mode is enabled.")
 	} else {
+		log.SetLevel(log.InfoLevel)
 		log.SetFormatter(&log.TextFormatter{
 			FullTimestamp: true,
 		})
