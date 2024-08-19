@@ -386,12 +386,7 @@ func (s *service) CreateObject(containerName, versionID, directoryPath string) f
 				}
 				defer fp.Close()
 
-				buf := bytes.NewBuffer(nil)
-				if _, err := io.Copy(buf, fp); err != nil {
-					return errors.Wrap(err, "error on data copy")
-				}
-
-				if err := uploadBlob(ctx, url, buf, size); err != nil {
+				if err := uploadBlob(ctx, url, fp, size); err != nil {
 					return err
 				}
 			}
