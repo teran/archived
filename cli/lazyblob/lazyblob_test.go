@@ -43,9 +43,8 @@ func TestLazyblob(t *testing.T) {
 	r.NoError(err)
 	r.True(strings.HasSuffix(fn, ".rpm.tmp"))
 
-	fp, err := lb.File(ctx)
+	fp, err := lb.Reader(ctx)
 	r.NoError(err)
-	defer fp.Close()
 
 	data, err := io.ReadAll(fp)
 	r.NoError(err)

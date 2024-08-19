@@ -222,14 +222,12 @@ func (s *service) createVersionFromYUMRepository(ctx context.Context, containerN
 
 			if uploadURL := resp.GetUploadUrl(); uploadURL != "" {
 				if gpgKeyring != nil {
-
 					log.Debug("verifying RPM GPG signature ...")
 
-					fp, err := lb.File(ctx)
+					fp, err := lb.Reader(ctx)
 					if err != nil {
 						return errors.Wrap(err, "error opening package file")
 					}
-					defer fp.Close()
 
 					_, sigs, err := rpmutils.Verify(fp, gpgKeyring)
 					if err != nil {
@@ -244,11 +242,10 @@ func (s *service) createVersionFromYUMRepository(ctx context.Context, containerN
 				err := func(url, uploadURL string) error {
 					log.Tracef("Upload URL: `%s`", uploadURL)
 
-					fp, err := lb.File(ctx)
+					fp, err := lb.Reader(ctx)
 					if err != nil {
 						return errors.Wrap(err, "error opening package file")
 					}
-					defer fp.Close()
 
 					return uploadBlob(ctx, uploadURL, fp, size)
 				}(url, uploadURL)

@@ -15,7 +15,7 @@ const userAgent = "Mozilla/5.0 (compatible; archived-cli/lazyblob; +https://gith
 
 type LazyBLOB interface {
 	URL() string
-	File(ctx context.Context) (*os.File, error)
+	Reader(ctx context.Context) (io.Reader, error)
 	Filename(ctx context.Context) (string, error)
 	Close() error
 }
@@ -103,7 +103,7 @@ func (l *lazyblob) download(ctx context.Context) error {
 	return nil
 }
 
-func (l *lazyblob) newReadCloser() (*os.File, error) {
+func (l *lazyblob) newReader() (io.Reader, error) {
 	l.mutex.RLock()
 	defer l.mutex.RUnlock()
 
@@ -119,14 +119,14 @@ func (l *lazyblob) newReadCloser() (*os.File, error) {
 	return l.tempFile, err
 }
 
-func (l *lazyblob) File(ctx context.Context) (*os.File, error) {
+func (l *lazyblob) Reader(ctx context.Context) (io.Reader, error) {
 	if l.tempFile == nil {
 		if err := l.download(ctx); err != nil {
 			return nil, err
 		}
 	}
 
-	return l.newReadCloser()
+	return l.newReader()
 }
 
 func (l *lazyblob) Filename(ctx context.Context) (string, error) {
@@ -148,13 +148,19 @@ func (l *lazyblob) Close() error {
 	defer l.mutex.Unlock()
 
 	if l.tempFile != nil {
-		err := l.tempFile.Close()
-		if err != nil && !errors.Is(err, os.ErrClosed) {
+		if err := os.Remove(l.tempFile.Name()); err != nil {
+			log.WithFields(log.Fields{
+				"filename": l.tempFile.Name(),
+			}).Debug("error removing temporary file")
+		}
+
+		log.Tracef("tempfile is suppose to be alive: closing ...")
+		if err := l.tempFile.Close(); err != nil && !errors.Is(err, os.ErrClosed) {
 			return err
 		}
+
 		l.tempFile = nil
-		return nil
 	}
 
-	return os.ErrClosed
+	return nil
 }
