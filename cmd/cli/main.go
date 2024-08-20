@@ -18,6 +18,7 @@ import (
 	"github.com/teran/archived/cli/router"
 	"github.com/teran/archived/cli/service"
 	"github.com/teran/archived/cli/service/stat_cache/local"
+	"github.com/teran/archived/cli/yum/mirrorlist"
 	v1proto "github.com/teran/archived/manager/presenter/grpc/proto/v1"
 )
 
@@ -76,6 +77,8 @@ var (
 	versionCreateFromDir = versionCreate.Flag("from-dir", "create version right from directory").
 				String()
 	versionCreateFromYumRepo = versionCreate.Flag("from-yum-repo", "create version right from yum repository").
+					String()
+	versionCreateFromYumMirrorlist = versionCreate.Flag("from-yum-mirrorlist", "create version right from yum repository received from mirrorlist").
 					String()
 	versionCreateFromYumRepoGPGKey = versionCreate.Flag("rpm-gpg-key-path", "path to the GPG key for RPM packages verification").
 					String()
@@ -173,6 +176,16 @@ func main() {
 		panic(err)
 	}
 
+	yumRepository := *versionCreateFromYumRepo
+	if versionCreateFromYumMirrorlist != nil && *versionCreateFromYumMirrorlist != "" {
+		ml, err := mirrorlist.New(ctx, *versionCreateFromYumMirrorlist)
+		if err != nil {
+			panic(err)
+		}
+
+		yumRepository = ml.URL(mirrorlist.SelectModeRandom)
+	}
+
 	cliSvc := service.New(cli, cacheRepo)
 
 	r := router.New(ctx)
@@ -182,7 +195,7 @@ func main() {
 
 	r.Register(versionList.FullCommand(), cliSvc.ListVersions(*versionListContainer))
 	r.Register(versionCreate.FullCommand(), cliSvc.CreateVersion(
-		*versionCreateContainer, *versionCreatePublish, versionCreateFromDir, versionCreateFromYumRepo, versionCreateFromYumRepoGPGKey))
+		*versionCreateContainer, *versionCreatePublish, versionCreateFromDir, &yumRepository, versionCreateFromYumRepoGPGKey))
 	r.Register(versionDelete.FullCommand(), cliSvc.DeleteVersion(*versionDeleteContainer, *versionDeleteVersion))
 	r.Register(versionPublish.FullCommand(), cliSvc.PublishVersion(*versionPublishContainer, *versionPublishVersion))
 
