@@ -22,6 +22,16 @@ func (s *manageHandlersTestSuite) TestCreateContainer() {
 	s.Require().NoError(err)
 }
 
+func (s *manageHandlersTestSuite) TestRenameContainer() {
+	s.svcMock.On("RenameContainer", "old-name", "new-name").Return(nil).Once()
+
+	_, err := s.client.RenameContainer(s.ctx, &v1pb.RenameContainerRequest{
+		OldName: "old-name",
+		NewName: "new-name",
+	})
+	s.Require().NoError(err)
+}
+
 func (s *manageHandlersTestSuite) TestListContainers() {
 	s.svcMock.On("ListContainers").Return([]string{"test-container1", "test-container2"}, nil).Once()
 

@@ -63,6 +63,10 @@ var (
 	containerCreate     = container.Command("create", "create new container")
 	containerCreateName = containerCreate.Arg("name", "name of the container to create").Required().String()
 
+	containerRename        = container.Command("rename", "rename the given container")
+	containerRenameOldName = containerRename.Arg("old-name", "the old name of the container").Required().String()
+	containerRenameNewName = containerRename.Arg("new-name", "the new name of the container").Required().String()
+
 	containerDelete     = container.Command("delete", "delete the given container")
 	containerDeleteName = containerDelete.Arg("name", "name of the container to delete").Required().String()
 
@@ -190,6 +194,7 @@ func main() {
 
 	r := router.New(ctx)
 	r.Register(containerCreate.FullCommand(), cliSvc.CreateContainer(*containerCreateName))
+	r.Register(containerRename.FullCommand(), cliSvc.RenameContainer(*containerRenameOldName, *containerRenameNewName))
 	r.Register(containerList.FullCommand(), cliSvc.ListContainers())
 	r.Register(containerDelete.FullCommand(), cliSvc.DeleteContainer(*containerDeleteName))
 

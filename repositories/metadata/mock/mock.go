@@ -24,6 +24,11 @@ func (m *Mock) CreateContainer(_ context.Context, name string) error {
 	return args.Error(0)
 }
 
+func (m *Mock) RenameContainer(_ context.Context, oldName, newName string) error {
+	args := m.Called(oldName, newName)
+	return args.Error(0)
+}
+
 func (m *Mock) ListContainers(context.Context) ([]string, error) {
 	args := m.Called()
 	return args.Get(0).([]string), args.Error(1)

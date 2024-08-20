@@ -13,6 +13,7 @@ var ErrNotFound = errors.New("not found")
 
 type Repository interface {
 	CreateContainer(ctx context.Context, name string) error
+	RenameContainer(ctx context.Context, oldName, newName string) error
 	ListContainers(ctx context.Context) ([]string, error)
 	DeleteContainer(ctx context.Context, name string) error
 

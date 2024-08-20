@@ -4,6 +4,7 @@ import (
 	"context"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/pkg/errors"
 )
 
 func (r *repository) CreateContainer(ctx context.Context, name string) error {
@@ -18,6 +19,43 @@ func (r *repository) CreateContainer(ctx context.Context, name string) error {
 			r.tp().UTC(),
 		))
 	return mapSQLErrors(err)
+}
+
+func (r *repository) RenameContainer(ctx context.Context, oldName, newName string) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return errors.Wrap(err, "error beginning transaction")
+	}
+	defer tx.Rollback()
+
+	row, err := selectQueryRow(ctx, tx, psql.
+		Select("id").
+		From("containers").
+		Where(sq.Eq{"name": oldName}))
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+
+	var containerID uint
+	if err := row.Scan(&containerID); err != nil {
+		return errors.Wrap(err, "error looking up container")
+	}
+
+	_, err = updateQuery(ctx, tx, psql.
+		Update("containers").
+		Set("name", newName).
+		Where(sq.Eq{
+			"id": containerID,
+		}),
+	)
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return errors.Wrap(err, "error committing transaction")
+	}
+	return nil
 }
 
 func (r *repository) ListContainers(ctx context.Context) ([]string, error) {

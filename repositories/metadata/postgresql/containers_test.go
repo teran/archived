@@ -35,4 +35,13 @@ func (s *postgreSQLRepositoryTestSuite) TestContainerOperations() {
 	s.Require().Equal([]string{
 		"test-container5",
 	}, list)
+
+	err = s.repo.RenameContainer(s.ctx, "test-container5", "and-then-there-was-the-one")
+	s.Require().NoError(err)
+
+	list, err = s.repo.ListContainers(s.ctx)
+	s.Require().NoError(err)
+	s.Require().Equal([]string{
+		"and-then-there-was-the-one",
+	}, list)
 }
