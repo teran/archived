@@ -5,10 +5,10 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/pkg/errors"
 	ptr "github.com/teran/go-ptr"
 
 	"github.com/teran/archived/models"
+	"github.com/teran/archived/repositories/metadata"
 )
 
 const defaultLimit uint64 = 1000
@@ -16,7 +16,7 @@ const defaultLimit uint64 = 1000
 func (r *repository) CreateVersion(ctx context.Context, container string) (string, error) {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return "", errors.Wrap(err, "error beginning transaction")
+		return "", mapSQLErrors(err)
 	}
 	defer tx.Rollback()
 
@@ -30,7 +30,7 @@ func (r *repository) CreateVersion(ctx context.Context, container string) (strin
 
 	var containerID uint
 	if err := row.Scan(&containerID); err != nil {
-		return "", errors.Wrap(err, "error looking up container")
+		return "", metadata.ErrNotFound
 	}
 
 	versionID := r.tp().UTC().Format("20060102150405")
@@ -54,7 +54,7 @@ func (r *repository) CreateVersion(ctx context.Context, container string) (strin
 	}
 
 	if err := tx.Commit(); err != nil {
-		return "", errors.Wrap(err, "error committing transaction")
+		return "", mapSQLErrors(err)
 	}
 
 	return versionID, nil
@@ -162,7 +162,7 @@ func (r *repository) listVersionsByContainer(ctx context.Context, container stri
 		)
 
 		if err := rows.Scan(&r.Name, &r.IsPublished, &createdAt); err != nil {
-			return 0, nil, errors.Wrap(err, "error decoding database result")
+			return 0, nil, mapSQLErrors(err)
 		}
 		r.CreatedAt = time.Date(
 			createdAt.Year(), createdAt.Month(), createdAt.Day(),
@@ -179,7 +179,7 @@ func (r *repository) listVersionsByContainer(ctx context.Context, container stri
 func (r *repository) MarkVersionPublished(ctx context.Context, container, version string) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return errors.Wrap(err, "error beginning transaction")
+		return mapSQLErrors(err)
 	}
 	defer tx.Rollback()
 
@@ -194,7 +194,7 @@ func (r *repository) MarkVersionPublished(ctx context.Context, container, versio
 	}
 
 	if err := row.Scan(&containerID); err != nil {
-		return errors.Wrap(err, "error looking up container")
+		return metadata.ErrNotFound
 	}
 
 	_, err = updateQuery(ctx, tx, psql.
@@ -209,7 +209,7 @@ func (r *repository) MarkVersionPublished(ctx context.Context, container, versio
 	}
 
 	if err := tx.Commit(); err != nil {
-		return errors.Wrap(err, "error committing transaction")
+		return mapSQLErrors(err)
 	}
 
 	return nil
@@ -218,7 +218,7 @@ func (r *repository) MarkVersionPublished(ctx context.Context, container, versio
 func (r *repository) DeleteVersion(ctx context.Context, container, version string) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return errors.Wrap(err, "error beginning transaction")
+		return mapSQLErrors(err)
 	}
 	defer tx.Rollback()
 
@@ -236,7 +236,7 @@ func (r *repository) DeleteVersion(ctx context.Context, container, version strin
 
 	var versionID uint64
 	if err := row.Scan(&versionID); err != nil {
-		return errors.Wrap(err, "error looking up version")
+		return mapSQLErrors(err)
 	}
 
 	_, err = deleteQuery(ctx, tx, psql.
@@ -259,7 +259,7 @@ func (r *repository) DeleteVersion(ctx context.Context, container, version strin
 	}
 
 	if err := tx.Commit(); err != nil {
-		return errors.Wrap(err, "error committing transaction")
+		return mapSQLErrors(err)
 	}
 	return nil
 }

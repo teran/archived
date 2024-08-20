@@ -90,6 +90,23 @@ func (s *postgreSQLRepositoryTestSuite) TestPublishVersion() {
 	}, list)
 }
 
+func (s *postgreSQLRepositoryTestSuite) TestPublishVersionErrors() {
+	// Not existent container
+	err := s.repo.MarkVersionPublished(s.ctx, "not-existent", "version")
+	s.Require().Error(err)
+	s.Require().Equal(metadata.ErrNotFound, err)
+
+	// Not existent version
+	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Once()
+
+	err = s.repo.CreateContainer(s.ctx, "container1")
+	s.Require().NoError(err)
+
+	err = s.repo.MarkVersionPublished(s.ctx, "not-existent", "version")
+	s.Require().Error(err)
+	s.Require().Equal(metadata.ErrNotFound, err)
+}
+
 func (s *postgreSQLRepositoryTestSuite) TestListAllVersionsByContainerErrors() {
 	_, err := s.repo.ListAllVersionsByContainer(s.ctx, "test-container")
 	s.Require().Error(err)

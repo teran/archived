@@ -4,7 +4,6 @@ import (
 	"context"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/pkg/errors"
 )
 
 func (r *repository) CreateBLOB(ctx context.Context, checksum string, size uint64, mimeType string) error {
@@ -60,7 +59,7 @@ func (r *repository) EnsureBlobKey(ctx context.Context, key string, size uint64)
 			"size":     size,
 		}))
 	if err != nil {
-		return errors.Wrap(err, "error selecting BLOB")
+		return mapSQLErrors(err)
 	}
 
 	var blobID uint

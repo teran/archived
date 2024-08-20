@@ -22,6 +22,16 @@ func (s *manageHandlersTestSuite) TestCreateContainer() {
 	s.Require().NoError(err)
 }
 
+func (s *manageHandlersTestSuite) TestCreateContainerNotFound() {
+	s.svcMock.On("CreateContainer", "test-container").Return(service.ErrNotFound).Once()
+
+	_, err := s.client.CreateContainer(s.ctx, &v1pb.CreateContainerRequest{
+		Name: "test-container",
+	})
+	s.Require().Error(err)
+	s.Require().Equal("rpc error: code = NotFound desc = entity not found", err.Error())
+}
+
 func (s *manageHandlersTestSuite) TestRenameContainer() {
 	s.svcMock.On("RenameContainer", "old-name", "new-name").Return(nil).Once()
 
@@ -30,6 +40,17 @@ func (s *manageHandlersTestSuite) TestRenameContainer() {
 		NewName: "new-name",
 	})
 	s.Require().NoError(err)
+}
+
+func (s *manageHandlersTestSuite) TestRenameContainerNotFound() {
+	s.svcMock.On("RenameContainer", "old-name", "new-name").Return(service.ErrNotFound).Once()
+
+	_, err := s.client.RenameContainer(s.ctx, &v1pb.RenameContainerRequest{
+		OldName: "old-name",
+		NewName: "new-name",
+	})
+	s.Require().Error(err)
+	s.Require().Equal("rpc error: code = NotFound desc = entity not found", err.Error())
 }
 
 func (s *manageHandlersTestSuite) TestListContainers() {
@@ -42,6 +63,14 @@ func (s *manageHandlersTestSuite) TestListContainers() {
 	}, resp.GetName())
 }
 
+func (s *manageHandlersTestSuite) TestListContainersNotFound() {
+	s.svcMock.On("ListContainers").Return([]string{}, service.ErrNotFound).Once()
+
+	_, err := s.client.ListContainers(s.ctx, &v1pb.ListContainersRequest{})
+	s.Require().Error(err)
+	s.Require().Equal("rpc error: code = NotFound desc = entity not found", err.Error())
+}
+
 func (s *manageHandlersTestSuite) TestCreateVersion() {
 	s.svcMock.On("CreateVersion", "test-container").Return("20240102030405", nil).Once()
 
@@ -52,6 +81,16 @@ func (s *manageHandlersTestSuite) TestCreateVersion() {
 	s.Require().Equal("20240102030405", resp.GetVersion())
 }
 
+func (s *manageHandlersTestSuite) TestCreateVersionNotFound() {
+	s.svcMock.On("CreateVersion", "test-container").Return("", service.ErrNotFound).Once()
+
+	_, err := s.client.CreateVersion(s.ctx, &v1pb.CreateVersionRequest{
+		Container: "test-container",
+	})
+	s.Require().Error(err)
+	s.Require().Equal("rpc error: code = NotFound desc = entity not found", err.Error())
+}
+
 func (s *manageHandlersTestSuite) TestDeleteContainer() {
 	s.svcMock.On("DeleteContainer", "test-container").Return(nil).Once()
 
@@ -59,6 +98,16 @@ func (s *manageHandlersTestSuite) TestDeleteContainer() {
 		Name: "test-container",
 	})
 	s.Require().NoError(err)
+}
+
+func (s *manageHandlersTestSuite) TestDeleteContainerNotFound() {
+	s.svcMock.On("DeleteContainer", "test-container").Return(service.ErrNotFound).Once()
+
+	_, err := s.client.DeleteContainer(s.ctx, &v1pb.DeleteContainerRequest{
+		Name: "test-container",
+	})
+	s.Require().Error(err)
+	s.Require().Equal("rpc error: code = NotFound desc = entity not found", err.Error())
 }
 
 func (s *manageHandlersTestSuite) TestListVersions() {
@@ -80,6 +129,16 @@ func (s *manageHandlersTestSuite) TestListVersions() {
 	}, resp.GetVersions())
 }
 
+func (s *manageHandlersTestSuite) TestListVersionsNotFound() {
+	s.svcMock.On("ListAllVersions", "test-container").Return([]models.Version{}, service.ErrNotFound).Once()
+
+	_, err := s.client.ListVersions(s.ctx, &v1pb.ListVersionsRequest{
+		Container: "test-container",
+	})
+	s.Require().Error(err)
+	s.Require().Equal("rpc error: code = NotFound desc = entity not found", err.Error())
+}
+
 func (s *manageHandlersTestSuite) TestDeleteVersion() {
 	s.svcMock.On("DeleteVersion", "test-container", "test-version").Return(nil).Once()
 
@@ -90,6 +149,17 @@ func (s *manageHandlersTestSuite) TestDeleteVersion() {
 	s.Require().NoError(err)
 }
 
+func (s *manageHandlersTestSuite) TestDeleteVersionNotFound() {
+	s.svcMock.On("DeleteVersion", "test-container", "test-version").Return(service.ErrNotFound).Once()
+
+	_, err := s.client.DeleteVersion(s.ctx, &v1pb.DeleteVersionRequest{
+		Container: "test-container",
+		Version:   "test-version",
+	})
+	s.Require().Error(err)
+	s.Require().Equal("rpc error: code = NotFound desc = entity not found", err.Error())
+}
+
 func (s *manageHandlersTestSuite) TestPublishVersion() {
 	s.svcMock.On("PublishVersion", "test-container", "20240102030405").Return(nil).Once()
 
@@ -98,6 +168,17 @@ func (s *manageHandlersTestSuite) TestPublishVersion() {
 		Version:   "20240102030405",
 	})
 	s.Require().NoError(err)
+}
+
+func (s *manageHandlersTestSuite) TestPublishVersionNotFound() {
+	s.svcMock.On("PublishVersion", "test-container", "20240102030405").Return(service.ErrNotFound).Once()
+
+	_, err := s.client.PublishVersion(s.ctx, &v1pb.PublishVersionRequest{
+		Container: "test-container",
+		Version:   "20240102030405",
+	})
+	s.Require().Error(err)
+	s.Require().Equal("rpc error: code = NotFound desc = entity not found", err.Error())
 }
 
 func (s *manageHandlersTestSuite) TestCreateObject() {
@@ -115,6 +196,20 @@ func (s *manageHandlersTestSuite) TestCreateObject() {
 	s.Require().Equal("https://example.com/url", resp.GetUploadUrl())
 }
 
+func (s *manageHandlersTestSuite) TestCreateObjectNotFound() {
+	s.svcMock.On("EnsureBLOBPresenceOrGetUploadURL", "checksum", int64(1234)).Return("", service.ErrNotFound).Once()
+
+	_, err := s.client.CreateObject(s.ctx, &v1pb.CreateObjectRequest{
+		Container: "test-container",
+		Version:   "version",
+		Key:       "key",
+		Checksum:  "checksum",
+		Size:      1234,
+	})
+	s.Require().Error(err)
+	s.Require().Equal("rpc error: code = NotFound desc = entity not found", err.Error())
+}
+
 func (s *manageHandlersTestSuite) TestListObjects() {
 	s.svcMock.On("ListObjects", "container", "version").Return([]string{"obj1", "obj2", "obj3"}, nil).Once()
 
@@ -126,6 +221,17 @@ func (s *manageHandlersTestSuite) TestListObjects() {
 	s.Require().Equal([]string{
 		"obj1", "obj2", "obj3",
 	}, resp.GetObjects())
+}
+
+func (s *manageHandlersTestSuite) TestListObjectsNotFound() {
+	s.svcMock.On("ListObjects", "container", "version").Return([]string{}, service.ErrNotFound).Once()
+
+	_, err := s.client.ListObjects(s.ctx, &v1pb.ListObjectsRequest{
+		Container: "container",
+		Version:   "version",
+	})
+	s.Require().Error(err)
+	s.Require().Equal("rpc error: code = NotFound desc = entity not found", err.Error())
 }
 
 func (s *manageHandlersTestSuite) TestGetObjectURL() {
@@ -140,6 +246,18 @@ func (s *manageHandlersTestSuite) TestGetObjectURL() {
 	s.Require().Equal("test-url", resp.GetUrl())
 }
 
+func (s *manageHandlersTestSuite) TestGetObjectURLNotFound() {
+	s.svcMock.On("GetObjectURL", "test-container", "test-version", "test-key").Return("test-url", service.ErrNotFound).Once()
+
+	_, err := s.client.GetObjectURL(s.ctx, &v1pb.GetObjectURLRequest{
+		Container: "test-container",
+		Version:   "test-version",
+		Key:       "test-key",
+	})
+	s.Require().Error(err)
+	s.Require().Equal("rpc error: code = NotFound desc = entity not found", err.Error())
+}
+
 func (s *manageHandlersTestSuite) TestDeleteObject() {
 	s.svcMock.On("DeleteObject", "test-container", "test-version", "test-key").Return(nil).Once()
 
@@ -149,6 +267,18 @@ func (s *manageHandlersTestSuite) TestDeleteObject() {
 		Key:       "test-key",
 	})
 	s.Require().NoError(err)
+}
+
+func (s *manageHandlersTestSuite) TestDeleteObjectNotFound() {
+	s.svcMock.On("DeleteObject", "test-container", "test-version", "test-key").Return(service.ErrNotFound).Once()
+
+	_, err := s.client.DeleteObject(s.ctx, &v1pb.DeleteObjectRequest{
+		Container: "test-container",
+		Version:   "test-version",
+		Key:       "test-key",
+	})
+	s.Require().Error(err)
+	s.Require().Equal("rpc error: code = NotFound desc = entity not found", err.Error())
 }
 
 // Definitions ...

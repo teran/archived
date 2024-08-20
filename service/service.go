@@ -69,7 +69,7 @@ func newSvc(mdRepo metadata.Repository, blobRepo blob.Repository, versionsPerPag
 func (s *service) CreateContainer(ctx context.Context, name string) error {
 	err := s.mdRepo.CreateContainer(ctx, name)
 	if err != nil {
-		return errors.Wrap(err, "error creating container")
+		return mapMetadataErrors(err)
 	}
 	return nil
 }
@@ -77,7 +77,7 @@ func (s *service) CreateContainer(ctx context.Context, name string) error {
 func (s *service) RenameContainer(ctx context.Context, oldName, newName string) error {
 	err := s.mdRepo.RenameContainer(ctx, oldName, newName)
 	if err != nil {
-		return errors.Wrap(err, "error renaming container")
+		return mapMetadataErrors(err)
 	}
 	return nil
 }
@@ -111,7 +111,7 @@ func (s *service) ListPublishedVersionsByPage(ctx context.Context, container str
 	limit := s.versionsPageSize
 	totalVersions, versions, err := s.mdRepo.ListPublishedVersionsByContainerAndPage(ctx, container, offset, limit)
 	if err != nil {
-		return 0, nil, err
+		return 0, nil, mapMetadataErrors(err)
 	}
 
 	totalPages := (totalVersions / s.versionsPageSize)
@@ -138,7 +138,8 @@ func (s *service) DeleteVersion(ctx context.Context, container, id string) error
 }
 
 func (s *service) AddObject(ctx context.Context, container, versionID, key, casKey string) error {
-	return s.mdRepo.CreateObject(ctx, container, versionID, strings.TrimPrefix(key, "/"), casKey)
+	err := s.mdRepo.CreateObject(ctx, container, versionID, strings.TrimPrefix(key, "/"), casKey)
+	return mapMetadataErrors(err)
 }
 
 func (s *service) ListObjects(ctx context.Context, container, versionID string) ([]string, error) {

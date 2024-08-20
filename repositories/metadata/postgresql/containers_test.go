@@ -1,5 +1,7 @@
 package postgresql
 
+import "github.com/teran/archived/repositories/metadata"
+
 func (s *postgreSQLRepositoryTestSuite) TestContainerOperations() {
 	s.tp.On("Now").Return("2024-01-02T01:02:03Z").Times(3)
 
@@ -15,10 +17,7 @@ func (s *postgreSQLRepositoryTestSuite) TestContainerOperations() {
 
 	err = s.repo.CreateContainer(s.ctx, "test-container9")
 	s.Require().Error(err)
-	s.Require().Equal(
-		`pq: duplicate key value violates unique constraint "containers_name_key"`,
-		err.Error(),
-	)
+	s.Require().Equal(metadata.ErrConflict, err)
 
 	list, err = s.repo.ListContainers(s.ctx)
 	s.Require().NoError(err)
@@ -30,6 +29,9 @@ func (s *postgreSQLRepositoryTestSuite) TestContainerOperations() {
 	err = s.repo.DeleteContainer(s.ctx, "test-container9")
 	s.Require().NoError(err)
 
+	err = s.repo.DeleteContainer(s.ctx, "not-existent")
+	s.Require().NoError(err)
+
 	list, err = s.repo.ListContainers(s.ctx)
 	s.Require().NoError(err)
 	s.Require().Equal([]string{
@@ -38,6 +40,10 @@ func (s *postgreSQLRepositoryTestSuite) TestContainerOperations() {
 
 	err = s.repo.RenameContainer(s.ctx, "test-container5", "and-then-there-was-the-one")
 	s.Require().NoError(err)
+
+	err = s.repo.RenameContainer(s.ctx, "not-existent", "some-name")
+	s.Require().Error(err)
+	s.Require().Equal(metadata.ErrNotFound, err)
 
 	list, err = s.repo.ListContainers(s.ctx)
 	s.Require().NoError(err)

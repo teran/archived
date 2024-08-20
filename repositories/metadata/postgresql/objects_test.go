@@ -71,3 +71,30 @@ func (s *postgreSQLRepositoryTestSuite) TestListObjectsErrors() {
 	s.Require().Error(err)
 	s.Require().Equal(metadata.ErrNotFound, err)
 }
+
+func (s *postgreSQLRepositoryTestSuite) TestRemapObjectErrors() {
+	// Remap with not existent container
+	err := s.repo.RemapObject(s.ctx, "not-existent", "version", "data/some-key.txt", "deadbeef")
+	s.Require().Error(err)
+	s.Require().Equal(metadata.ErrNotFound, err)
+
+	// Remap with not existent version
+	s.tp.On("Now").Return("2024-01-02T01:02:03Z").Once()
+
+	err = s.repo.CreateContainer(s.ctx, "container1")
+	s.Require().NoError(err)
+
+	err = s.repo.RemapObject(s.ctx, "not-existent", "version", "data/some-key.txt", "deadbeef")
+	s.Require().Error(err)
+	s.Require().Equal(metadata.ErrNotFound, err)
+
+	// Remap with not existent key
+	s.tp.On("Now").Return("2024-01-02T01:02:03Z").Twice()
+
+	versionID, err := s.repo.CreateVersion(s.ctx, "container1")
+	s.Require().NoError(err)
+
+	err = s.repo.RemapObject(s.ctx, "container1", versionID, "data/some-key.txt", "deadbeef")
+	s.Require().Error(err)
+	s.Require().Equal(metadata.ErrNotFound, err)
+}
