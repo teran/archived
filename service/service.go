@@ -17,6 +17,7 @@ type Manager interface {
 	Publisher
 
 	CreateContainer(ctx context.Context, name string) error
+	RenameContainer(ctx context.Context, oldName, newName string) error
 	DeleteContainer(ctx context.Context, name string) error
 
 	CreateVersion(ctx context.Context, container string) (id string, err error)
@@ -70,7 +71,15 @@ func (s *service) CreateContainer(ctx context.Context, name string) error {
 	if err != nil {
 		return errors.Wrap(err, "error creating container")
 	}
-	return err
+	return nil
+}
+
+func (s *service) RenameContainer(ctx context.Context, oldName, newName string) error {
+	err := s.mdRepo.RenameContainer(ctx, oldName, newName)
+	if err != nil {
+		return errors.Wrap(err, "error renaming container")
+	}
+	return nil
 }
 
 func (s *service) ListContainers(ctx context.Context) ([]string, error) {

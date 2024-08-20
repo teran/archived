@@ -41,6 +41,10 @@ func (m *memcache) CreateContainer(ctx context.Context, name string) error {
 	return m.repo.CreateContainer(ctx, name)
 }
 
+func (m *memcache) RenameContainer(ctx context.Context, oldName, newName string) error {
+	return m.repo.RenameContainer(ctx, oldName, newName)
+}
+
 func (m *memcache) ListContainers(ctx context.Context) ([]string, error) {
 	cacheKey := strings.Join([]string{
 		m.keyPrefix,

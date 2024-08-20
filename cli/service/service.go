@@ -26,6 +26,7 @@ import (
 
 type Service interface {
 	CreateContainer(containerName string) func(ctx context.Context) error
+	RenameContainer(oldName, newName string) func(ctx context.Context) error
 	ListContainers() func(ctx context.Context) error
 	DeleteContainer(containerName string) func(ctx context.Context) error
 
@@ -63,6 +64,20 @@ func (s *service) CreateContainer(containerName string) func(ctx context.Context
 			return errors.Wrap(err, "error creating container")
 		}
 		fmt.Printf("container `%s` created\n", containerName)
+		return nil
+	}
+}
+
+func (s *service) RenameContainer(oldName, newName string) func(ctx context.Context) error {
+	return func(ctx context.Context) error {
+		_, err := s.cli.RenameContainer(ctx, &v1proto.RenameContainerRequest{
+			OldName: oldName,
+			NewName: newName,
+		})
+		if err != nil {
+			return errors.Wrap(err, "error renaming container")
+		}
+		fmt.Printf("container `%s` renamed to `%s`\n", oldName, newName)
 		return nil
 	}
 }

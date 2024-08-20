@@ -177,6 +177,16 @@ func (s *memcacheTestSuite) TestCreateContainer() {
 	s.Require().NoError(err)
 }
 
+func (s *memcacheTestSuite) TestRenameContainer() {
+	s.repoMock.On("RenameContainer", "old-name", "new-name").Return(nil).Twice()
+
+	err := s.cache.RenameContainer(s.ctx, "old-name", "new-name")
+	s.Require().NoError(err)
+
+	err = s.cache.RenameContainer(s.ctx, "old-name", "new-name")
+	s.Require().NoError(err)
+}
+
 func (s *memcacheTestSuite) TestDeleteContainer() {
 	s.repoMock.On("DeleteContainer", "container1").Return(nil).Twice()
 

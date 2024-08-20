@@ -28,6 +28,21 @@ func (s *serviceTestSuite) TestCreateContainer() {
 	s.Require().Equal("error creating container: test error", err.Error())
 }
 
+func (s *serviceTestSuite) TestRenameContainer() {
+	// Happy path
+	s.mdRepoMock.On("RenameContainer", "old-name", "new-name").Return(nil).Once()
+
+	err := s.svc.RenameContainer(s.ctx, "old-name", "new-name")
+	s.Require().NoError(err)
+
+	// return error
+	s.mdRepoMock.On("RenameContainer", "old-name", "new-name").Return(errors.New("test error")).Once()
+
+	err = s.svc.RenameContainer(s.ctx, "old-name", "new-name")
+	s.Require().Error(err)
+	s.Require().Equal("error renaming container: test error", err.Error())
+}
+
 func (s *serviceTestSuite) TestDeleteContainer() {
 	s.mdRepoMock.On("DeleteContainer", "container").Return(nil).Once()
 

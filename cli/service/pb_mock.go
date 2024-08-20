@@ -23,6 +23,11 @@ func (m *protoClientMock) CreateContainer(ctx context.Context, in *v1proto.Creat
 	return &v1proto.CreateContainerResponse{}, args.Error(0)
 }
 
+func (m *protoClientMock) RenameContainer(ctx context.Context, in *v1proto.RenameContainerRequest, opts ...grpc.CallOption) (*v1proto.RenameContainerResponse, error) {
+	args := m.Called(in.GetOldName(), in.GetNewName())
+	return &v1proto.RenameContainerResponse{}, args.Error(0)
+}
+
 func (m *protoClientMock) DeleteContainer(ctx context.Context, in *v1proto.DeleteContainerRequest, opts ...grpc.CallOption) (*v1proto.DeleteContainerResponse, error) {
 	args := m.Called(in.GetName())
 	return &v1proto.DeleteContainerResponse{}, args.Error(0)

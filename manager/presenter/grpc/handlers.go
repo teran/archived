@@ -41,6 +41,15 @@ func (h *handlers) CreateContainer(ctx context.Context, in *v1.CreateContainerRe
 	return &v1.CreateContainerResponse{}, nil
 }
 
+func (h *handlers) RenameContainer(ctx context.Context, in *v1.RenameContainerRequest) (*v1.RenameContainerResponse, error) {
+	err := h.svc.RenameContainer(ctx, in.GetOldName(), in.GetNewName())
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.RenameContainerResponse{}, nil
+}
+
 func (h *handlers) DeleteContainer(ctx context.Context, in *v1.DeleteContainerRequest) (*v1.DeleteContainerResponse, error) {
 	err := h.svc.DeleteContainer(ctx, in.GetName())
 	if err != nil {

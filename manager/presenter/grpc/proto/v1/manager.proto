@@ -9,6 +9,13 @@ message CreateContainerRequest {
 }
 message CreateContainerResponse {}
 
+message RenameContainerRequest{
+  string old_name = 1;
+  string new_name = 2;
+}
+
+message RenameContainerResponse {}
+
 message DeleteContainerRequest {
   string name = 1;
 }
@@ -88,6 +95,7 @@ message DeleteObjectResponse {}
 
 service ManageService {
     rpc CreateContainer(CreateContainerRequest) returns (CreateContainerResponse);
+    rpc RenameContainer(RenameContainerRequest) returns (RenameContainerResponse);
     rpc DeleteContainer(DeleteContainerRequest) returns (DeleteContainerResponse);
     rpc ListContainers(ListContainersRequest) returns (ListContainersResponse);
 

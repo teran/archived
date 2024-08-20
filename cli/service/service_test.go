@@ -27,6 +27,13 @@ func (s *serviceTestSuite) TestCreateContainer() {
 	s.Require().NoError(fn(s.ctx))
 }
 
+func (s *serviceTestSuite) TestRenameContainer() {
+	s.cliMock.On("RenameContainer", "old-name", "new-name").Return(nil).Once()
+
+	fn := s.svc.RenameContainer("old-name", "new-name")
+	s.Require().NoError(fn(s.ctx))
+}
+
 func (s *serviceTestSuite) TestListContainers() {
 	s.cliMock.On("ListContainers").Return([]string{"container1", "container2"}, nil).Once()
 
