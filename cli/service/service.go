@@ -269,7 +269,7 @@ func (s *service) createVersionFromYUMRepository(ctx context.Context, containerN
 			if cnt%processStatusInterval == 0 {
 				log.WithFields(log.Fields{
 					"repository_url": url,
-				}).Infof("%d files processed ...", cnt)
+				}).Infof("%d files processed ...", cnt+1)
 			}
 
 			return nil
@@ -337,12 +337,6 @@ func (s *service) CreateObject(containerName, versionID, directoryPath string) f
 		var cnt int
 		return filepath.Walk(directoryPath, func(path string, info fs.FileInfo, err error) error {
 			defer func() { cnt++ }()
-
-			if cnt%processStatusInterval == 0 {
-				log.WithFields(log.Fields{
-					"directory": directoryPath,
-				}).Infof("%d files processed ...", cnt)
-			}
 
 			if err != nil {
 				return errors.Wrap(err, "walk: internal error")
@@ -415,6 +409,12 @@ func (s *service) CreateObject(containerName, versionID, directoryPath string) f
 				if err := uploadBlob(ctx, url, fp, size); err != nil {
 					return err
 				}
+			}
+
+			if cnt%processStatusInterval == 0 {
+				log.WithFields(log.Fields{
+					"directory": directoryPath,
+				}).Infof("%d files processed ...", cnt+1)
 			}
 
 			return nil
