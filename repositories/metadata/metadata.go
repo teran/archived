@@ -9,7 +9,10 @@ import (
 	"github.com/teran/archived/models"
 )
 
-var ErrNotFound = errors.New("not found")
+var (
+	ErrNotFound = errors.New("not found")
+	ErrConflict = errors.New("entity with given identifier already exists")
+)
 
 type Repository interface {
 	CreateContainer(ctx context.Context, name string) error

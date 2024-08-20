@@ -35,7 +35,7 @@ func New(svc service.Manager) ManageServerInterface {
 func (h *handlers) CreateContainer(ctx context.Context, in *v1.CreateContainerRequest) (*v1.CreateContainerResponse, error) {
 	err := h.svc.CreateContainer(ctx, in.GetName())
 	if err != nil {
-		return nil, err
+		return nil, mapServiceError(err)
 	}
 
 	return &v1.CreateContainerResponse{}, nil
@@ -44,7 +44,7 @@ func (h *handlers) CreateContainer(ctx context.Context, in *v1.CreateContainerRe
 func (h *handlers) RenameContainer(ctx context.Context, in *v1.RenameContainerRequest) (*v1.RenameContainerResponse, error) {
 	err := h.svc.RenameContainer(ctx, in.GetOldName(), in.GetNewName())
 	if err != nil {
-		return nil, err
+		return nil, mapServiceError(err)
 	}
 
 	return &v1.RenameContainerResponse{}, nil
@@ -53,7 +53,7 @@ func (h *handlers) RenameContainer(ctx context.Context, in *v1.RenameContainerRe
 func (h *handlers) DeleteContainer(ctx context.Context, in *v1.DeleteContainerRequest) (*v1.DeleteContainerResponse, error) {
 	err := h.svc.DeleteContainer(ctx, in.GetName())
 	if err != nil {
-		return nil, err
+		return nil, mapServiceError(err)
 	}
 
 	return &v1.DeleteContainerResponse{}, nil
@@ -62,7 +62,7 @@ func (h *handlers) DeleteContainer(ctx context.Context, in *v1.DeleteContainerRe
 func (h *handlers) ListContainers(ctx context.Context, _ *v1.ListContainersRequest) (*v1.ListContainersResponse, error) {
 	containers, err := h.svc.ListContainers(ctx)
 	if err != nil {
-		return nil, err
+		return nil, mapServiceError(err)
 	}
 
 	return &v1.ListContainersResponse{
@@ -73,7 +73,7 @@ func (h *handlers) ListContainers(ctx context.Context, _ *v1.ListContainersReque
 func (h *handlers) CreateVersion(ctx context.Context, in *v1.CreateVersionRequest) (*v1.CreateVersionResponse, error) {
 	version, err := h.svc.CreateVersion(ctx, in.GetContainer())
 	if err != nil {
-		return nil, err
+		return nil, mapServiceError(err)
 	}
 
 	return &v1.CreateVersionResponse{
@@ -84,10 +84,7 @@ func (h *handlers) CreateVersion(ctx context.Context, in *v1.CreateVersionReques
 func (h *handlers) ListVersions(ctx context.Context, in *v1.ListVersionsRequest) (*v1.ListVersionsResponse, error) {
 	versions, err := h.svc.ListAllVersions(ctx, in.GetContainer())
 	if err != nil {
-		if err == service.ErrNotFound {
-			return nil, status.Error(codes.NotFound, err.Error())
-		}
-		return nil, err
+		return nil, mapServiceError(err)
 	}
 
 	versionNames := []string{}
@@ -103,7 +100,7 @@ func (h *handlers) ListVersions(ctx context.Context, in *v1.ListVersionsRequest)
 func (h *handlers) DeleteVersion(ctx context.Context, in *v1.DeleteVersionRequest) (*v1.DeleteVersionResponse, error) {
 	err := h.svc.DeleteVersion(ctx, in.GetContainer(), in.GetVersion())
 	if err != nil {
-		return nil, err
+		return nil, mapServiceError(err)
 	}
 
 	return &v1.DeleteVersionResponse{}, nil
@@ -112,7 +109,7 @@ func (h *handlers) DeleteVersion(ctx context.Context, in *v1.DeleteVersionReques
 func (h *handlers) PublishVersion(ctx context.Context, in *v1.PublishVersionRequest) (*v1.PublishVersionResponse, error) {
 	err := h.svc.PublishVersion(ctx, in.GetContainer(), in.GetVersion())
 	if err != nil {
-		return nil, err
+		return nil, mapServiceError(err)
 	}
 
 	return &v1.PublishVersionResponse{}, nil
@@ -121,12 +118,12 @@ func (h *handlers) PublishVersion(ctx context.Context, in *v1.PublishVersionRequ
 func (h *handlers) CreateObject(ctx context.Context, in *v1.CreateObjectRequest) (*v1.CreateObjectResponse, error) {
 	url, err := h.svc.EnsureBLOBPresenceOrGetUploadURL(ctx, in.GetChecksum(), in.GetSize())
 	if err != nil && url == "" {
-		return nil, err
+		return nil, mapServiceError(err)
 	}
 
 	err = h.svc.AddObject(ctx, in.GetContainer(), in.GetVersion(), in.GetKey(), in.GetChecksum())
 	if err != nil {
-		return nil, err
+		return nil, mapServiceError(err)
 	}
 
 	return &v1.CreateObjectResponse{
@@ -140,7 +137,7 @@ func (h *handlers) ListObjects(ctx context.Context, in *v1.ListObjectsRequest) (
 		if err == service.ErrNotFound {
 			return nil, status.Error(codes.NotFound, err.Error())
 		}
-		return nil, err
+		return nil, mapServiceError(err)
 	}
 
 	return &v1.ListObjectsResponse{
@@ -154,7 +151,7 @@ func (h *handlers) GetObjectURL(ctx context.Context, in *v1.GetObjectURLRequest)
 		if err == service.ErrNotFound {
 			return nil, status.Error(codes.NotFound, err.Error())
 		}
-		return nil, err
+		return nil, mapServiceError(err)
 	}
 
 	return &v1.GetObjectURLResponse{
@@ -165,7 +162,7 @@ func (h *handlers) GetObjectURL(ctx context.Context, in *v1.GetObjectURLRequest)
 func (h *handlers) DeleteObject(ctx context.Context, in *v1.DeleteObjectRequest) (*v1.DeleteObjectResponse, error) {
 	err := h.svc.DeleteObject(ctx, in.GetContainer(), in.GetVersion(), in.GetKey())
 	if err != nil {
-		return nil, err
+		return nil, mapServiceError(err)
 	}
 
 	return &v1.DeleteObjectResponse{}, nil
@@ -173,4 +170,12 @@ func (h *handlers) DeleteObject(ctx context.Context, in *v1.DeleteObjectRequest)
 
 func (h *handlers) Register(gs *grpc.Server) {
 	v1.RegisterManageServiceServer(gs, h)
+}
+
+func mapServiceError(err error) error {
+	switch err {
+	case service.ErrNotFound:
+		return status.Error(codes.NotFound, err.Error())
+	}
+	return status.Error(codes.Internal, err.Error())
 }

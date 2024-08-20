@@ -13,6 +13,10 @@ func (s *postgreSQLRepositoryTestSuite) TestBlobs() {
 	err := s.repo.CreateContainer(s.ctx, containerName)
 	s.Require().NoError(err)
 
+	_, err = s.repo.CreateVersion(s.ctx, "not-existent")
+	s.Require().Error(err)
+	s.Require().Equal(metadata.ErrNotFound, err)
+
 	versionID, err := s.repo.CreateVersion(s.ctx, containerName)
 	s.Require().NoError(err)
 

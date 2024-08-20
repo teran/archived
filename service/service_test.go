@@ -25,7 +25,7 @@ func (s *serviceTestSuite) TestCreateContainer() {
 
 	err = s.svc.CreateContainer(s.ctx, "container")
 	s.Require().Error(err)
-	s.Require().Equal("error creating container: test error", err.Error())
+	s.Require().Equal("test error", err.Error())
 }
 
 func (s *serviceTestSuite) TestRenameContainer() {
@@ -40,7 +40,7 @@ func (s *serviceTestSuite) TestRenameContainer() {
 
 	err = s.svc.RenameContainer(s.ctx, "old-name", "new-name")
 	s.Require().Error(err)
-	s.Require().Equal("error renaming container: test error", err.Error())
+	s.Require().Equal("test error", err.Error())
 }
 
 func (s *serviceTestSuite) TestDeleteContainer() {
