@@ -13,7 +13,7 @@ import (
 
 const defaultLimit uint64 = 1000
 
-func (r *repository) CreateVersion(ctx context.Context, container string) (string, error) {
+func (r *repository) CreateVersion(ctx context.Context, namespace, container string) (string, error) {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return "", mapSQLErrors(err)
@@ -22,8 +22,24 @@ func (r *repository) CreateVersion(ctx context.Context, container string) (strin
 
 	row, err := selectQueryRow(ctx, tx, psql.
 		Select("id").
+		From("namespaces").
+		Where(sq.Eq{"name": namespace}))
+	if err != nil {
+		return "", mapSQLErrors(err)
+	}
+
+	var namespaceID uint
+	if err := row.Scan(&namespaceID); err != nil {
+		return "", mapSQLErrors(err)
+	}
+
+	row, err = selectQueryRow(ctx, tx, psql.
+		Select("id").
 		From("containers").
-		Where(sq.Eq{"name": container}))
+		Where(sq.Eq{
+			"namespace_id": namespaceID,
+			"name":         container,
+		}))
 	if err != nil {
 		return "", mapSQLErrors(err)
 	}
@@ -60,12 +76,26 @@ func (r *repository) CreateVersion(ctx context.Context, container string) (strin
 	return versionID, nil
 }
 
-func (r *repository) GetLatestPublishedVersionByContainer(ctx context.Context, container string) (string, error) {
+func (r *repository) GetLatestPublishedVersionByContainer(ctx context.Context, namespace, container string) (string, error) {
 	row, err := selectQueryRow(ctx, r.db, psql.
+		Select("id").
+		From("namespaces").
+		Where(sq.Eq{"name": namespace}))
+	if err != nil {
+		return "", mapSQLErrors(err)
+	}
+
+	var namespaceID uint
+	if err := row.Scan(&namespaceID); err != nil {
+		return "", mapSQLErrors(err)
+	}
+
+	row, err = selectQueryRow(ctx, r.db, psql.
 		Select("v.name").
 		From("versions v").
 		Join("containers c ON v.container_id = c.id").
 		Where(sq.Eq{
+			"c.namespace_id": namespaceID,
 			"c.name":         container,
 			"v.is_published": true,
 		}).
@@ -84,34 +114,50 @@ func (r *repository) GetLatestPublishedVersionByContainer(ctx context.Context, c
 	return versionName, nil
 }
 
-func (r *repository) ListPublishedVersionsByContainer(ctx context.Context, container string) ([]models.Version, error) {
-	_, versions, err := r.listVersionsByContainer(ctx, container, ptr.Bool(true), 0, 0)
+func (r *repository) ListPublishedVersionsByContainer(ctx context.Context, namespace, container string) ([]models.Version, error) {
+	_, versions, err := r.listVersionsByContainer(ctx, namespace, container, ptr.Bool(true), 0, 0)
 	return versions, err
 }
 
-func (r *repository) ListAllVersionsByContainer(ctx context.Context, container string) ([]models.Version, error) {
-	_, versions, err := r.listVersionsByContainer(ctx, container, nil, 0, 0)
+func (r *repository) ListAllVersionsByContainer(ctx context.Context, namespace, container string) ([]models.Version, error) {
+	_, versions, err := r.listVersionsByContainer(ctx, namespace, container, nil, 0, 0)
 	return versions, err
 }
 
-func (r *repository) ListUnpublishedVersionsByContainer(ctx context.Context, container string) ([]models.Version, error) {
-	_, versions, err := r.listVersionsByContainer(ctx, container, ptr.Bool(false), 0, 0)
+func (r *repository) ListUnpublishedVersionsByContainer(ctx context.Context, namespace, container string) ([]models.Version, error) {
+	_, versions, err := r.listVersionsByContainer(ctx, namespace, container, ptr.Bool(false), 0, 0)
 	return versions, err
 }
 
-func (r *repository) ListPublishedVersionsByContainerAndPage(ctx context.Context, container string, offset, limit uint64) (uint64, []models.Version, error) {
-	return r.listVersionsByContainer(ctx, container, ptr.Bool(true), offset, limit)
+func (r *repository) ListPublishedVersionsByContainerAndPage(ctx context.Context, namespace, container string, offset, limit uint64) (uint64, []models.Version, error) {
+	return r.listVersionsByContainer(ctx, namespace, container, ptr.Bool(true), offset, limit)
 }
 
-func (r *repository) listVersionsByContainer(ctx context.Context, container string, isPublished *bool, offset, limit uint64) (uint64, []models.Version, error) {
+func (r *repository) listVersionsByContainer(ctx context.Context, namespace, container string, isPublished *bool, offset, limit uint64) (uint64, []models.Version, error) {
 	if limit == 0 {
 		limit = defaultLimit
 	}
 
 	row, err := selectQueryRow(ctx, r.db, psql.
 		Select("id").
+		From("namespaces").
+		Where(sq.Eq{"name": namespace}))
+	if err != nil {
+		return 0, nil, mapSQLErrors(err)
+	}
+
+	var namespaceID uint
+	if err := row.Scan(&namespaceID); err != nil {
+		return 0, nil, mapSQLErrors(err)
+	}
+
+	row, err = selectQueryRow(ctx, r.db, psql.
+		Select("id").
 		From("containers").
-		Where(sq.Eq{"name": container}))
+		Where(sq.Eq{
+			"namespace_id": namespaceID,
+			"name":         container,
+		}))
 	if err != nil {
 		return 0, nil, mapSQLErrors(err)
 	}
@@ -176,23 +222,38 @@ func (r *repository) listVersionsByContainer(ctx context.Context, container stri
 	return versionsTotal, result, nil
 }
 
-func (r *repository) MarkVersionPublished(ctx context.Context, container, version string) error {
+func (r *repository) MarkVersionPublished(ctx context.Context, namespace, container, version string) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return mapSQLErrors(err)
 	}
 	defer tx.Rollback()
 
-	var containerID uint
-
 	row, err := selectQueryRow(ctx, tx, psql.
 		Select("id").
-		From("containers").
-		Where(sq.Eq{"name": container}))
+		From("namespaces").
+		Where(sq.Eq{"name": namespace}))
 	if err != nil {
 		return mapSQLErrors(err)
 	}
 
+	var namespaceID uint
+	if err := row.Scan(&namespaceID); err != nil {
+		return mapSQLErrors(err)
+	}
+
+	row, err = selectQueryRow(ctx, tx, psql.
+		Select("id").
+		From("containers").
+		Where(sq.Eq{
+			"namespace_id": namespaceID,
+			"name":         container,
+		}))
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+
+	var containerID uint
 	if err := row.Scan(&containerID); err != nil {
 		return metadata.ErrNotFound
 	}
@@ -215,7 +276,7 @@ func (r *repository) MarkVersionPublished(ctx context.Context, container, versio
 	return nil
 }
 
-func (r *repository) DeleteVersion(ctx context.Context, container, version string) error {
+func (r *repository) DeleteVersion(ctx context.Context, namespace, container, version string) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return mapSQLErrors(err)
@@ -223,12 +284,26 @@ func (r *repository) DeleteVersion(ctx context.Context, container, version strin
 	defer tx.Rollback()
 
 	row, err := selectQueryRow(ctx, tx, psql.
+		Select("id").
+		From("namespaces").
+		Where(sq.Eq{"name": namespace}))
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+
+	var namespaceID uint
+	if err := row.Scan(&namespaceID); err != nil {
+		return mapSQLErrors(err)
+	}
+
+	row, err = selectQueryRow(ctx, tx, psql.
 		Select("v.id").
 		From("versions v").
 		Join("containers c ON v.container_id = c.id").
 		Where(sq.Eq{
-			"c.name": container,
-			"v.name": version,
+			"c.namespace_id": namespaceID,
+			"c.name":         container,
+			"v.name":         version,
 		}))
 	if err != nil {
 		return mapSQLErrors(err)

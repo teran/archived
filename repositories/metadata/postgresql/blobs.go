@@ -24,7 +24,7 @@ func (r *repository) CreateBLOB(ctx context.Context, checksum string, size uint6
 	return mapSQLErrors(err)
 }
 
-func (r *repository) GetBlobKeyByObject(ctx context.Context, container, version, key string) (string, error) {
+func (r *repository) GetBlobKeyByObject(ctx context.Context, namespace, container, version, key string) (string, error) {
 	row, err := selectQueryRow(ctx, r.db, psql.
 		Select("b.checksum AS checksum").
 		From("blobs b").
@@ -32,7 +32,9 @@ func (r *repository) GetBlobKeyByObject(ctx context.Context, container, version,
 		Join("object_keys ok ON ok.id = o.key_id").
 		Join("versions v ON o.version_id = v.id").
 		Join("containers c ON v.container_id = c.id").
+		Join("namespaces ns ON c.namespace_id = ns.id").
 		Where(sq.Eq{
+			"ns.name":        namespace,
 			"c.name":         container,
 			"v.name":         version,
 			"ok.key":         key,

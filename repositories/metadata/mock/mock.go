@@ -19,83 +19,103 @@ func New() *Mock {
 	return &Mock{}
 }
 
-func (m *Mock) CreateContainer(_ context.Context, name string) error {
+func (m *Mock) CreateNamespace(ctx context.Context, name string) error {
 	args := m.Called(name)
 	return args.Error(0)
 }
 
-func (m *Mock) RenameContainer(_ context.Context, oldName, newName string) error {
+func (m *Mock) RenameNamespace(ctx context.Context, oldName, newName string) error {
 	args := m.Called(oldName, newName)
 	return args.Error(0)
 }
 
-func (m *Mock) ListContainers(context.Context) ([]string, error) {
+func (m *Mock) ListNamespaces(ctx context.Context) ([]string, error) {
 	args := m.Called()
 	return args.Get(0).([]string), args.Error(1)
 }
 
-func (m *Mock) DeleteContainer(_ context.Context, name string) error {
+func (m *Mock) DeleteNamespace(ctx context.Context, name string) error {
 	args := m.Called(name)
 	return args.Error(0)
 }
 
-func (m *Mock) CreateVersion(_ context.Context, container string) (string, error) {
-	args := m.Called(container)
+func (m *Mock) CreateContainer(_ context.Context, namespace, name string) error {
+	args := m.Called(namespace, name)
+	return args.Error(0)
+}
+
+func (m *Mock) RenameContainer(_ context.Context, namespace, oldName, newName string) error {
+	args := m.Called(namespace, oldName, newName)
+	return args.Error(0)
+}
+
+func (m *Mock) ListContainers(_ context.Context, namespace string) ([]string, error) {
+	args := m.Called(namespace)
+	return args.Get(0).([]string), args.Error(1)
+}
+
+func (m *Mock) DeleteContainer(_ context.Context, namespace, name string) error {
+	args := m.Called(namespace, name)
+	return args.Error(0)
+}
+
+func (m *Mock) CreateVersion(_ context.Context, namespace, container string) (string, error) {
+	args := m.Called(namespace, container)
 	return args.String(0), args.Error(1)
 }
 
-func (m *Mock) GetLatestPublishedVersionByContainer(_ context.Context, container string) (string, error) {
-	args := m.Called(container)
+func (m *Mock) GetLatestPublishedVersionByContainer(_ context.Context, namespace, container string) (string, error) {
+	args := m.Called(namespace, container)
 	return args.String(0), args.Error(1)
 }
 
-func (m *Mock) ListAllVersionsByContainer(_ context.Context, container string) ([]models.Version, error) {
-	args := m.Called(container)
+func (m *Mock) ListAllVersionsByContainer(_ context.Context, namespace, container string) ([]models.Version, error) {
+	args := m.Called(namespace, container)
 	return args.Get(0).([]models.Version), args.Error(1)
 }
 
-func (m *Mock) ListPublishedVersionsByContainer(_ context.Context, container string) ([]models.Version, error) {
-	args := m.Called(container)
+func (m *Mock) ListPublishedVersionsByContainer(_ context.Context, namespace, container string) ([]models.Version, error) {
+	args := m.Called(namespace, container)
 	return args.Get(0).([]models.Version), args.Error(1)
 }
 
-func (m *Mock) ListPublishedVersionsByContainerAndPage(_ context.Context, container string, offset, limit uint64) (uint64, []models.Version, error) {
-	args := m.Called(container, offset, limit)
+func (m *Mock) ListPublishedVersionsByContainerAndPage(_ context.Context, namespace, container string, offset, limit uint64) (uint64, []models.Version, error) {
+	args := m.Called(namespace, container, offset, limit)
 	return args.Get(0).(uint64), args.Get(1).([]models.Version), args.Error(2)
 }
 
-func (m *Mock) ListUnpublishedVersionsByContainer(_ context.Context, container string) ([]models.Version, error) {
-	args := m.Called(container)
+func (m *Mock) ListUnpublishedVersionsByContainer(_ context.Context, namespace, container string) ([]models.Version, error) {
+	args := m.Called(namespace, container)
 	return args.Get(0).([]models.Version), args.Error(1)
 }
 
-func (m *Mock) MarkVersionPublished(_ context.Context, container, version string) error {
-	args := m.Called(container, version)
+func (m *Mock) MarkVersionPublished(_ context.Context, namespace, container, version string) error {
+	args := m.Called(namespace, container, version)
 	return args.Error(0)
 }
 
-func (m *Mock) DeleteVersion(ctx context.Context, container, version string) error {
-	args := m.Called(container, version)
+func (m *Mock) DeleteVersion(ctx context.Context, namespace, container, version string) error {
+	args := m.Called(namespace, container, version)
 	return args.Error(0)
 }
 
-func (m *Mock) CreateObject(_ context.Context, container, version, key, casKey string) error {
-	args := m.Called(container, version, key, casKey)
+func (m *Mock) CreateObject(_ context.Context, namespace, container, version, key, casKey string) error {
+	args := m.Called(namespace, container, version, key, casKey)
 	return args.Error(0)
 }
 
-func (m *Mock) ListObjects(_ context.Context, container, version string, offset, limit uint64) (uint64, []string, error) {
-	args := m.Called(container, version, offset, limit)
+func (m *Mock) ListObjects(_ context.Context, namespace, container, version string, offset, limit uint64) (uint64, []string, error) {
+	args := m.Called(namespace, container, version, offset, limit)
 	return args.Get(0).(uint64), args.Get(1).([]string), args.Error(2)
 }
 
-func (m *Mock) DeleteObject(_ context.Context, container, version string, key ...string) error {
-	args := m.Called(container, version, key)
+func (m *Mock) DeleteObject(_ context.Context, namespace, container, version string, key ...string) error {
+	args := m.Called(namespace, container, version, key)
 	return args.Error(0)
 }
 
-func (m *Mock) RemapObject(_ context.Context, container, version, key, newCASKey string) error {
-	args := m.Called(container, version, key, newCASKey)
+func (m *Mock) RemapObject(_ context.Context, namespace, container, version, key, newCASKey string) error {
+	args := m.Called(namespace, container, version, key, newCASKey)
 	return args.Error(0)
 }
 
@@ -104,8 +124,8 @@ func (m *Mock) CreateBLOB(_ context.Context, checksum string, size uint64, mimeT
 	return args.Error(0)
 }
 
-func (m *Mock) GetBlobKeyByObject(_ context.Context, container, version, key string) (string, error) {
-	args := m.Called(container, version, key)
+func (m *Mock) GetBlobKeyByObject(_ context.Context, namespace, container, version, key string) (string, error) {
+	args := m.Called(namespace, container, version, key)
 	return args.String(0), args.Error(1)
 }
 

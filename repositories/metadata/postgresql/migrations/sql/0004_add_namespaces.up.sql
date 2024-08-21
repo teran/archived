@@ -18,7 +18,7 @@ ALTER TABLE containers
     ALTER COLUMN namespace_id SET NOT NULL,
     ADD FOREIGN KEY (namespace_id) REFERENCES namespaces (id);
 
-CREATE INDEX namespaces_name_idx ON namespaces (name);
+CREATE UNIQUE INDEX namespaces_name_key ON namespaces (name);
 DROP INDEX containers_name_key;
 CREATE UNIQUE INDEX containers_namespace_id_name_key ON containers (namespace_id, name);
 
