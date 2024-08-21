@@ -16,30 +16,36 @@ var ErrNotFound = errors.New("entity not found")
 type Manager interface {
 	Publisher
 
-	CreateContainer(ctx context.Context, name string) error
-	RenameContainer(ctx context.Context, oldName, newName string) error
-	DeleteContainer(ctx context.Context, name string) error
+	CreateNamespace(ctx context.Context, name string) error
+	RenameNamespace(ctx context.Context, oldName, newName string) error
+	DeleteNamespace(ctx context.Context, name string) error
 
-	CreateVersion(ctx context.Context, container string) (id string, err error)
-	ListAllVersions(ctx context.Context, container string) ([]models.Version, error)
-	PublishVersion(ctx context.Context, container, id string) error
-	DeleteVersion(ctx context.Context, container, id string) error
+	CreateContainer(ctx context.Context, namespace, name string) error
+	RenameContainer(ctx context.Context, namespace, oldName, newName string) error
+	DeleteContainer(ctx context.Context, namespace, name string) error
 
-	AddObject(ctx context.Context, container, versionID, key string, casKey string) error
-	ListObjects(ctx context.Context, container, versionID string) ([]string, error)
-	DeleteObject(ctx context.Context, container, versionID, key string) error
+	CreateVersion(ctx context.Context, namespace, container string) (id string, err error)
+	ListAllVersions(ctx context.Context, namespace, container string) ([]models.Version, error)
+	PublishVersion(ctx context.Context, namespace, container, id string) error
+	DeleteVersion(ctx context.Context, namespace, container, id string) error
+
+	AddObject(ctx context.Context, namespace, container, versionID, key string, casKey string) error
+	ListObjects(ctx context.Context, namespace, container, versionID string) ([]string, error)
+	DeleteObject(ctx context.Context, namespace, container, versionID, key string) error
 
 	EnsureBLOBPresenceOrGetUploadURL(ctx context.Context, checksum string, size int64) (string, error)
 }
 
 type Publisher interface {
-	ListContainers(ctx context.Context) ([]string, error)
+	ListNamespaces(ctx context.Context) ([]string, error)
 
-	ListPublishedVersions(ctx context.Context, container string) ([]models.Version, error)
-	ListPublishedVersionsByPage(ctx context.Context, container string, pageNum uint64) (uint64, []models.Version, error)
+	ListContainers(ctx context.Context, namespace string) ([]string, error)
 
-	ListObjectsByPage(ctx context.Context, container, versionID string, pageNum uint64) (uint64, []string, error)
-	GetObjectURL(ctx context.Context, container, versionID, key string) (string, error)
+	ListPublishedVersions(ctx context.Context, namespace, container string) ([]models.Version, error)
+	ListPublishedVersionsByPage(ctx context.Context, namespace, container string, pageNum uint64) (uint64, []models.Version, error)
+
+	ListObjectsByPage(ctx context.Context, namespace, container, versionID string, pageNum uint64) (uint64, []string, error)
+	GetObjectURL(ctx context.Context, namespace, container, versionID, key string) (string, error)
 }
 
 type service struct {
@@ -66,50 +72,76 @@ func newSvc(mdRepo metadata.Repository, blobRepo blob.Repository, versionsPerPag
 	}
 }
 
-func (s *service) CreateContainer(ctx context.Context, name string) error {
-	err := s.mdRepo.CreateContainer(ctx, name)
+func (s *service) CreateNamespace(ctx context.Context, name string) error {
+	err := s.mdRepo.CreateNamespace(ctx, name)
 	if err != nil {
 		return mapMetadataErrors(err)
 	}
 	return nil
 }
 
-func (s *service) RenameContainer(ctx context.Context, oldName, newName string) error {
-	err := s.mdRepo.RenameContainer(ctx, oldName, newName)
+func (s *service) RenameNamespace(ctx context.Context, oldName, newName string) error {
+	err := s.mdRepo.RenameNamespace(ctx, oldName, newName)
 	if err != nil {
 		return mapMetadataErrors(err)
 	}
 	return nil
 }
 
-func (s *service) ListContainers(ctx context.Context) ([]string, error) {
-	containers, err := s.mdRepo.ListContainers(ctx)
+func (s *service) ListNamespaces(ctx context.Context) ([]string, error) {
+	containers, err := s.mdRepo.ListNamespaces(ctx)
 	return containers, mapMetadataErrors(err)
 }
 
-func (s *service) DeleteContainer(ctx context.Context, name string) error {
-	err := s.mdRepo.DeleteContainer(ctx, name)
+func (s *service) DeleteNamespace(ctx context.Context, name string) error {
+	err := s.mdRepo.DeleteNamespace(ctx, name)
 	return mapMetadataErrors(err)
 }
 
-func (s *service) CreateVersion(ctx context.Context, container string) (id string, err error) {
-	version, err := s.mdRepo.CreateVersion(ctx, container)
+func (s *service) CreateContainer(ctx context.Context, namespace, name string) error {
+	err := s.mdRepo.CreateContainer(ctx, namespace, name)
+	if err != nil {
+		return mapMetadataErrors(err)
+	}
+	return nil
+}
+
+func (s *service) RenameContainer(ctx context.Context, namespace, oldName, newName string) error {
+	err := s.mdRepo.RenameContainer(ctx, namespace, oldName, newName)
+	if err != nil {
+		return mapMetadataErrors(err)
+	}
+	return nil
+}
+
+func (s *service) ListContainers(ctx context.Context, namespace string) ([]string, error) {
+	containers, err := s.mdRepo.ListContainers(ctx, namespace)
+	return containers, mapMetadataErrors(err)
+}
+
+func (s *service) DeleteContainer(ctx context.Context, namespace, name string) error {
+	err := s.mdRepo.DeleteContainer(ctx, namespace, name)
+	return mapMetadataErrors(err)
+}
+
+func (s *service) CreateVersion(ctx context.Context, namespace, container string) (id string, err error) {
+	version, err := s.mdRepo.CreateVersion(ctx, namespace, container)
 	return version, mapMetadataErrors(err)
 }
 
-func (s *service) ListPublishedVersions(ctx context.Context, container string) ([]models.Version, error) {
-	versions, err := s.mdRepo.ListPublishedVersionsByContainer(ctx, container)
+func (s *service) ListPublishedVersions(ctx context.Context, namespace, container string) ([]models.Version, error) {
+	versions, err := s.mdRepo.ListPublishedVersionsByContainer(ctx, namespace, container)
 	return versions, mapMetadataErrors(err)
 }
 
-func (s *service) ListPublishedVersionsByPage(ctx context.Context, container string, pageNum uint64) (uint64, []models.Version, error) {
+func (s *service) ListPublishedVersionsByPage(ctx context.Context, namespace, container string, pageNum uint64) (uint64, []models.Version, error) {
 	if pageNum < 1 {
 		pageNum = 1
 	}
 
 	offset := (pageNum - 1) * s.versionsPageSize
 	limit := s.versionsPageSize
-	totalVersions, versions, err := s.mdRepo.ListPublishedVersionsByContainerAndPage(ctx, container, offset, limit)
+	totalVersions, versions, err := s.mdRepo.ListPublishedVersionsByContainerAndPage(ctx, namespace, container, offset, limit)
 	if err != nil {
 		return 0, nil, mapMetadataErrors(err)
 	}
@@ -122,35 +154,35 @@ func (s *service) ListPublishedVersionsByPage(ctx context.Context, container str
 	return totalPages, versions, mapMetadataErrors(err)
 }
 
-func (s *service) ListAllVersions(ctx context.Context, container string) ([]models.Version, error) {
-	versions, err := s.mdRepo.ListAllVersionsByContainer(ctx, container)
+func (s *service) ListAllVersions(ctx context.Context, namespace, container string) ([]models.Version, error) {
+	versions, err := s.mdRepo.ListAllVersionsByContainer(ctx, namespace, container)
 	return versions, mapMetadataErrors(err)
 }
 
-func (s *service) PublishVersion(ctx context.Context, container, id string) error {
-	err := s.mdRepo.MarkVersionPublished(ctx, container, id)
+func (s *service) PublishVersion(ctx context.Context, namespace, container, id string) error {
+	err := s.mdRepo.MarkVersionPublished(ctx, namespace, container, id)
 	return mapMetadataErrors(err)
 }
 
-func (s *service) DeleteVersion(ctx context.Context, container, id string) error {
-	err := s.mdRepo.DeleteVersion(ctx, container, id)
+func (s *service) DeleteVersion(ctx context.Context, namespace, container, id string) error {
+	err := s.mdRepo.DeleteVersion(ctx, namespace, container, id)
 	return mapMetadataErrors(err)
 }
 
-func (s *service) AddObject(ctx context.Context, container, versionID, key, casKey string) error {
-	err := s.mdRepo.CreateObject(ctx, container, versionID, strings.TrimPrefix(key, "/"), casKey)
+func (s *service) AddObject(ctx context.Context, namespace, container, versionID, key, casKey string) error {
+	err := s.mdRepo.CreateObject(ctx, namespace, container, versionID, strings.TrimPrefix(key, "/"), casKey)
 	return mapMetadataErrors(err)
 }
 
-func (s *service) ListObjects(ctx context.Context, container, versionID string) ([]string, error) {
-	_, objects, err := s.mdRepo.ListObjects(ctx, container, versionID, 0, 1000)
+func (s *service) ListObjects(ctx context.Context, namespace, container, versionID string) ([]string, error) {
+	_, objects, err := s.mdRepo.ListObjects(ctx, namespace, container, versionID, 0, 1000)
 	return objects, mapMetadataErrors(err)
 }
 
-func (s *service) ListObjectsByPage(ctx context.Context, container, versionID string, pageNum uint64) (uint64, []string, error) {
+func (s *service) ListObjectsByPage(ctx context.Context, namespace, container, versionID string, pageNum uint64) (uint64, []string, error) {
 	var err error
 	if versionID == "latest" {
-		versionID, err = s.mdRepo.GetLatestPublishedVersionByContainer(ctx, container)
+		versionID, err = s.mdRepo.GetLatestPublishedVersionByContainer(ctx, namespace, container)
 		if err != nil {
 			return 0, nil, mapMetadataErrors(err)
 		}
@@ -162,7 +194,7 @@ func (s *service) ListObjectsByPage(ctx context.Context, container, versionID st
 
 	offset := (pageNum - 1) * s.objectsPageSize
 	limit := s.objectsPageSize
-	totalObjects, objects, err := s.mdRepo.ListObjects(ctx, container, versionID, offset, limit)
+	totalObjects, objects, err := s.mdRepo.ListObjects(ctx, namespace, container, versionID, offset, limit)
 	if err != nil {
 		return 0, nil, err
 	}
@@ -175,16 +207,16 @@ func (s *service) ListObjectsByPage(ctx context.Context, container, versionID st
 	return totalPages, objects, mapMetadataErrors(err)
 }
 
-func (s *service) GetObjectURL(ctx context.Context, container, versionID, key string) (string, error) {
+func (s *service) GetObjectURL(ctx context.Context, namespace, container, versionID, key string) (string, error) {
 	var err error
 	if versionID == "latest" {
-		versionID, err = s.mdRepo.GetLatestPublishedVersionByContainer(ctx, container)
+		versionID, err = s.mdRepo.GetLatestPublishedVersionByContainer(ctx, namespace, container)
 		if err != nil {
 			return "", mapMetadataErrors(err)
 		}
 	}
 
-	objectKey, err := s.mdRepo.GetBlobKeyByObject(ctx, container, versionID, key)
+	objectKey, err := s.mdRepo.GetBlobKeyByObject(ctx, namespace, container, versionID, key)
 	if err != nil {
 		return "", mapMetadataErrors(err)
 	}
@@ -209,8 +241,8 @@ func (s *service) EnsureBLOBPresenceOrGetUploadURL(ctx context.Context, checksum
 	return "", err
 }
 
-func (s *service) DeleteObject(ctx context.Context, container, versionID, key string) error {
-	err := s.mdRepo.DeleteObject(ctx, container, versionID, key)
+func (s *service) DeleteObject(ctx context.Context, namespace, container, versionID, key string) error {
+	err := s.mdRepo.DeleteObject(ctx, namespace, container, versionID, key)
 	return mapMetadataErrors(err)
 }
 
