@@ -21,7 +21,7 @@ type Repository interface {
 	DeleteNamespace(ctx context.Context, name string) error
 
 	CreateContainer(ctx context.Context, namespace, name string) error
-	RenameContainer(ctx context.Context, namespace, oldName, newName string) error
+	RenameContainer(ctx context.Context, namespace, oldName, newNamespace, newName string) error
 	ListContainers(ctx context.Context, namespace string) ([]string, error)
 	DeleteContainer(ctx context.Context, namespace, name string) error
 

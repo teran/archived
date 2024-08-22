@@ -180,12 +180,12 @@ func (s *memcacheTestSuite) TestCreateContainer() {
 }
 
 func (s *memcacheTestSuite) TestRenameContainer() {
-	s.repoMock.On("RenameContainer", defaultNamespace, "old-name", "new-name").Return(nil).Twice()
+	s.repoMock.On("RenameContainer", defaultNamespace, "old-name", "new-namespace", "new-name").Return(nil).Twice()
 
-	err := s.cache.RenameContainer(s.ctx, defaultNamespace, "old-name", "new-name")
+	err := s.cache.RenameContainer(s.ctx, defaultNamespace, "old-name", "new-namespace", "new-name")
 	s.Require().NoError(err)
 
-	err = s.cache.RenameContainer(s.ctx, defaultNamespace, "old-name", "new-name")
+	err = s.cache.RenameContainer(s.ctx, defaultNamespace, "old-name", "new-namespace", "new-name")
 	s.Require().NoError(err)
 }
 

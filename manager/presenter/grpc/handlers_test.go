@@ -63,6 +63,17 @@ func (s *manageHandlersTestSuite) TestCreateContainer() {
 	s.Require().NoError(err)
 }
 
+func (s *manageHandlersTestSuite) TestMoveContainer() {
+	s.svcMock.On("MoveContainer", defaultNamespace, "test-container", "new-namespace").Return(nil).Once()
+
+	_, err := s.client.MoveContainer(s.ctx, &v1pb.MoveContainerRequest{
+		Namespace:            defaultNamespace,
+		ContainerName:        "test-container",
+		DestinationNamespace: "new-namespace",
+	})
+	s.Require().NoError(err)
+}
+
 func (s *manageHandlersTestSuite) TestCreateContainerNotFound() {
 	s.svcMock.On("CreateContainer", defaultNamespace, "test-container").Return(service.ErrNotFound).Once()
 

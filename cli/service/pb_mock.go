@@ -45,6 +45,11 @@ func (m *protoClientMock) CreateContainer(ctx context.Context, in *v1proto.Creat
 	return &v1proto.CreateContainerResponse{}, args.Error(0)
 }
 
+func (m *protoClientMock) MoveContainer(ctx context.Context, in *v1proto.MoveContainerRequest, opts ...grpc.CallOption) (*v1proto.MoveContainerResponse, error) {
+	args := m.Called(in.GetNamespace(), in.GetContainerName(), in.GetDestinationNamespace())
+	return &v1proto.MoveContainerResponse{}, args.Error(0)
+}
+
 func (m *protoClientMock) RenameContainer(ctx context.Context, in *v1proto.RenameContainerRequest, opts ...grpc.CallOption) (*v1proto.RenameContainerResponse, error) {
 	args := m.Called(in.GetNamespace(), in.GetOldName(), in.GetNewName())
 	return &v1proto.RenameContainerResponse{}, args.Error(0)

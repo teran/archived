@@ -48,7 +48,7 @@ func (r *repository) CreateContainer(ctx context.Context, namespace, name string
 	return nil
 }
 
-func (r *repository) RenameContainer(ctx context.Context, namespace, oldName, newName string) error {
+func (r *repository) RenameContainer(ctx context.Context, namespace, oldName, newNamespace, newName string) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return mapSQLErrors(err)
@@ -65,6 +65,19 @@ func (r *repository) RenameContainer(ctx context.Context, namespace, oldName, ne
 
 	var namespaceID uint
 	if err := row.Scan(&namespaceID); err != nil {
+		return mapSQLErrors(err)
+	}
+
+	row, err = selectQueryRow(ctx, tx, psql.
+		Select("id").
+		From("namespaces").
+		Where(sq.Eq{"name": newNamespace}))
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+
+	var newNamespaceID uint
+	if err := row.Scan(&newNamespaceID); err != nil {
 		return mapSQLErrors(err)
 	}
 
@@ -87,6 +100,7 @@ func (r *repository) RenameContainer(ctx context.Context, namespace, oldName, ne
 	_, err = updateQuery(ctx, tx, psql.
 		Update("containers").
 		Set("name", newName).
+		Set("namespace_id", newNamespaceID).
 		Where(sq.Eq{
 			"id": containerID,
 		}),
