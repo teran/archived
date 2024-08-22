@@ -59,6 +59,24 @@ var (
 			Envar("ARCHIVED_CLI_STAT_CACHE_DIR").
 			String()
 
+	namespaceName = app.Flag("namespace", "namespace for containers to operate on").
+			Short('n').
+			Default("default").
+			String()
+
+	namespace           = app.Command("namespace", "namespace operations")
+	namespaceCreate     = namespace.Command("create", "create new namespace")
+	namespaceCreateName = containerCreate.Arg("name", "name of the namespace to create").Required().String()
+
+	namespaceRename        = namespace.Command("rename", "rename the given namespace")
+	namespaceRenameOldName = namespaceRename.Arg("old-name", "the old name of the namespace").Required().String()
+	namespaceRenameNewName = namespaceRename.Arg("new-name", "the new name of the namespace").Required().String()
+
+	namespaceDelete     = namespace.Command("delete", "delete the given namespace")
+	namespaceDeleteName = namespaceDelete.Arg("name", "name of the namespace to delete").Required().String()
+
+	namespaceList = namespace.Command("list", "list namespaces")
+
 	container           = app.Command("container", "container operations")
 	containerCreate     = container.Command("create", "create new container")
 	containerCreateName = containerCreate.Arg("name", "name of the container to create").Required().String()
@@ -193,20 +211,26 @@ func main() {
 	cliSvc := service.New(cli, cacheRepo)
 
 	r := router.New(ctx)
-	r.Register(containerCreate.FullCommand(), cliSvc.CreateContainer(*containerCreateName))
-	r.Register(containerRename.FullCommand(), cliSvc.RenameContainer(*containerRenameOldName, *containerRenameNewName))
-	r.Register(containerList.FullCommand(), cliSvc.ListContainers())
-	r.Register(containerDelete.FullCommand(), cliSvc.DeleteContainer(*containerDeleteName))
 
-	r.Register(versionList.FullCommand(), cliSvc.ListVersions(*versionListContainer))
+	r.Register(namespaceCreate.FullCommand(), cliSvc.CreateNamespace(*namespaceCreateName))
+	r.Register(namespaceRename.FullCommand(), cliSvc.RenameNamespace(*containerRenameOldName, *containerRenameNewName))
+	r.Register(namespaceList.FullCommand(), cliSvc.ListNamespaces())
+	r.Register(namespaceDelete.FullCommand(), cliSvc.DeleteNamespace(*containerDeleteName))
+
+	r.Register(containerCreate.FullCommand(), cliSvc.CreateContainer(*namespaceName, *containerCreateName))
+	r.Register(containerRename.FullCommand(), cliSvc.RenameContainer(*namespaceName, *containerRenameOldName, *containerRenameNewName))
+	r.Register(containerList.FullCommand(), cliSvc.ListContainers(*namespaceName))
+	r.Register(containerDelete.FullCommand(), cliSvc.DeleteContainer(*namespaceName, *containerDeleteName))
+
+	r.Register(versionList.FullCommand(), cliSvc.ListVersions(*namespaceName, *versionListContainer))
 	r.Register(versionCreate.FullCommand(), cliSvc.CreateVersion(
-		*versionCreateContainer, *versionCreatePublish, versionCreateFromDir, &yumRepository, versionCreateFromYumRepoGPGKey))
-	r.Register(versionDelete.FullCommand(), cliSvc.DeleteVersion(*versionDeleteContainer, *versionDeleteVersion))
-	r.Register(versionPublish.FullCommand(), cliSvc.PublishVersion(*versionPublishContainer, *versionPublishVersion))
+		*namespaceName, *versionCreateContainer, *versionCreatePublish, versionCreateFromDir, &yumRepository, versionCreateFromYumRepoGPGKey))
+	r.Register(versionDelete.FullCommand(), cliSvc.DeleteVersion(*namespaceName, *versionDeleteContainer, *versionDeleteVersion))
+	r.Register(versionPublish.FullCommand(), cliSvc.PublishVersion(*namespaceName, *versionPublishContainer, *versionPublishVersion))
 
-	r.Register(objectCreate.FullCommand(), cliSvc.CreateObject(*objectCreateContainer, *objectCreateVersion, *objectCreatePath))
-	r.Register(objectList.FullCommand(), cliSvc.ListObjects(*objectListContainer, *objectListVersion))
-	r.Register(objectURL.FullCommand(), cliSvc.GetObjectURL(*objectURLContainer, *objectURLVersion, *objectURLKey))
+	r.Register(objectCreate.FullCommand(), cliSvc.CreateObject(*namespaceName, *objectCreateContainer, *objectCreateVersion, *objectCreatePath))
+	r.Register(objectList.FullCommand(), cliSvc.ListObjects(*namespaceName, *objectListContainer, *objectListVersion))
+	r.Register(objectURL.FullCommand(), cliSvc.GetObjectURL(*namespaceName, *objectURLContainer, *objectURLVersion, *objectURLKey))
 
 	r.Register(statCacheShowPath.FullCommand(), func(ctx context.Context) error {
 		fmt.Println(*cacheDir)
