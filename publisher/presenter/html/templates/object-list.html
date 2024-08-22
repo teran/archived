@@ -1,9 +1,10 @@
+{{ $namespace := .Namespace }}
 {{ $container := .Container }}
 {{ $version := .Version }}
 {{ template "header" . }}
         <a href="..">..</a><br>
 {{- range $object := .Objects }}
-        <a href="/{{ $container }}/{{ $version }}/{{ $object }}">{{ $object }}</a><br>
+        <a href="/{{ $namespace }}/{{ $container }}/{{ $version }}/{{ $object }}">{{ $object }}</a><br>
 {{- else }}
         <p>No objects found</p>
 {{- end }}

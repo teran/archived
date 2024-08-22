@@ -1,6 +1,7 @@
+{{ $namespace := .Namespace }}
 {{ template "header" . }}
 {{- range $container := .Containers }}
-        <a href="/{{ $container }}/">{{ $container }}/</a><br>
+        <a href="/{{ $namespace }}/{{ $container }}/">{{ $container }}/</a><br>
 {{- else }}
         <p>No containers found</p>
 {{- end }}

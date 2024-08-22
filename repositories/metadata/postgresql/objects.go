@@ -6,7 +6,7 @@ import (
 	sq "github.com/Masterminds/squirrel"
 )
 
-func (r *repository) CreateObject(ctx context.Context, container, version, key, casKey string) error {
+func (r *repository) CreateObject(ctx context.Context, namespace, container, version, key, casKey string) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return mapSQLErrors(err)
@@ -14,13 +14,27 @@ func (r *repository) CreateObject(ctx context.Context, container, version, key, 
 	defer tx.Rollback()
 
 	row, err := selectQueryRow(ctx, tx, psql.
+		Select("id").
+		From("namespaces").
+		Where(sq.Eq{"name": namespace}))
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+
+	var namespaceID uint
+	if err := row.Scan(&namespaceID); err != nil {
+		return mapSQLErrors(err)
+	}
+
+	row, err = selectQueryRow(ctx, tx, psql.
 		Select("v.id as id").
 		From("containers c").
 		Join("versions v ON v.container_id = c.id").
 		Where(sq.Eq{
-			"c.name":       container,
-			"v.name":       version,
-			"is_published": false,
+			"c.namespace_id": namespaceID,
+			"c.name":         container,
+			"v.name":         version,
+			"is_published":   false,
 		}))
 	if err != nil {
 		return mapSQLErrors(err)
@@ -89,12 +103,26 @@ func (r *repository) CreateObject(ctx context.Context, container, version, key, 
 	return nil
 }
 
-func (r *repository) ListObjects(ctx context.Context, container, version string, offset, limit uint64) (uint64, []string, error) {
+func (r *repository) ListObjects(ctx context.Context, namespace, container, version string, offset, limit uint64) (uint64, []string, error) {
 	row, err := selectQueryRow(ctx, r.db, psql.
+		Select("id").
+		From("namespaces").
+		Where(sq.Eq{"name": namespace}))
+	if err != nil {
+		return 0, nil, mapSQLErrors(err)
+	}
+
+	var namespaceID uint
+	if err := row.Scan(&namespaceID); err != nil {
+		return 0, nil, mapSQLErrors(err)
+	}
+
+	row, err = selectQueryRow(ctx, r.db, psql.
 		Select("id").
 		From("containers").
 		Where(sq.Eq{
-			"name": container,
+			"name":         container,
+			"namespace_id": namespaceID,
 		}))
 	if err != nil {
 		return 0, nil, mapSQLErrors(err)
@@ -162,7 +190,7 @@ func (r *repository) ListObjects(ctx context.Context, container, version string,
 	return objectsTotal, result, nil
 }
 
-func (r *repository) DeleteObject(ctx context.Context, container, version string, key ...string) error {
+func (r *repository) DeleteObject(ctx context.Context, namespace, container, version string, key ...string) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return mapSQLErrors(err)
@@ -170,12 +198,26 @@ func (r *repository) DeleteObject(ctx context.Context, container, version string
 	defer tx.Rollback()
 
 	row, err := selectQueryRow(ctx, tx, psql.
+		Select("id").
+		From("namespaces").
+		Where(sq.Eq{"name": namespace}))
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+
+	var namespaceID uint
+	if err := row.Scan(&namespaceID); err != nil {
+		return mapSQLErrors(err)
+	}
+
+	row, err = selectQueryRow(ctx, tx, psql.
 		Select("v.id").
 		From("versions v").
 		Join("containers c ON v.container_id = c.id").
 		Where(sq.Eq{
-			"c.name": container,
-			"v.name": version,
+			"c.namespace_id": namespaceID,
+			"c.name":         container,
+			"v.name":         version,
 		}))
 	if err != nil {
 		return mapSQLErrors(err)
@@ -216,7 +258,7 @@ func (r *repository) DeleteObject(ctx context.Context, container, version string
 	return nil
 }
 
-func (r *repository) RemapObject(ctx context.Context, container, version, key, newCASKey string) error {
+func (r *repository) RemapObject(ctx context.Context, namespace, container, version, key, newCASKey string) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return mapSQLErrors(err)
@@ -224,12 +266,26 @@ func (r *repository) RemapObject(ctx context.Context, container, version, key, n
 	defer tx.Rollback()
 
 	row, err := selectQueryRow(ctx, tx, psql.
+		Select("id").
+		From("namespaces").
+		Where(sq.Eq{"name": namespace}))
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+
+	var namespaceID uint
+	if err := row.Scan(&namespaceID); err != nil {
+		return mapSQLErrors(err)
+	}
+
+	row, err = selectQueryRow(ctx, tx, psql.
 		Select("v.id").
 		From("versions v").
 		Join("containers c ON v.container_id = c.id").
 		Where(sq.Eq{
-			"c.name": container,
-			"v.name": version,
+			"c.namespace_id": namespaceID,
+			"c.name":         container,
+			"v.name":         version,
 		}))
 	if err != nil {
 		return mapSQLErrors(err)

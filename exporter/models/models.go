@@ -1,12 +1,14 @@
 package models
 
 type VersionsCount struct {
+	Namespace     string
 	ContainerName string
 	VersionsCount uint64
 	IsPublished   bool
 }
 
 type ObjectsCount struct {
+	Namespace     string
 	ContainerName string
 	VersionName   string
 	IsPublished   bool
@@ -14,6 +16,7 @@ type ObjectsCount struct {
 }
 
 type BlobsRawSizeBytes struct {
+	Namespace     string
 	ContainerName string
 	VersionName   string
 	IsPublished   bool
@@ -21,6 +24,7 @@ type BlobsRawSizeBytes struct {
 }
 
 type Stats struct {
+	NamespacesCount     uint64
 	ContainersCount     uint64
 	VersionsCount       []VersionsCount
 	ObjectsCount        []ObjectsCount

@@ -14,30 +14,38 @@ import (
 	"github.com/teran/archived/service"
 )
 
-func (s *handlersTestSuite) TestContainerIndex() {
-	s.serviceMock.On("ListContainers").Return([]string{"test-container-1"}, nil).Once()
+const defaultNamespace = "default"
 
-	s.compareHTMLResponse(s.srv.URL, "testdata/index.html.sample")
+func (s *handlersTestSuite) TestNamespaceIndex() {
+	s.serviceMock.On("ListNamespaces").Return([]string{"default", "test-namespace-1"}, nil).Once()
+
+	s.compareHTMLResponse(s.srv.URL, "testdata/namespaces.html.sample")
+}
+
+func (s *handlersTestSuite) TestContainerIndex() {
+	s.serviceMock.On("ListContainers", defaultNamespace).Return([]string{"test-container-1"}, nil).Once()
+
+	s.compareHTMLResponse(s.srv.URL+"/default/", "testdata/containers.html.sample")
 }
 
 func (s *handlersTestSuite) TestVersionIndex() {
-	s.serviceMock.On("ListPublishedVersionsByPage", "test-container-1", uint64(1)).Return(uint64(100), []models.Version{
+	s.serviceMock.On("ListPublishedVersionsByPage", defaultNamespace, "test-container-1", uint64(1)).Return(uint64(100), []models.Version{
 		{Name: "20241011121314"},
 	}, nil).Once()
 
-	s.compareHTMLResponse(s.srv.URL+"/test-container-1/", "testdata/versions.html.sample")
+	s.compareHTMLResponse(s.srv.URL+"/default/test-container-1/", "testdata/versions.html.sample")
 }
 
 func (s *handlersTestSuite) TestObjectIndex() {
-	s.serviceMock.On("ListObjectsByPage", "test-container-1", "20241011121314", uint64(1)).Return(uint64(100), []string{"test-object-dir/file.txt"}, nil).Once()
+	s.serviceMock.On("ListObjectsByPage", defaultNamespace, "test-container-1", "20241011121314", uint64(1)).Return(uint64(100), []string{"test-object-dir/file.txt"}, nil).Once()
 
-	s.compareHTMLResponse(s.srv.URL+"/test-container-1/20241011121314/", "testdata/objects.html.sample")
+	s.compareHTMLResponse(s.srv.URL+"/default/test-container-1/20241011121314/", "testdata/objects.html.sample")
 }
 
 func (s *handlersTestSuite) TestGetObject() {
-	s.serviceMock.On("GetObjectURL", "test-container-1", "20241011121314", "test-dir/filename.txt").Return("https://example.com/some-addr", nil).Once()
+	s.serviceMock.On("GetObjectURL", defaultNamespace, "test-container-1", "20241011121314", "test-dir/filename.txt").Return("https://example.com/some-addr", nil).Once()
 
-	req, err := http.NewRequest(http.MethodGet, s.srv.URL+"/test-container-1/20241011121314/test-dir/filename.txt", nil)
+	req, err := http.NewRequest(http.MethodGet, s.srv.URL+"/default/test-container-1/20241011121314/test-dir/filename.txt", nil)
 	s.Require().NoError(err)
 
 	client := &http.Client{
@@ -54,28 +62,28 @@ func (s *handlersTestSuite) TestGetObject() {
 }
 
 func (s *handlersTestSuite) TestErrNotFound() {
-	s.serviceMock.On("ListPublishedVersionsByPage", "test-container-1", uint64(1)).Return(uint64(100), []models.Version(nil), service.ErrNotFound).Once()
-	s.compareHTMLResponse(s.srv.URL+"/test-container-1/", "testdata/404.html.sample")
+	s.serviceMock.On("ListPublishedVersionsByPage", defaultNamespace, "test-container-1", uint64(1)).Return(uint64(100), []models.Version(nil), service.ErrNotFound).Once()
+	s.compareHTMLResponse(s.srv.URL+"/default/test-container-1/", "testdata/404.html.sample")
 
-	s.serviceMock.On("ListObjectsByPage", "test-container-1", "20240101010101", uint64(1)).Return(uint64(100), []string(nil), service.ErrNotFound).Once()
-	s.compareHTMLResponse(s.srv.URL+"/test-container-1/20240101010101/", "testdata/404.html.sample")
+	s.serviceMock.On("ListObjectsByPage", defaultNamespace, "test-container-1", "20240101010101", uint64(1)).Return(uint64(100), []string(nil), service.ErrNotFound).Once()
+	s.compareHTMLResponse(s.srv.URL+"/default/test-container-1/20240101010101/", "testdata/404.html.sample")
 
-	s.serviceMock.On("GetObjectURL", "test-container-1", "20240101010101", "test-object.txt").Return("", service.ErrNotFound).Once()
-	s.compareHTMLResponse(s.srv.URL+"/test-container-1/20240101010101/test-object.txt", "testdata/404.html.sample")
+	s.serviceMock.On("GetObjectURL", defaultNamespace, "test-container-1", "20240101010101", "test-object.txt").Return("", service.ErrNotFound).Once()
+	s.compareHTMLResponse(s.srv.URL+"/default/test-container-1/20240101010101/test-object.txt", "testdata/404.html.sample")
 
-	s.compareHTMLResponse(s.srv.URL+"/test-container-1/20240101010101", "testdata/404.html.sample")
-	s.compareHTMLResponse(s.srv.URL+"/test-container-1", "testdata/404.html.sample")
+	s.compareHTMLResponse(s.srv.URL+"/default/test-container-1/20240101010101", "testdata/404.html.sample")
+	s.compareHTMLResponse(s.srv.URL+"/default/test-container-1", "testdata/404.html.sample")
 }
 
 func (s *handlersTestSuite) TestErr5xx() {
-	s.serviceMock.On("ListPublishedVersionsByPage", "test-container-1", uint64(1)).Panic("blah").Once()
-	s.compareHTMLResponse(s.srv.URL+"/test-container-1/", "testdata/5xx.html.sample")
+	s.serviceMock.On("ListPublishedVersionsByPage", defaultNamespace, "test-container-1", uint64(1)).Panic("blah").Once()
+	s.compareHTMLResponse(s.srv.URL+"/default/test-container-1/", "testdata/5xx.html.sample")
 }
 
 func (s *handlersTestSuite) TestEscapedPath() {
-	s.serviceMock.On("GetObjectURL", "test-container-1", "20240101010101", "test object.txt").Return("https://example.com/some-addr", nil).Once()
+	s.serviceMock.On("GetObjectURL", defaultNamespace, "test-container-1", "20240101010101", "test object.txt").Return("https://example.com/some-addr", nil).Once()
 
-	req, err := http.NewRequest(http.MethodGet, s.srv.URL+"/test-container-1/20240101010101/test%20object.txt", nil)
+	req, err := http.NewRequest(http.MethodGet, s.srv.URL+"/default/test-container-1/20240101010101/test%20object.txt", nil)
 	s.Require().NoError(err)
 
 	client := &http.Client{

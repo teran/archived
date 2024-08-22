@@ -32,8 +32,46 @@ func New(svc service.Manager) ManageServerInterface {
 	}
 }
 
+func (h *handlers) CreateNamespace(ctx context.Context, in *v1.CreateNamespaceRequest) (*v1.CreateNamespaceResponse, error) {
+	err := h.svc.CreateNamespace(ctx, in.GetName())
+	if err != nil {
+		return nil, mapServiceError(err)
+	}
+
+	return &v1.CreateNamespaceResponse{}, nil
+}
+
+func (h *handlers) RenameNamespace(ctx context.Context, in *v1.RenameNamespaceRequest) (*v1.RenameNamespaceResponse, error) {
+	err := h.svc.RenameNamespace(ctx, in.GetOldName(), in.GetNewName())
+	if err != nil {
+		return nil, mapServiceError(err)
+	}
+
+	return &v1.RenameNamespaceResponse{}, nil
+}
+
+func (h *handlers) DeleteNamespace(ctx context.Context, in *v1.DeleteNamespaceRequest) (*v1.DeleteNamespaceResponse, error) {
+	err := h.svc.DeleteNamespace(ctx, in.GetName())
+	if err != nil {
+		return nil, mapServiceError(err)
+	}
+
+	return &v1.DeleteNamespaceResponse{}, nil
+}
+
+func (h *handlers) ListNamespaces(ctx context.Context, in *v1.ListNamespacesRequest) (*v1.ListNamespacesResponse, error) {
+	namespaces, err := h.svc.ListNamespaces(ctx)
+	if err != nil {
+		return nil, mapServiceError(err)
+	}
+
+	return &v1.ListNamespacesResponse{
+		Name: namespaces,
+	}, nil
+}
+
 func (h *handlers) CreateContainer(ctx context.Context, in *v1.CreateContainerRequest) (*v1.CreateContainerResponse, error) {
-	err := h.svc.CreateContainer(ctx, in.GetName())
+	err := h.svc.CreateContainer(ctx, in.GetNamespace(), in.GetName())
 	if err != nil {
 		return nil, mapServiceError(err)
 	}
@@ -42,7 +80,7 @@ func (h *handlers) CreateContainer(ctx context.Context, in *v1.CreateContainerRe
 }
 
 func (h *handlers) RenameContainer(ctx context.Context, in *v1.RenameContainerRequest) (*v1.RenameContainerResponse, error) {
-	err := h.svc.RenameContainer(ctx, in.GetOldName(), in.GetNewName())
+	err := h.svc.RenameContainer(ctx, in.GetNamespace(), in.GetOldName(), in.GetNewName())
 	if err != nil {
 		return nil, mapServiceError(err)
 	}
@@ -51,7 +89,7 @@ func (h *handlers) RenameContainer(ctx context.Context, in *v1.RenameContainerRe
 }
 
 func (h *handlers) DeleteContainer(ctx context.Context, in *v1.DeleteContainerRequest) (*v1.DeleteContainerResponse, error) {
-	err := h.svc.DeleteContainer(ctx, in.GetName())
+	err := h.svc.DeleteContainer(ctx, in.GetNamespace(), in.GetName())
 	if err != nil {
 		return nil, mapServiceError(err)
 	}
@@ -59,8 +97,8 @@ func (h *handlers) DeleteContainer(ctx context.Context, in *v1.DeleteContainerRe
 	return &v1.DeleteContainerResponse{}, nil
 }
 
-func (h *handlers) ListContainers(ctx context.Context, _ *v1.ListContainersRequest) (*v1.ListContainersResponse, error) {
-	containers, err := h.svc.ListContainers(ctx)
+func (h *handlers) ListContainers(ctx context.Context, in *v1.ListContainersRequest) (*v1.ListContainersResponse, error) {
+	containers, err := h.svc.ListContainers(ctx, in.GetNamespace())
 	if err != nil {
 		return nil, mapServiceError(err)
 	}
@@ -71,7 +109,7 @@ func (h *handlers) ListContainers(ctx context.Context, _ *v1.ListContainersReque
 }
 
 func (h *handlers) CreateVersion(ctx context.Context, in *v1.CreateVersionRequest) (*v1.CreateVersionResponse, error) {
-	version, err := h.svc.CreateVersion(ctx, in.GetContainer())
+	version, err := h.svc.CreateVersion(ctx, in.GetNamespace(), in.GetContainer())
 	if err != nil {
 		return nil, mapServiceError(err)
 	}
@@ -82,7 +120,7 @@ func (h *handlers) CreateVersion(ctx context.Context, in *v1.CreateVersionReques
 }
 
 func (h *handlers) ListVersions(ctx context.Context, in *v1.ListVersionsRequest) (*v1.ListVersionsResponse, error) {
-	versions, err := h.svc.ListAllVersions(ctx, in.GetContainer())
+	versions, err := h.svc.ListAllVersions(ctx, in.GetNamespace(), in.GetContainer())
 	if err != nil {
 		return nil, mapServiceError(err)
 	}
@@ -98,7 +136,7 @@ func (h *handlers) ListVersions(ctx context.Context, in *v1.ListVersionsRequest)
 }
 
 func (h *handlers) DeleteVersion(ctx context.Context, in *v1.DeleteVersionRequest) (*v1.DeleteVersionResponse, error) {
-	err := h.svc.DeleteVersion(ctx, in.GetContainer(), in.GetVersion())
+	err := h.svc.DeleteVersion(ctx, in.GetNamespace(), in.GetContainer(), in.GetVersion())
 	if err != nil {
 		return nil, mapServiceError(err)
 	}
@@ -107,7 +145,7 @@ func (h *handlers) DeleteVersion(ctx context.Context, in *v1.DeleteVersionReques
 }
 
 func (h *handlers) PublishVersion(ctx context.Context, in *v1.PublishVersionRequest) (*v1.PublishVersionResponse, error) {
-	err := h.svc.PublishVersion(ctx, in.GetContainer(), in.GetVersion())
+	err := h.svc.PublishVersion(ctx, in.GetNamespace(), in.GetContainer(), in.GetVersion())
 	if err != nil {
 		return nil, mapServiceError(err)
 	}
@@ -121,7 +159,7 @@ func (h *handlers) CreateObject(ctx context.Context, in *v1.CreateObjectRequest)
 		return nil, mapServiceError(err)
 	}
 
-	err = h.svc.AddObject(ctx, in.GetContainer(), in.GetVersion(), in.GetKey(), in.GetChecksum())
+	err = h.svc.AddObject(ctx, in.GetNamespace(), in.GetContainer(), in.GetVersion(), in.GetKey(), in.GetChecksum())
 	if err != nil {
 		return nil, mapServiceError(err)
 	}
@@ -132,7 +170,7 @@ func (h *handlers) CreateObject(ctx context.Context, in *v1.CreateObjectRequest)
 }
 
 func (h *handlers) ListObjects(ctx context.Context, in *v1.ListObjectsRequest) (*v1.ListObjectsResponse, error) {
-	objects, err := h.svc.ListObjects(ctx, in.GetContainer(), in.GetVersion())
+	objects, err := h.svc.ListObjects(ctx, in.GetNamespace(), in.GetContainer(), in.GetVersion())
 	if err != nil {
 		if err == service.ErrNotFound {
 			return nil, status.Error(codes.NotFound, err.Error())
@@ -146,7 +184,7 @@ func (h *handlers) ListObjects(ctx context.Context, in *v1.ListObjectsRequest) (
 }
 
 func (h *handlers) GetObjectURL(ctx context.Context, in *v1.GetObjectURLRequest) (*v1.GetObjectURLResponse, error) {
-	url, err := h.svc.GetObjectURL(ctx, in.GetContainer(), in.GetVersion(), in.GetKey())
+	url, err := h.svc.GetObjectURL(ctx, in.GetNamespace(), in.GetContainer(), in.GetVersion(), in.GetKey())
 	if err != nil {
 		if err == service.ErrNotFound {
 			return nil, status.Error(codes.NotFound, err.Error())
@@ -160,7 +198,7 @@ func (h *handlers) GetObjectURL(ctx context.Context, in *v1.GetObjectURLRequest)
 }
 
 func (h *handlers) DeleteObject(ctx context.Context, in *v1.DeleteObjectRequest) (*v1.DeleteObjectResponse, error) {
-	err := h.svc.DeleteObject(ctx, in.GetContainer(), in.GetVersion(), in.GetKey())
+	err := h.svc.DeleteObject(ctx, in.GetNamespace(), in.GetContainer(), in.GetVersion(), in.GetKey())
 	if err != nil {
 		return nil, mapServiceError(err)
 	}

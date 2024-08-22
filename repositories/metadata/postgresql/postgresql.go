@@ -12,6 +12,8 @@ import (
 	"github.com/teran/archived/repositories/metadata"
 )
 
+const defaultNamespace = "default"
+
 var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
 type repository struct {

@@ -13,6 +13,8 @@ import (
 	repoMock "github.com/teran/archived/repositories/metadata/mock"
 )
 
+const defaultNamespace = "default"
+
 func init() {
 	log.SetLevel(log.TraceLevel)
 }
@@ -20,9 +22,11 @@ func init() {
 func (s *serviceTestSuite) TestAll() {
 	s.tp.On("Now").Return("2024-08-01T10:11:12Z").Once()
 
-	call1 := s.repoMock.On("ListContainers").Return([]string{"container1"}, nil).Once()
+	call0 := s.repoMock.On("ListNamespaces").Return([]string{defaultNamespace}, nil).Once()
 
-	call2 := s.repoMock.On("ListUnpublishedVersionsByContainer", "container1").Return([]models.Version{
+	call1 := s.repoMock.On("ListContainers", defaultNamespace).Return([]string{"container1"}, nil).Once().NotBefore(call0)
+
+	call2 := s.repoMock.On("ListUnpublishedVersionsByContainer", defaultNamespace, "container1").Return([]models.Version{
 		{
 			Name:      "version1",
 			CreatedAt: time.Date(2024, 7, 31, 10, 1, 1, 0, time.UTC),
@@ -32,10 +36,10 @@ func (s *serviceTestSuite) TestAll() {
 			CreatedAt: time.Date(2024, 8, 1, 10, 1, 1, 0, time.UTC),
 		},
 	}, nil).Once().NotBefore(call1)
-	call3 := s.repoMock.On("ListObjects", "container1", "version1", uint64(0), uint64(1000)).Return(uint64(3), []string{"obj1", "obj2", "obj3"}, nil).Once().NotBefore(call2)
-	call4 := s.repoMock.On("DeleteObject", "container1", "version1", []string{"obj1", "obj2", "obj3"}).Return(nil).Once().NotBefore(call3)
-	call5 := s.repoMock.On("ListObjects", "container1", "version1", uint64(0), uint64(1000)).Return(uint64(0), []string{}, nil).Once().NotBefore(call4)
-	_ = s.repoMock.On("DeleteVersion", "container1", "version1").Return(nil).Once().NotBefore(call5)
+	call3 := s.repoMock.On("ListObjects", defaultNamespace, "container1", "version1", uint64(0), uint64(1000)).Return(uint64(3), []string{"obj1", "obj2", "obj3"}, nil).Once().NotBefore(call2)
+	call4 := s.repoMock.On("DeleteObject", defaultNamespace, "container1", "version1", []string{"obj1", "obj2", "obj3"}).Return(nil).Once().NotBefore(call3)
+	call5 := s.repoMock.On("ListObjects", defaultNamespace, "container1", "version1", uint64(0), uint64(1000)).Return(uint64(0), []string{}, nil).Once().NotBefore(call4)
+	_ = s.repoMock.On("DeleteVersion", defaultNamespace, "container1", "version1").Return(nil).Once().NotBefore(call5)
 
 	err := s.svc.Run(s.ctx)
 	s.Require().NoError(err)

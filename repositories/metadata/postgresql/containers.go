@@ -6,21 +6,7 @@ import (
 	sq "github.com/Masterminds/squirrel"
 )
 
-func (r *repository) CreateContainer(ctx context.Context, name string) error {
-	_, err := insertQuery(ctx, r.db, psql.
-		Insert("containers").
-		Columns(
-			"name",
-			"created_at",
-		).
-		Values(
-			name,
-			r.tp().UTC(),
-		))
-	return mapSQLErrors(err)
-}
-
-func (r *repository) RenameContainer(ctx context.Context, oldName, newName string) error {
+func (r *repository) CreateContainer(ctx context.Context, namespace, name string) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return mapSQLErrors(err)
@@ -29,8 +15,66 @@ func (r *repository) RenameContainer(ctx context.Context, oldName, newName strin
 
 	row, err := selectQueryRow(ctx, tx, psql.
 		Select("id").
+		From("namespaces").
+		Where(sq.Eq{"name": namespace}))
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+
+	var namespaceID uint
+	if err := row.Scan(&namespaceID); err != nil {
+		return mapSQLErrors(err)
+	}
+
+	_, err = insertQuery(ctx, tx, psql.
+		Insert("containers").
+		Columns(
+			"name",
+			"namespace_id",
+			"created_at",
+		).
+		Values(
+			name,
+			namespaceID,
+			r.tp().UTC(),
+		))
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return mapSQLErrors(err)
+	}
+	return nil
+}
+
+func (r *repository) RenameContainer(ctx context.Context, namespace, oldName, newName string) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+	defer tx.Rollback()
+
+	row, err := selectQueryRow(ctx, tx, psql.
+		Select("id").
+		From("namespaces").
+		Where(sq.Eq{"name": namespace}))
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+
+	var namespaceID uint
+	if err := row.Scan(&namespaceID); err != nil {
+		return mapSQLErrors(err)
+	}
+
+	row, err = selectQueryRow(ctx, tx, psql.
+		Select("id").
 		From("containers").
-		Where(sq.Eq{"name": oldName}))
+		Where(sq.Eq{
+			"name":         oldName,
+			"namespace_id": namespaceID,
+		}))
 	if err != nil {
 		return mapSQLErrors(err)
 	}
@@ -57,10 +101,26 @@ func (r *repository) RenameContainer(ctx context.Context, oldName, newName strin
 	return nil
 }
 
-func (r *repository) ListContainers(ctx context.Context) ([]string, error) {
+func (r *repository) ListContainers(ctx context.Context, namespace string) ([]string, error) {
+	row, err := selectQueryRow(ctx, r.db, psql.
+		Select("id").
+		From("namespaces").
+		Where(sq.Eq{"name": namespace}))
+	if err != nil {
+		return nil, mapSQLErrors(err)
+	}
+
+	var namespaceID uint
+	if err := row.Scan(&namespaceID); err != nil {
+		return nil, mapSQLErrors(err)
+	}
+
 	rows, err := selectQuery(ctx, r.db, psql.
 		Select("name").
 		From("containers").
+		Where(sq.Eq{
+			"namespace_id": namespaceID,
+		}).
 		OrderBy("name"))
 	if err != nil {
 		return nil, mapSQLErrors(err)
@@ -80,9 +140,38 @@ func (r *repository) ListContainers(ctx context.Context) ([]string, error) {
 	return result, nil
 }
 
-func (r *repository) DeleteContainer(ctx context.Context, name string) error {
-	_, err := deleteQuery(ctx, r.db, psql.
+func (r *repository) DeleteContainer(ctx context.Context, namespace, name string) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+	defer tx.Rollback()
+
+	row, err := selectQueryRow(ctx, tx, psql.
+		Select("id").
+		From("namespaces").
+		Where(sq.Eq{"name": namespace}))
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+
+	var namespaceID uint
+	if err := row.Scan(&namespaceID); err != nil {
+		return mapSQLErrors(err)
+	}
+
+	_, err = deleteQuery(ctx, r.db, psql.
 		Delete("containers").
-		Where(sq.Eq{"name": name}))
-	return mapSQLErrors(err)
+		Where(sq.Eq{
+			"name":         name,
+			"namespace_id": namespaceID,
+		}))
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return mapSQLErrors(err)
+	}
+	return nil
 }

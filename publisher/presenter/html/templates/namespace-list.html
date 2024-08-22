@@ -1,0 +1,7 @@
+{{ template "header" . }}
+{{- range $namespace := .Namespaces }}
+        <a href="/{{ $namespace }}/">{{ $namespace }}/</a><br>
+{{- else }}
+        <p>No namespaces found</p>
+{{- end }}
+{{ template "footer" }}

@@ -42,24 +42,45 @@ func New(svc service.Publisher, templateDir, staticDir string) Handlers {
 	}
 }
 
-func (h *handlers) ContainerIndex(c echo.Context) error {
-	containers, err := h.svc.ListContainers(c.Request().Context())
+func (h *handlers) NamespaceIndex(c echo.Context) error {
+	namespaces, err := h.svc.ListNamespaces(c.Request().Context())
 	if err != nil {
 		return err
 	}
 
 	type data struct {
 		Title      string
+		Namespaces []string
+	}
+
+	return c.Render(http.StatusOK, "namespace-list.html", &data{
+		Title:      "Namespace index",
+		Namespaces: namespaces,
+	})
+}
+
+func (h *handlers) ContainerIndex(c echo.Context) error {
+	namespace := c.Param("namespace")
+	containers, err := h.svc.ListContainers(c.Request().Context(), namespace)
+	if err != nil {
+		return err
+	}
+
+	type data struct {
+		Title      string
+		Namespace  string
 		Containers []string
 	}
 
 	return c.Render(http.StatusOK, "container-list.html", &data{
-		Title:      "Container index",
+		Title:      fmt.Sprintf("Container index (%s)", namespace),
+		Namespace:  namespace,
 		Containers: containers,
 	})
 }
 
 func (h *handlers) VersionIndex(c echo.Context) error {
+	namespace := c.Param("namespace")
 	container := c.Param("container")
 
 	pageParam := c.QueryParam("page")
@@ -74,7 +95,7 @@ func (h *handlers) VersionIndex(c echo.Context) error {
 		}
 	}
 
-	pagesCount, versions, err := h.svc.ListPublishedVersionsByPage(c.Request().Context(), container, page)
+	pagesCount, versions, err := h.svc.ListPublishedVersionsByPage(c.Request().Context(), namespace, container, page)
 	if err != nil {
 		if err == service.ErrNotFound {
 			return c.Render(http.StatusNotFound, notFoundTemplateFilename, nil)
@@ -86,20 +107,23 @@ func (h *handlers) VersionIndex(c echo.Context) error {
 		Title       string
 		CurrentPage uint64
 		PagesCount  uint64
+		Namespace   string
 		Container   string
 		Versions    []models.Version
 	}
 
 	return c.Render(http.StatusOK, "version-list.html", &data{
-		Title:       fmt.Sprintf("Version index (%s)", container),
+		Title:       fmt.Sprintf("Version index (%s/%s)", namespace, container),
 		CurrentPage: page,
 		PagesCount:  pagesCount,
+		Namespace:   namespace,
 		Container:   container,
 		Versions:    versions,
 	})
 }
 
 func (h *handlers) ObjectIndex(c echo.Context) error {
+	namespace := c.Param("namespace")
 	container := c.Param("container")
 	version := c.Param("version")
 
@@ -115,7 +139,7 @@ func (h *handlers) ObjectIndex(c echo.Context) error {
 		}
 	}
 
-	pagesCount, objects, err := h.svc.ListObjectsByPage(c.Request().Context(), container, version, page)
+	pagesCount, objects, err := h.svc.ListObjectsByPage(c.Request().Context(), namespace, container, version, page)
 	if err != nil {
 		if err == service.ErrNotFound {
 			return c.Render(http.StatusNotFound, notFoundTemplateFilename, nil)
@@ -127,14 +151,16 @@ func (h *handlers) ObjectIndex(c echo.Context) error {
 		Title       string
 		CurrentPage uint64
 		PagesCount  uint64
+		Namespace   string
 		Container   string
 		Version     string
 		Objects     []string
 	}
 	return c.Render(http.StatusOK, "object-list.html", &data{
-		Title:       fmt.Sprintf("Object index (%s/%s)", container, version),
+		Title:       fmt.Sprintf("Object index (%s/%s/%s)", namespace, container, version),
 		CurrentPage: page,
 		PagesCount:  pagesCount,
+		Namespace:   namespace,
 		Container:   container,
 		Version:     version,
 		Objects:     objects,
@@ -142,6 +168,7 @@ func (h *handlers) ObjectIndex(c echo.Context) error {
 }
 
 func (h *handlers) GetObject(c echo.Context) error {
+	namespace := c.Param("namespace")
 	container := c.Param("container")
 	version := c.Param("version")
 
@@ -151,7 +178,7 @@ func (h *handlers) GetObject(c echo.Context) error {
 		return err
 	}
 
-	url, err := h.svc.GetObjectURL(c.Request().Context(), container, version, key)
+	url, err := h.svc.GetObjectURL(c.Request().Context(), namespace, container, version, key)
 	if err != nil {
 		if err == service.ErrNotFound {
 			return c.Render(http.StatusNotFound, notFoundTemplateFilename, nil)
@@ -199,10 +226,11 @@ func (h *handlers) Register(e *echo.Echo) {
 
 	e.HTTPErrorHandler = h.ErrorHandler
 
-	e.GET("/", h.ContainerIndex)
-	e.GET("/:container/", h.VersionIndex)
-	e.GET("/:container/:version/", h.ObjectIndex)
-	e.GET("/:container/:version/:object", h.GetObject)
+	e.GET("/", h.NamespaceIndex)
+	e.GET("/:namespace/", h.ContainerIndex)
+	e.GET("/:namespace/:container/", h.VersionIndex)
+	e.GET("/:namespace/:container/:version/", h.ObjectIndex)
+	e.GET("/:namespace/:container/:version/:object", h.GetObject)
 
 	e.Static(h.staticDir, "static")
 }
