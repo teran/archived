@@ -100,7 +100,7 @@ message CreateObjectRequest {
   string version = 3;
   string key = 4;
   string checksum = 5;
-  int64 size = 6;
+  uint64 size = 6;
 }
 message CreateObjectResponse {
   optional string upload_url = 1;

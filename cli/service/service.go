@@ -280,14 +280,14 @@ func (s *service) createVersionFromYUMRepository(ctx context.Context, namespaceN
 			Version:   versionID,
 			Key:       k,
 			Checksum:  checksum,
-			Size:      int64(size),
+			Size:      uint64(size),
 		})
 		if err != nil {
 			return errors.Wrap(err, "error creating object")
 		}
 
 		if uploadURL := resp.GetUploadUrl(); uploadURL != "" {
-			err := uploadBlob(ctx, uploadURL, bytes.NewReader(v), int64(size))
+			err := uploadBlob(ctx, uploadURL, bytes.NewReader(v), uint64(size))
 			if err != nil {
 				return err
 			}
@@ -299,7 +299,7 @@ func (s *service) createVersionFromYUMRepository(ctx context.Context, namespaceN
 		"packages_count": len(packages),
 	}).Info("handling package files ...")
 	for cnt, pkg := range packages {
-		err := func(name, checksum, sourceURL string, size int64) error {
+		err := func(name, checksum, sourceURL string, size uint64) error {
 			lb := lazyblob.New(sourceURL, os.TempDir(), size)
 			defer func() {
 				if err := lb.Close(); err != nil {
@@ -373,7 +373,7 @@ func (s *service) createVersionFromYUMRepository(ctx context.Context, namespaceN
 			}
 
 			return nil
-		}(pkg.Name, pkg.Checksum, strings.TrimSuffix(url, "/")+"/"+strings.TrimPrefix(pkg.Name, "/"), int64(pkg.Size))
+		}(pkg.Name, pkg.Checksum, strings.TrimSuffix(url, "/")+"/"+strings.TrimPrefix(pkg.Name, "/"), pkg.Size)
 		if err != nil {
 			return err
 		}
@@ -495,7 +495,7 @@ func (s *service) CreateObject(namespaceName, containerName, versionID, director
 				Version:   versionID,
 				Key:       shortPath,
 				Checksum:  checksum,
-				Size:      size,
+				Size:      uint64(size),
 			})
 			if err != nil {
 				return errors.Wrap(err, "error creating object")
@@ -510,7 +510,7 @@ func (s *service) CreateObject(namespaceName, containerName, versionID, director
 				}
 				defer fp.Close()
 
-				if err := uploadBlob(ctx, url, fp, size); err != nil {
+				if err := uploadBlob(ctx, url, fp, uint64(size)); err != nil {
 					return err
 				}
 			}
@@ -603,7 +603,7 @@ func checksumFile(filename string) (string, error) {
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
-func uploadBlob(ctx context.Context, url string, rd io.Reader, size int64) error {
+func uploadBlob(ctx context.Context, url string, rd io.Reader, size uint64) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, io.NopCloser(rd))
 	if err != nil {
 		return errors.Wrap(err, "error constructing request")
@@ -616,7 +616,7 @@ func uploadBlob(ctx context.Context, url string, rd io.Reader, size int64) error
 			"length": size,
 		}).Tracef("size is set")
 
-		req.ContentLength = size
+		req.ContentLength = int64(size)
 	}
 
 	log.WithFields(log.Fields{

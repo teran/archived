@@ -251,7 +251,7 @@ func (s *manageHandlersTestSuite) TestPublishVersionNotFound() {
 }
 
 func (s *manageHandlersTestSuite) TestCreateObject() {
-	s.svcMock.On("EnsureBLOBPresenceOrGetUploadURL", "checksum", int64(1234)).Return("https://example.com/url", nil).Once()
+	s.svcMock.On("EnsureBLOBPresenceOrGetUploadURL", "checksum", uint64(1234)).Return("https://example.com/url", nil).Once()
 	s.svcMock.On("AddObject", defaultNamespace, "test-container", "version", "key", "checksum").Return(nil).Once()
 
 	resp, err := s.client.CreateObject(s.ctx, &v1pb.CreateObjectRequest{
@@ -260,14 +260,14 @@ func (s *manageHandlersTestSuite) TestCreateObject() {
 		Version:   "version",
 		Key:       "key",
 		Checksum:  "checksum",
-		Size:      1234,
+		Size:      uint64(1234),
 	})
 	s.Require().NoError(err)
 	s.Require().Equal("https://example.com/url", resp.GetUploadUrl())
 }
 
 func (s *manageHandlersTestSuite) TestCreateObjectNotFound() {
-	s.svcMock.On("EnsureBLOBPresenceOrGetUploadURL", "checksum", int64(1234)).Return("", service.ErrNotFound).Once()
+	s.svcMock.On("EnsureBLOBPresenceOrGetUploadURL", "checksum", uint64(1234)).Return("", service.ErrNotFound).Once()
 
 	_, err := s.client.CreateObject(s.ctx, &v1pb.CreateObjectRequest{
 		Namespace: defaultNamespace,
@@ -275,7 +275,7 @@ func (s *manageHandlersTestSuite) TestCreateObjectNotFound() {
 		Version:   "version",
 		Key:       "key",
 		Checksum:  "checksum",
-		Size:      1234,
+		Size:      uint64(1234),
 	})
 	s.Require().Error(err)
 	s.Require().Equal("rpc error: code = NotFound desc = entity not found", err.Error())

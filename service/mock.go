@@ -100,7 +100,7 @@ func (m *Mock) AddObject(_ context.Context, namespace, container, versionID, key
 	return args.Error(0)
 }
 
-func (m *Mock) EnsureBLOBPresenceOrGetUploadURL(ctx context.Context, checksum string, size int64) (string, error) {
+func (m *Mock) EnsureBLOBPresenceOrGetUploadURL(ctx context.Context, checksum string, size uint64) (string, error) {
 	args := m.Called(checksum, size)
 	return args.String(0), args.Error(1)
 }
