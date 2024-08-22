@@ -31,6 +31,7 @@ type Service interface {
 	DeleteNamespace(namespaceName string) func(ctx context.Context) error
 
 	CreateContainer(namespaceName, containerName string) func(ctx context.Context) error
+	MoveContainer(namespaceName, containerName, destinationNamespace string) func(ctx context.Context) error
 	RenameContainer(namespaceName, oldName, newName string) func(ctx context.Context) error
 	ListContainers(namespaceName string) func(ctx context.Context) error
 	DeleteContainer(namespaceName, containerName string) func(ctx context.Context) error
@@ -125,6 +126,21 @@ func (s *service) CreateContainer(namespaceName, containerName string) func(ctx 
 			return errors.Wrap(err, "error creating container")
 		}
 		fmt.Printf("container `%s` created\n", containerName)
+		return nil
+	}
+}
+
+func (s *service) MoveContainer(namespaceName, containerName, destinationNamespace string) func(ctx context.Context) error {
+	return func(ctx context.Context) error {
+		_, err := s.cli.MoveContainer(ctx, &v1proto.MoveContainerRequest{
+			Namespace:            namespaceName,
+			ContainerName:        containerName,
+			DestinationNamespace: destinationNamespace,
+		})
+		if err != nil {
+			return errors.Wrap(err, "error moving container")
+		}
+		fmt.Printf("container `%s` just moved from `%s` to `%s`\n", containerName, namespaceName, destinationNamespace)
 		return nil
 	}
 }
@@ -340,7 +356,7 @@ func (s *service) createVersionFromYUMRepository(ctx context.Context, namespaceN
 
 					fp, err := lb.Reader(ctx)
 					if err != nil {
-						return errors.Wrap(err, "error opening package file")
+						return errors.Wrap(err, "error getting reader for package file")
 					}
 
 					return uploadBlob(ctx, uploadURL, fp, size)

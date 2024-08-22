@@ -27,6 +27,7 @@ To do so archived relies on two storages: metadata and CAS.
 
 Metadata is a some kind of database to store all of the things:
 
+* namespaces - group of containers
 * containers - some kind of directories
 * versions - immutable version of the data in container
 * objects - named data BLOBs with some additional metadata
@@ -49,7 +50,8 @@ archived is built with microservice architecture containing the following
 components:
 
 * archived-publisher - HTTP server to allow data listing and fetching
-* archived-manager - gRPC API to manage containers, versions and objects
+* archived-manager - gRPC API to manage namespaces, containers, versions and
+    objects
 * archived-exporter - Prometheus metrics exporter for metadata entities
 * CLI - CLI application to interact with manage component
 * migrator - metadata migration tool
@@ -86,8 +88,8 @@ reference.
 ## CLI
 
 archived-cli provides an CLI interface to operate archived including creating
-containers, versions and objects. It works with archived-manager to handle
-requests.
+namespaces, containers, versions and objects. It works with archived-manager
+to handle requests.
 
 ```shell
 usage: archived-cli --endpoint=ENDPOINT [<flags>] <command> [<args> ...]
@@ -96,22 +98,41 @@ CLI interface for archived
 
 
 Flags:
-      --[no-]help          Show context-sensitive help (also try --help-long and --help-man).
-  -d, --[no-]debug         Enable debug mode ($ARCHIVED_CLI_DEBUG)
-  -t, --[no-]trace         Enable trace mode (debug mode on steroids) ($ARCHIVED_CLI_TRACE)
-  -s, --endpoint=ENDPOINT  Manage API endpoint address ($ARCHIVED_CLI_ENDPOINT)
-      --[no-]insecure      Do not use TLS for gRPC connection
+      --[no-]help            Show context-sensitive help (also try --help-long and --help-man).
+  -d, --[no-]debug           Enable debug mode ($ARCHIVED_CLI_DEBUG)
+  -t, --[no-]trace           Enable trace mode (debug mode on steroids) ($ARCHIVED_CLI_TRACE)
+  -s, --endpoint=ENDPOINT    Manager API endpoint address ($ARCHIVED_CLI_ENDPOINT)
+      --[no-]insecure        Do not use TLS for gRPC connection
       --[no-]insecure-skip-verify
-                           Do not perform TLS certificate verification for gRPC connection
+                             Do not perform TLS certificate verification for gRPC connection
       --cache-dir="~/.cache/archived/cli/objects"
-                           cache directory for objects
+                             Stat-cache directory for objects ($ARCHIVED_CLI_STAT_CACHE_DIR)
+  -n, --namespace="default"  namespace for containers to operate on
 
 Commands:
 help [<command>...]
     Show help.
 
+namespace create <name>
+    create new namespace
+
+namespace rename <old-name> <new-name>
+    rename the given namespace
+
+namespace delete <name>
+    delete the given namespace
+
+namespace list
+    list namespaces
+
 container create <name>
     create new container
+
+container move <name> <namespace>
+    move container to another namespace
+
+container rename <old-name> <new-name>
+    rename the given container
 
 container delete <name>
     delete the given container
@@ -142,6 +163,9 @@ object url <container> <version> <key>
 
 object delete <container> <version> <key>
     delete object
+
+stat-cache show-path
+    print actual cache path
 ```
 
 ## How build the project manually
