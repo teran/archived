@@ -3,7 +3,10 @@ package postgresql
 import "github.com/teran/archived/repositories/metadata"
 
 func (s *postgreSQLRepositoryTestSuite) TestContainerOperations() {
-	s.tp.On("Now").Return("2024-01-02T01:02:03Z").Times(3)
+	s.tp.On("Now").Return("2024-01-02T01:02:03Z").Times(4)
+
+	err := s.repo.CreateNamespace(s.ctx, "new-namespace")
+	s.Require().NoError(err)
 
 	list, err := s.repo.ListContainers(s.ctx, defaultNamespace)
 	s.Require().NoError(err)
@@ -38,14 +41,18 @@ func (s *postgreSQLRepositoryTestSuite) TestContainerOperations() {
 		"test-container5",
 	}, list)
 
-	err = s.repo.RenameContainer(s.ctx, defaultNamespace, "test-container5", "and-then-there-was-the-one")
+	err = s.repo.RenameContainer(s.ctx, defaultNamespace, "test-container5", "new-namespace", "and-then-there-was-the-one")
 	s.Require().NoError(err)
 
-	err = s.repo.RenameContainer(s.ctx, defaultNamespace, "not-existent", "some-name")
+	err = s.repo.RenameContainer(s.ctx, defaultNamespace, "not-existent", "new-namespace", "some-name")
 	s.Require().Error(err)
 	s.Require().Equal(metadata.ErrNotFound, err)
 
 	list, err = s.repo.ListContainers(s.ctx, defaultNamespace)
+	s.Require().NoError(err)
+	s.Require().Equal([]string{}, list)
+
+	list, err = s.repo.ListContainers(s.ctx, "new-namespace")
 	s.Require().NoError(err)
 	s.Require().Equal([]string{
 		"and-then-there-was-the-one",

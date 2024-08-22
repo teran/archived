@@ -29,6 +29,13 @@ func (s *serviceTestSuite) TestCreateContainer() {
 	s.Require().NoError(fn(s.ctx))
 }
 
+func (s *serviceTestSuite) TestMoveContainer() {
+	s.cliMock.On("MoveContainer", defaultNamespace, "test-container", "new-namespace").Return(nil).Once()
+
+	fn := s.svc.MoveContainer(defaultNamespace, "test-container", "new-namespace")
+	s.Require().NoError(fn(s.ctx))
+}
+
 func (s *serviceTestSuite) TestRenameContainer() {
 	s.cliMock.On("RenameContainer", defaultNamespace, "old-name", "new-name").Return(nil).Once()
 

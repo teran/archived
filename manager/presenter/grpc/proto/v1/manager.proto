@@ -32,6 +32,13 @@ message CreateContainerRequest {
 }
 message CreateContainerResponse {}
 
+message MoveContainerRequest {
+  string namespace = 1;
+  string container_name = 2;
+  string destination_namespace = 3;
+}
+message MoveContainerResponse {}
+
 message RenameContainerRequest{
   string namespace = 1;
   string old_name = 2;
@@ -136,6 +143,7 @@ service ManageService {
   rpc ListNamespaces(ListNamespacesRequest) returns (ListNamespacesResponse);
 
   rpc CreateContainer(CreateContainerRequest) returns (CreateContainerResponse);
+  rpc MoveContainer(MoveContainerRequest) returns (MoveContainerResponse);
   rpc RenameContainer(RenameContainerRequest) returns (RenameContainerResponse);
   rpc DeleteContainer(DeleteContainerRequest) returns (DeleteContainerResponse);
   rpc ListContainers(ListContainersRequest) returns (ListContainersResponse);

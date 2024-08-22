@@ -79,6 +79,15 @@ func (h *handlers) CreateContainer(ctx context.Context, in *v1.CreateContainerRe
 	return &v1.CreateContainerResponse{}, nil
 }
 
+func (h *handlers) MoveContainer(ctx context.Context, in *v1.MoveContainerRequest) (*v1.MoveContainerResponse, error) {
+	err := h.svc.MoveContainer(ctx, in.GetNamespace(), in.GetContainerName(), in.GetDestinationNamespace())
+	if err != nil {
+		return nil, mapServiceError(err)
+	}
+
+	return &v1.MoveContainerResponse{}, nil
+}
+
 func (h *handlers) RenameContainer(ctx context.Context, in *v1.RenameContainerRequest) (*v1.RenameContainerResponse, error) {
 	err := h.svc.RenameContainer(ctx, in.GetNamespace(), in.GetOldName(), in.GetNewName())
 	if err != nil {

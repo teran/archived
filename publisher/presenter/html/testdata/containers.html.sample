@@ -9,6 +9,7 @@
         <h1>Container index (default)</h1>
         <hr>
 
+        <a href="..">..</a><br>
         <a href="/default/test-container-1/">test-container-1/</a><br>
 
         <hr>

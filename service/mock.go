@@ -45,6 +45,11 @@ func (m *Mock) CreateContainer(_ context.Context, namespace, name string) error 
 	return args.Error(0)
 }
 
+func (m *Mock) MoveContainer(ctx context.Context, namespace, container, destNamespace string) error {
+	args := m.Called(namespace, container, destNamespace)
+	return args.Error(0)
+}
+
 func (m *Mock) RenameContainer(_ context.Context, namespace, oldName, newName string) error {
 	args := m.Called(namespace, oldName, newName)
 	return args.Error(0)

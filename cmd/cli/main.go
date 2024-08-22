@@ -66,7 +66,7 @@ var (
 
 	namespace           = app.Command("namespace", "namespace operations")
 	namespaceCreate     = namespace.Command("create", "create new namespace")
-	namespaceCreateName = containerCreate.Arg("name", "name of the namespace to create").Required().String()
+	namespaceCreateName = namespaceCreate.Arg("name", "name of the namespace to create").Required().String()
 
 	namespaceRename        = namespace.Command("rename", "rename the given namespace")
 	namespaceRenameOldName = namespaceRename.Arg("old-name", "the old name of the namespace").Required().String()
@@ -80,6 +80,10 @@ var (
 	container           = app.Command("container", "container operations")
 	containerCreate     = container.Command("create", "create new container")
 	containerCreateName = containerCreate.Arg("name", "name of the container to create").Required().String()
+
+	containerMove          = container.Command("move", "move container to another namespace")
+	containerMoveName      = containerMove.Arg("name", "container namespace to move").Required().String()
+	containerMoveNamespace = containerMove.Arg("namespace", "destination namespace to move to").Required().String()
 
 	containerRename        = container.Command("rename", "rename the given container")
 	containerRenameOldName = containerRename.Arg("old-name", "the old name of the container").Required().String()
@@ -218,6 +222,7 @@ func main() {
 	r.Register(namespaceDelete.FullCommand(), cliSvc.DeleteNamespace(*containerDeleteName))
 
 	r.Register(containerCreate.FullCommand(), cliSvc.CreateContainer(*namespaceName, *containerCreateName))
+	r.Register(containerMove.FullCommand(), cliSvc.MoveContainer(*namespaceName, *containerMoveName, *containerMoveNamespace))
 	r.Register(containerRename.FullCommand(), cliSvc.RenameContainer(*namespaceName, *containerRenameOldName, *containerRenameNewName))
 	r.Register(containerList.FullCommand(), cliSvc.ListContainers(*namespaceName))
 	r.Register(containerDelete.FullCommand(), cliSvc.DeleteContainer(*namespaceName, *containerDeleteName))

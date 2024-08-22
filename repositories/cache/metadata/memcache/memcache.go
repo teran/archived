@@ -93,8 +93,8 @@ func (m *memcache) CreateContainer(ctx context.Context, namespace, name string) 
 	return m.repo.CreateContainer(ctx, namespace, name)
 }
 
-func (m *memcache) RenameContainer(ctx context.Context, namespace, oldName, newName string) error {
-	return m.repo.RenameContainer(ctx, namespace, oldName, newName)
+func (m *memcache) RenameContainer(ctx context.Context, namespace, oldName, newNamespace, newName string) error {
+	return m.repo.RenameContainer(ctx, namespace, oldName, newNamespace, newName)
 }
 
 func (m *memcache) ListContainers(ctx context.Context, namespace string) ([]string, error) {

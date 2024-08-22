@@ -87,15 +87,30 @@ func (s *serviceTestSuite) TestCreateContainer() {
 	s.Require().Equal("test error", err.Error())
 }
 
+func (s *serviceTestSuite) TestMoveContainer() {
+	// Happy path
+	s.mdRepoMock.On("RenameContainer", defaultNamespace, "container", "new-namespace", "container").Return(nil).Once()
+
+	err := s.svc.MoveContainer(s.ctx, defaultNamespace, "container", "new-namespace")
+	s.Require().NoError(err)
+
+	// return error
+	s.mdRepoMock.On("RenameContainer", defaultNamespace, "container", "new-namespace", "container").Return(errors.New("test error")).Once()
+
+	err = s.svc.MoveContainer(s.ctx, defaultNamespace, "container", "new-namespace")
+	s.Require().Error(err)
+	s.Require().Equal("test error", err.Error())
+}
+
 func (s *serviceTestSuite) TestRenameContainer() {
 	// Happy path
-	s.mdRepoMock.On("RenameContainer", defaultNamespace, "old-name", "new-name").Return(nil).Once()
+	s.mdRepoMock.On("RenameContainer", defaultNamespace, "old-name", defaultNamespace, "new-name").Return(nil).Once()
 
 	err := s.svc.RenameContainer(s.ctx, defaultNamespace, "old-name", "new-name")
 	s.Require().NoError(err)
 
 	// return error
-	s.mdRepoMock.On("RenameContainer", defaultNamespace, "old-name", "new-name").Return(errors.New("test error")).Once()
+	s.mdRepoMock.On("RenameContainer", defaultNamespace, "old-name", defaultNamespace, "new-name").Return(errors.New("test error")).Once()
 
 	err = s.svc.RenameContainer(s.ctx, defaultNamespace, "old-name", "new-name")
 	s.Require().Error(err)
