@@ -62,24 +62,28 @@ func (l *lazyblob) download(ctx context.Context) error {
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, l.url, nil)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error creating request object")
 	}
 
 	req.Header.Set("User-Agent", userAgent)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error performing HTTP request")
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode > 299 {
+		return errors.Errorf("%s: unexpected HTTP response status: %s", l.url, resp.Status)
+	}
+
 	if err := os.MkdirAll(l.tempDir, 0o700); err != nil {
-		return err
+		return errors.Wrap(err, "error creating directory structure")
 	}
 
 	l.tempFile, err = os.CreateTemp(l.tempDir, "package_*.rpm.tmp")
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error creating temporary file")
 	}
 
 	log.WithFields(log.Fields{
@@ -88,7 +92,7 @@ func (l *lazyblob) download(ctx context.Context) error {
 
 	n, err := io.Copy(l.tempFile, resp.Body)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error writing data")
 	}
 
 	log.WithFields(log.Fields{
@@ -97,7 +101,7 @@ func (l *lazyblob) download(ctx context.Context) error {
 	}).Trace("bytes copied")
 
 	if n != l.length {
-		return io.ErrShortWrite
+		return errors.Wrap(io.ErrShortWrite, "data length copied mismatch")
 	}
 
 	return nil
@@ -122,7 +126,7 @@ func (l *lazyblob) newReader() (io.Reader, error) {
 func (l *lazyblob) Reader(ctx context.Context) (io.Reader, error) {
 	if l.tempFile == nil {
 		if err := l.download(ctx); err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "error downloading file")
 		}
 	}
 
