@@ -23,13 +23,13 @@ type LazyBLOB interface {
 type lazyblob struct {
 	url      string
 	tempDir  string
-	length   int64
+	length   uint64
 	tempFile *os.File
 
 	mutex *sync.RWMutex
 }
 
-func New(url, tempDir string, length int64) LazyBLOB {
+func New(url, tempDir string, length uint64) LazyBLOB {
 	log.WithFields(log.Fields{
 		"url":     url,
 		"length":  length,
@@ -100,7 +100,7 @@ func (l *lazyblob) download(ctx context.Context) error {
 		"length":   n,
 	}).Trace("bytes copied")
 
-	if n != l.length {
+	if uint64(n) != l.length {
 		return errors.Wrap(io.ErrShortWrite, "data length copied mismatch")
 	}
 

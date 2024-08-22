@@ -34,7 +34,7 @@ type Manager interface {
 	ListObjects(ctx context.Context, namespace, container, versionID string) ([]string, error)
 	DeleteObject(ctx context.Context, namespace, container, versionID, key string) error
 
-	EnsureBLOBPresenceOrGetUploadURL(ctx context.Context, checksum string, size int64) (string, error)
+	EnsureBLOBPresenceOrGetUploadURL(ctx context.Context, checksum string, size uint64) (string, error)
 }
 
 type Publisher interface {
@@ -233,7 +233,7 @@ func (s *service) GetObjectURL(ctx context.Context, namespace, container, versio
 	return s.blobRepo.GetBlobURL(ctx, objectKey)
 }
 
-func (s *service) EnsureBLOBPresenceOrGetUploadURL(ctx context.Context, checksum string, size int64) (string, error) {
+func (s *service) EnsureBLOBPresenceOrGetUploadURL(ctx context.Context, checksum string, size uint64) (string, error) {
 	err := s.mdRepo.EnsureBlobKey(ctx, checksum, uint64(size))
 	if err == nil {
 		return "", nil

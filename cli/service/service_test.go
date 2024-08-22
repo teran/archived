@@ -88,11 +88,11 @@ func (s *serviceTestSuite) TestCreateVersionFromDirAndPublish() {
 
 	s.cliMock.On("CreateVersion", defaultNamespace, "container1").Return("version_id", nil, nil).Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", int64(5)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", uint64(5)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61", int64(5)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61", uint64(5)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.On("PublishVersion", defaultNamespace, "container1", "version_id").Return(nil).Once()
@@ -129,40 +129,40 @@ func (s *serviceTestSuite) TestCreateVersionFromYumRepoAndPublish() {
 
 	s.cliMock.On("CreateVersion", defaultNamespace, "container1").Return("version_id", nil, nil).Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/2267234d92017b049818be743f720f37c176a3b3bb3e802ee4d5cd0090651091-primary.xml.gz", "2267234d92017b049818be743f720f37c176a3b3bb3e802ee4d5cd0090651091", int64(720)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/2267234d92017b049818be743f720f37c176a3b3bb3e802ee4d5cd0090651091-primary.xml.gz", "2267234d92017b049818be743f720f37c176a3b3bb3e802ee4d5cd0090651091", uint64(720)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/1b4aca205bffe8d65f33b066e3f9965cb4c009e3c94b3f296cce8bff166ad8ed-primary.sqlite.bz2", "1b4aca205bffe8d65f33b066e3f9965cb4c009e3c94b3f296cce8bff166ad8ed", int64(1995)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/1b4aca205bffe8d65f33b066e3f9965cb4c009e3c94b3f296cce8bff166ad8ed-primary.sqlite.bz2", "1b4aca205bffe8d65f33b066e3f9965cb4c009e3c94b3f296cce8bff166ad8ed", uint64(1995)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/314e73564000b8a68848551ce0fa9b36e11ed609698f232fa9ab5810ec531de1-filelists.xml.gz", "314e73564000b8a68848551ce0fa9b36e11ed609698f232fa9ab5810ec531de1", int64(313)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/314e73564000b8a68848551ce0fa9b36e11ed609698f232fa9ab5810ec531de1-filelists.xml.gz", "314e73564000b8a68848551ce0fa9b36e11ed609698f232fa9ab5810ec531de1", uint64(313)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/2623c0a1472f574989dcba85417e8ce27b87983bba12922a6d91d574e617d2f6-filelists.sqlite.bz2", "2623c0a1472f574989dcba85417e8ce27b87983bba12922a6d91d574e617d2f6", int64(858)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/2623c0a1472f574989dcba85417e8ce27b87983bba12922a6d91d574e617d2f6-filelists.sqlite.bz2", "2623c0a1472f574989dcba85417e8ce27b87983bba12922a6d91d574e617d2f6", uint64(858)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/e3984def0f3b5ce1b174fad2f6eb3c05829633d2d5d5d8ba05c9720ad59046e7-other.xml.gz", "e3984def0f3b5ce1b174fad2f6eb3c05829633d2d5d5d8ba05c9720ad59046e7", int64(281)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/e3984def0f3b5ce1b174fad2f6eb3c05829633d2d5d5d8ba05c9720ad59046e7-other.xml.gz", "e3984def0f3b5ce1b174fad2f6eb3c05829633d2d5d5d8ba05c9720ad59046e7", uint64(281)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/64f4875d92a3672f62a2d15d5f0ae6f0806451f42403bd07105214e1c9f4f0d7-other.sqlite.bz2", "64f4875d92a3672f62a2d15d5f0ae6f0806451f42403bd07105214e1c9f4f0d7", int64(749)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/64f4875d92a3672f62a2d15d5f0ae6f0806451f42403bd07105214e1c9f4f0d7-other.sqlite.bz2", "64f4875d92a3672f62a2d15d5f0ae6f0806451f42403bd07105214e1c9f4f0d7", uint64(749)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/repomd.xml", "ad1ff2a7e93b614596a9c432f85b141df86e2c010b6591a04c8b011051bd739c", int64(3069)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/repomd.xml", "ad1ff2a7e93b614596a9c432f85b141df86e2c010b6591a04c8b011051bd739c", uint64(3069)).
 		Return(ptr.String(""), nil).
 		Once()
 
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "Packages/testpkg-1-1.src.rpm", "684303227d799ffe1f0b39e030a12ad249931a11ec1690e2079f981cc16d8c52", int64(6156)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "Packages/testpkg-1-1.src.rpm", "684303227d799ffe1f0b39e030a12ad249931a11ec1690e2079f981cc16d8c52", uint64(6156)).
 		Return(ptr.String(uploadSrv.URL+"/upload"), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "Packages/testpkg-1-1.x86_64.rpm", "d9ae5e56ea38d2ac470f320cade63663dae6ab8b8e1630b2fd5a3c607f45e2ee", int64(6722)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "Packages/testpkg-1-1.x86_64.rpm", "d9ae5e56ea38d2ac470f320cade63663dae6ab8b8e1630b2fd5a3c607f45e2ee", uint64(6722)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.On("PublishVersion", defaultNamespace, "container1", "version_id").Return(nil).Once()
@@ -199,40 +199,40 @@ func (s *serviceTestSuite) TestCreateVersionFromYumRepoAndPublishSHA1() {
 
 	s.cliMock.On("CreateVersion", defaultNamespace, "container1").Return("version_id", nil, nil).Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/80779e2ab55e25a77124d370de1d08deae8f1cc6-primary.xml.gz", "1c07f3f3f0e6d09972c1d7852d1dbc9715d6fbdceee66c50e8356d1e69502d3b", int64(688)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/80779e2ab55e25a77124d370de1d08deae8f1cc6-primary.xml.gz", "1c07f3f3f0e6d09972c1d7852d1dbc9715d6fbdceee66c50e8356d1e69502d3b", uint64(688)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/e7a8a53e7398f6c22894718ea227fea60f2b78ba-primary.sqlite.bz2", "c9b8ce03b503e29d9ec2faa2328e4f2082f0a5f71478ca6cb2f1a3ab75e676bc", int64(1937)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/e7a8a53e7398f6c22894718ea227fea60f2b78ba-primary.sqlite.bz2", "c9b8ce03b503e29d9ec2faa2328e4f2082f0a5f71478ca6cb2f1a3ab75e676bc", uint64(1937)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/4a11e3eeb25d21b08f41e5578d702d2bea21a2e7-filelists.xml.gz", "b56801c0a86f9a0136953e8c8e59cd35c1f18fc41e70ba8fcdcccfee068dfc8a", int64(282)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/4a11e3eeb25d21b08f41e5578d702d2bea21a2e7-filelists.xml.gz", "b56801c0a86f9a0136953e8c8e59cd35c1f18fc41e70ba8fcdcccfee068dfc8a", uint64(282)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/c66ce2caa41ed83879f9b3dd9f40e61c65af499e-filelists.sqlite.bz2", "59bd3edd4edacac87e5e15494698f34a7f52277691635f927c185e92a681d9ee", int64(787)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/c66ce2caa41ed83879f9b3dd9f40e61c65af499e-filelists.sqlite.bz2", "59bd3edd4edacac87e5e15494698f34a7f52277691635f927c185e92a681d9ee", uint64(787)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/fdedb6ce109127d52228d01b0239010ddca14c8f-other.xml.gz", "56e566dfc63b0a7056b21cec661717a411f68cf98747d9a719557bce3a8ac41a", int64(247)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/fdedb6ce109127d52228d01b0239010ddca14c8f-other.xml.gz", "56e566dfc63b0a7056b21cec661717a411f68cf98747d9a719557bce3a8ac41a", uint64(247)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/b31561a27d014d35b59b27c27859bb1c17ac573e-other.sqlite.bz2", "7eec446e0036d356d8e5694047d9fdb6af00f2fc62993b854232830cf9dbcff8", int64(669)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/b31561a27d014d35b59b27c27859bb1c17ac573e-other.sqlite.bz2", "7eec446e0036d356d8e5694047d9fdb6af00f2fc62993b854232830cf9dbcff8", uint64(669)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/repomd.xml", "9f18801e8532f631e308a130a347f66eb3900d054df1d66dff53a69aa5b9e7d3", int64(2601)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/repomd.xml", "9f18801e8532f631e308a130a347f66eb3900d054df1d66dff53a69aa5b9e7d3", uint64(2601)).
 		Return(ptr.String(""), nil).
 		Once()
 
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "Packages/testpkg-1-1.src.rpm", "684303227d799ffe1f0b39e030a12ad249931a11ec1690e2079f981cc16d8c52", int64(6156)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "Packages/testpkg-1-1.src.rpm", "684303227d799ffe1f0b39e030a12ad249931a11ec1690e2079f981cc16d8c52", uint64(6156)).
 		Return(ptr.String(uploadSrv.URL+"/upload"), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "Packages/testpkg-1-1.x86_64.rpm", "d9ae5e56ea38d2ac470f320cade63663dae6ab8b8e1630b2fd5a3c607f45e2ee", int64(6722)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "Packages/testpkg-1-1.x86_64.rpm", "d9ae5e56ea38d2ac470f320cade63663dae6ab8b8e1630b2fd5a3c607f45e2ee", uint64(6722)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.On("PublishVersion", defaultNamespace, "container1", "version_id").Return(nil).Once()
@@ -269,40 +269,40 @@ func (s *serviceTestSuite) TestCreateVersionFromYumRepoAndPublishGPGNoSignature(
 
 	s.cliMock.On("CreateVersion", defaultNamespace, "container1").Return("version_id", nil, nil).Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/2267234d92017b049818be743f720f37c176a3b3bb3e802ee4d5cd0090651091-primary.xml.gz", "2267234d92017b049818be743f720f37c176a3b3bb3e802ee4d5cd0090651091", int64(720)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/2267234d92017b049818be743f720f37c176a3b3bb3e802ee4d5cd0090651091-primary.xml.gz", "2267234d92017b049818be743f720f37c176a3b3bb3e802ee4d5cd0090651091", uint64(720)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/1b4aca205bffe8d65f33b066e3f9965cb4c009e3c94b3f296cce8bff166ad8ed-primary.sqlite.bz2", "1b4aca205bffe8d65f33b066e3f9965cb4c009e3c94b3f296cce8bff166ad8ed", int64(1995)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/1b4aca205bffe8d65f33b066e3f9965cb4c009e3c94b3f296cce8bff166ad8ed-primary.sqlite.bz2", "1b4aca205bffe8d65f33b066e3f9965cb4c009e3c94b3f296cce8bff166ad8ed", uint64(1995)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/314e73564000b8a68848551ce0fa9b36e11ed609698f232fa9ab5810ec531de1-filelists.xml.gz", "314e73564000b8a68848551ce0fa9b36e11ed609698f232fa9ab5810ec531de1", int64(313)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/314e73564000b8a68848551ce0fa9b36e11ed609698f232fa9ab5810ec531de1-filelists.xml.gz", "314e73564000b8a68848551ce0fa9b36e11ed609698f232fa9ab5810ec531de1", uint64(313)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/2623c0a1472f574989dcba85417e8ce27b87983bba12922a6d91d574e617d2f6-filelists.sqlite.bz2", "2623c0a1472f574989dcba85417e8ce27b87983bba12922a6d91d574e617d2f6", int64(858)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/2623c0a1472f574989dcba85417e8ce27b87983bba12922a6d91d574e617d2f6-filelists.sqlite.bz2", "2623c0a1472f574989dcba85417e8ce27b87983bba12922a6d91d574e617d2f6", uint64(858)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/e3984def0f3b5ce1b174fad2f6eb3c05829633d2d5d5d8ba05c9720ad59046e7-other.xml.gz", "e3984def0f3b5ce1b174fad2f6eb3c05829633d2d5d5d8ba05c9720ad59046e7", int64(281)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/e3984def0f3b5ce1b174fad2f6eb3c05829633d2d5d5d8ba05c9720ad59046e7-other.xml.gz", "e3984def0f3b5ce1b174fad2f6eb3c05829633d2d5d5d8ba05c9720ad59046e7", uint64(281)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/64f4875d92a3672f62a2d15d5f0ae6f0806451f42403bd07105214e1c9f4f0d7-other.sqlite.bz2", "64f4875d92a3672f62a2d15d5f0ae6f0806451f42403bd07105214e1c9f4f0d7", int64(749)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/64f4875d92a3672f62a2d15d5f0ae6f0806451f42403bd07105214e1c9f4f0d7-other.sqlite.bz2", "64f4875d92a3672f62a2d15d5f0ae6f0806451f42403bd07105214e1c9f4f0d7", uint64(749)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/repomd.xml", "ad1ff2a7e93b614596a9c432f85b141df86e2c010b6591a04c8b011051bd739c", int64(3069)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/repomd.xml", "ad1ff2a7e93b614596a9c432f85b141df86e2c010b6591a04c8b011051bd739c", uint64(3069)).
 		Return(ptr.String(""), nil).
 		Once()
 
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "Packages/testpkg-1-1.src.rpm", "684303227d799ffe1f0b39e030a12ad249931a11ec1690e2079f981cc16d8c52", int64(6156)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "Packages/testpkg-1-1.src.rpm", "684303227d799ffe1f0b39e030a12ad249931a11ec1690e2079f981cc16d8c52", uint64(6156)).
 		Return(ptr.String(uploadSrv.URL+"/upload"), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "Packages/testpkg-1-1.x86_64.rpm", "d9ae5e56ea38d2ac470f320cade63663dae6ab8b8e1630b2fd5a3c607f45e2ee", int64(6722)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "Packages/testpkg-1-1.x86_64.rpm", "d9ae5e56ea38d2ac470f320cade63663dae6ab8b8e1630b2fd5a3c607f45e2ee", uint64(6722)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.On("PublishVersion", defaultNamespace, "container1", "version_id").Return(nil).Once()
@@ -339,40 +339,40 @@ func (s *serviceTestSuite) TestCreateVersionFromYumRepoAndPublishGPGSigned() {
 
 	s.cliMock.On("CreateVersion", defaultNamespace, "container1").Return("version_id", nil, nil).Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/c99064d5c98a01f3720c735431ab1f449c56a1c4e233efd99353716d856c245f-primary.xml.gz", "c99064d5c98a01f3720c735431ab1f449c56a1c4e233efd99353716d856c245f", int64(718)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/c99064d5c98a01f3720c735431ab1f449c56a1c4e233efd99353716d856c245f-primary.xml.gz", "c99064d5c98a01f3720c735431ab1f449c56a1c4e233efd99353716d856c245f", uint64(718)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/0586c412097e75a9420880bb8256802008e79f2cbe7d7d34cebeb55abce6ad40-primary.sqlite.bz2", "0586c412097e75a9420880bb8256802008e79f2cbe7d7d34cebeb55abce6ad40", int64(1985)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/0586c412097e75a9420880bb8256802008e79f2cbe7d7d34cebeb55abce6ad40-primary.sqlite.bz2", "0586c412097e75a9420880bb8256802008e79f2cbe7d7d34cebeb55abce6ad40", uint64(1985)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/64f76a79439371fc632b7cac21b68f322142bc183b706332314e97d1007f8f0c-filelists.xml.gz", "64f76a79439371fc632b7cac21b68f322142bc183b706332314e97d1007f8f0c", int64(314)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/64f76a79439371fc632b7cac21b68f322142bc183b706332314e97d1007f8f0c-filelists.xml.gz", "64f76a79439371fc632b7cac21b68f322142bc183b706332314e97d1007f8f0c", uint64(314)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/464b3eff37b3eee86b7e4f78efcf0e8911afa496a57753ac42a67c2afbdd2d48-filelists.sqlite.bz2", "464b3eff37b3eee86b7e4f78efcf0e8911afa496a57753ac42a67c2afbdd2d48", int64(859)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/464b3eff37b3eee86b7e4f78efcf0e8911afa496a57753ac42a67c2afbdd2d48-filelists.sqlite.bz2", "464b3eff37b3eee86b7e4f78efcf0e8911afa496a57753ac42a67c2afbdd2d48", uint64(859)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/4c25d51dbded8086515c32ce5753f7bd22d4b0d0ee9c45d3f580751fbd26e05a-other.xml.gz", "4c25d51dbded8086515c32ce5753f7bd22d4b0d0ee9c45d3f580751fbd26e05a", int64(282)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/4c25d51dbded8086515c32ce5753f7bd22d4b0d0ee9c45d3f580751fbd26e05a-other.xml.gz", "4c25d51dbded8086515c32ce5753f7bd22d4b0d0ee9c45d3f580751fbd26e05a", uint64(282)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/f16e9edf15ee11cb5a79dd9466f58bbe2a481db47cfad8f6287540beda0779f6-other.sqlite.bz2", "f16e9edf15ee11cb5a79dd9466f58bbe2a481db47cfad8f6287540beda0779f6", int64(743)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/f16e9edf15ee11cb5a79dd9466f58bbe2a481db47cfad8f6287540beda0779f6-other.sqlite.bz2", "f16e9edf15ee11cb5a79dd9466f58bbe2a481db47cfad8f6287540beda0779f6", uint64(743)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/repomd.xml", "4d207e2d80ec3aefb6f9e08f744f547f7171c94dc451d01fa24fe5c57ffb01a0", int64(3069)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "repodata/repomd.xml", "4d207e2d80ec3aefb6f9e08f744f547f7171c94dc451d01fa24fe5c57ffb01a0", uint64(3069)).
 		Return(ptr.String(""), nil).
 		Once()
 
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "SRPMS/testpkg-1-1.src.rpm", "cbce80483872b31a4b92a9ef0aea11f38e0f06db301781db53ba88a365bffd8e", int64(6115)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "SRPMS/testpkg-1-1.src.rpm", "cbce80483872b31a4b92a9ef0aea11f38e0f06db301781db53ba88a365bffd8e", uint64(6115)).
 		Return(ptr.String(uploadSrv.URL+"/upload"), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version_id", "RPMS/x86_64/testpkg-1-1.x86_64.rpm", "3ea740db3d27481b38231c9bd987c46bb6bdda480c60fbfcce84d7d88abf5051", int64(6734)).
+		On("CreateObject", defaultNamespace, "container1", "version_id", "RPMS/x86_64/testpkg-1-1.x86_64.rpm", "3ea740db3d27481b38231c9bd987c46bb6bdda480c60fbfcce84d7d88abf5051", uint64(6734)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.On("PublishVersion", defaultNamespace, "container1", "version_id").Return(nil).Once()
@@ -409,11 +409,11 @@ func (s *serviceTestSuite) TestCreateObjectWithoutEndingSlashInThePath() {
 	s.cacheMock.On("Put", "testdata/repo/somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61").Return(nil).Once()
 
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version1", "somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", int64(5)).
+		On("CreateObject", defaultNamespace, "container1", "version1", "somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", uint64(5)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version1", "somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61", int64(5)).
+		On("CreateObject", defaultNamespace, "container1", "version1", "somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61", uint64(5)).
 		Return(ptr.String(""), nil).
 		Once()
 
@@ -428,11 +428,11 @@ func (s *serviceTestSuite) TestCreateObjectWithEndingSlashInThePath() {
 	s.cacheMock.On("Put", "testdata/repo/somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61").Return(nil).Once()
 
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version1", "somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", int64(5)).
+		On("CreateObject", defaultNamespace, "container1", "version1", "somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", uint64(5)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version1", "somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61", int64(5)).
+		On("CreateObject", defaultNamespace, "container1", "version1", "somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61", uint64(5)).
 		Return(ptr.String(""), nil).
 		Once()
 
@@ -445,11 +445,11 @@ func (s *serviceTestSuite) TestCreateObjectWithCache() {
 	s.cacheMock.On("Get", "testdata/repo/somefile2").Return("ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61", nil).Once()
 
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version1", "somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", int64(5)).
+		On("CreateObject", defaultNamespace, "container1", "version1", "somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", uint64(5)).
 		Return(ptr.String(""), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version1", "somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61", int64(5)).
+		On("CreateObject", defaultNamespace, "container1", "version1", "somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61", uint64(5)).
 		Return(ptr.String(""), nil).
 		Once()
 
@@ -474,11 +474,11 @@ func (s *serviceTestSuite) TestCreateObjectWithUploadURL() {
 	defer srv.Close()
 
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version1", "somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", int64(5)).
+		On("CreateObject", defaultNamespace, "container1", "version1", "somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", uint64(5)).
 		Return(ptr.String(srv.URL+"/test-url"), nil).
 		Once()
 	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version1", "somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61", int64(5)).
+		On("CreateObject", defaultNamespace, "container1", "version1", "somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61", uint64(5)).
 		Return(ptr.String(""), nil).
 		Once()
 
