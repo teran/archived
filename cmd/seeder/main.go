@@ -45,11 +45,11 @@ type config struct {
 	BLOBS3DisableSSL       bool          `envconfig:"BLOB_S3_DISABLE_SSL" default:"false"`
 	BLOBS3ForcePathStyle   bool          `envconfig:"BLOB_S3_FORCE_PATH_STYLE" default:"true"`
 
-	CreateNamespaces             int `envconfig:"CREATE_NAMESPACES" default:"100"`
+	CreateNamespaces             int `envconfig:"CREATE_NAMESPACES" default:"10"`
 	CreateContainersPerNamespace int `envconfig:"CREATE_CONTAINERS_PER_NAMESPACE" default:"100"`
 	CreateVersionsPerContainer   int `envconfig:"CREATE_VERSIONS_PER_CONTAINER" default:"100"`
 	CreateObjectsPerVersion      int `envconfig:"CREATE_OBJECTS_PER_VERSION" default:"100"`
-	MaxObjectSizeBytes           int `envconfig:"MAX_OBJECT_SIZE_BYTES" default:"4194304"`
+	MaxObjectSizeBytes           int `envconfig:"MAX_OBJECT_SIZE_BYTES" default:"4096"`
 }
 
 func main() {
@@ -108,7 +108,7 @@ func main() {
 			panic(err)
 		}
 		for j := 0; j <= cfg.CreateContainersPerNamespace; j++ {
-			container := fmt.Sprintf("container-%06d", i)
+			container := fmt.Sprintf("container-%06d", j)
 			if err := managerSvc.CreateContainer(ctx, namespace, container); err != nil {
 				panic(err)
 			}
