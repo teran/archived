@@ -10,6 +10,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
   minio:
     image: quay.io/minio/minio:latest
     environment:
@@ -23,6 +24,7 @@ services:
     ports:
       - "9000:9000"
       - "9001:9001"
+
   migrator:
     build:
       context: .
@@ -51,6 +53,7 @@ services:
     depends_on:
       postgresql:
         condition: service_healthy
+
   manager:
     build:
       context: .
@@ -69,6 +72,24 @@ services:
     depends_on:
       postgresql:
         condition: service_healthy
+
+  # seeder:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.seeder
+  #   image: ghcr.io/teran/archived/seeder:latest
+  #   environment:
+  #     LOG_LEVEL: info
+  #     METADATA_DSN: postgres://postgres:password@postgresql?sslmode=disable
+  #     BLOB_S3_ENDPOINT: http://minio:9000
+  #     BLOB_S3_BUCKET: test-bucket
+  #     BLOB_S3_ACCESS_KEY_ID: minioadmin
+  #     BLOB_S3_SECRET_KEY: minioadmin
+  #   depends_on:
+  #     postgresql:
+  #       condition: service_healthy
+  #     migrator:
+  #       condition: service_completed_successfully
 
 volumes:
   database:
