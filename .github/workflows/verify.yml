@@ -162,3 +162,11 @@ jobs:
           platforms: amd64
           push: false
           outputs: type=image,name=ghcr.io/${{ github.repository }}/publisher,annotation-index.org.opencontainers.image.description=${{ github.repository }}
+      - name: Build seeder container image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.seeder
+          platforms: amd64
+          push: false
+          outputs: type=image,name=ghcr.io/${{ github.repository }}/seeder,annotation-index.org.opencontainers.image.description=${{ github.repository }}
