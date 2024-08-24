@@ -61,7 +61,20 @@ func (h *handlers) NamespaceIndex(c echo.Context) error {
 
 func (h *handlers) ContainerIndex(c echo.Context) error {
 	namespace := c.Param("namespace")
-	containers, err := h.svc.ListContainers(c.Request().Context(), namespace)
+
+	pageParam := c.QueryParam("page")
+	var page uint64 = 1
+
+	var err error
+	if pageParam != "" {
+		page, err = strconv.ParseUint(pageParam, 10, 64)
+		if err != nil {
+			log.Warnf("malformed page parameter: `%s`", pageParam)
+			page = 1
+		}
+	}
+
+	total, containers, err := h.svc.ListContainersByPage(c.Request().Context(), namespace, page)
 	if err != nil {
 		return err
 	}
@@ -70,12 +83,14 @@ func (h *handlers) ContainerIndex(c echo.Context) error {
 		Title      string
 		Namespace  string
 		Containers []string
+		Total      uint64
 	}
 
 	return c.Render(http.StatusOK, "container-list.html", &data{
 		Title:      fmt.Sprintf("Container index (%s)", namespace),
 		Namespace:  namespace,
 		Containers: containers,
+		Total:      total,
 	})
 }
 

@@ -187,6 +187,20 @@ func (s *serviceTestSuite) TestListContainers() {
 	s.Require().Equal("test error", err.Error())
 }
 
+
+func (s *serviceTestSuite) TestListContainersByPage() {
+	s.mdRepoMock.On("ListContainersByPage", defaultNamespace, uint64(300), uint64(50)).Return(uint64(200), []string{
+		"container1", "container2",
+	}, nil).Once()
+
+	total, containers, err := s.svc.ListContainersByPage(s.ctx, defaultNamespace, 7)
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(4), total)
+	s.Require().Equal([]string{
+		"container1", "container2",
+	}, containers)
+}
+
 func (s *serviceTestSuite) TestListPublishedVersions() {
 	s.mdRepoMock.On("ListPublishedVersionsByContainer", defaultNamespace, "container").Return([]models.Version{
 		{Name: "version1"},
@@ -301,7 +315,7 @@ func (s *serviceTestSuite) SetupTest() {
 	s.mdRepoMock = mdRepoMock.New()
 	s.blobRepoMock = blobRepoMock.New()
 
-	s.svc = newSvc(s.mdRepoMock, s.blobRepoMock, 50, 50)
+	s.svc = newSvc(s.mdRepoMock, s.blobRepoMock, 50, 50, 50)
 }
 
 func (s *serviceTestSuite) TearDownTest() {

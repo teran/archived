@@ -154,6 +154,63 @@ func (r *repository) ListContainers(ctx context.Context, namespace string) ([]st
 	return result, nil
 }
 
+func (r *repository) ListContainersByPage(ctx context.Context, namespace string, offset, limit uint64) (uint64, []string, error) {
+	row, err := selectQueryRow(ctx, r.db, psql.
+		Select("id").
+		From("namespaces").
+		Where(sq.Eq{"name": namespace}))
+	if err != nil {
+		return 0, nil, mapSQLErrors(err)
+	}
+
+	var namespaceID uint
+	if err := row.Scan(&namespaceID); err != nil {
+		return 0, nil, mapSQLErrors(err)
+	}
+
+	row, err = selectQueryRow(ctx, r.db, psql.
+		Select("COUNT(*)").
+		From("containers").
+		Where(sq.Eq{
+			"namespace_id": namespaceID,
+		}))
+	if err != nil {
+		return 0, nil, mapSQLErrors(err)
+	}
+
+	var containersTotal uint64
+	if err := row.Scan(&containersTotal); err != nil {
+		return 0, nil, mapSQLErrors(err)
+	}
+
+	rows, err := selectQuery(ctx, r.db, psql.
+		Select("name").
+		From("containers").
+		Where(sq.Eq{
+			"namespace_id": namespaceID,
+		}).
+		OrderBy("name").
+		Limit(limit).
+		Offset(offset))
+	if err != nil {
+		return 0, nil, mapSQLErrors(err)
+	}
+	defer rows.Close()
+
+	result := []string{}
+	for rows.Next() {
+		var r string
+		if err := rows.Scan(&r); err != nil {
+			return 0, nil, mapSQLErrors(err)
+		}
+
+		result = append(result, r)
+	}
+
+	return containersTotal, result, nil
+}
+
+
 func (r *repository) DeleteContainer(ctx context.Context, namespace, name string) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {

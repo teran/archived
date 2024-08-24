@@ -44,6 +44,15 @@ func (s *memcacheTestSuite) TestListContainersError() {
 	s.Require().Equal("some error", err.Error())
 }
 
+func (s *memcacheTestSuite) TestListContainersByPage() {
+	s.repoMock.On("ListContainersByPage", defaultNamespace, uint64(0), uint64(15)).Return(uint64(500), []string{"container1"}, nil).Once()
+
+	total, containers, err := s.cache.ListContainersByPage(s.ctx, defaultNamespace, 0, 15)
+	s.Require().NoError(err)
+	s.Require().Equal([]string{"container1"}, containers)
+	s.Require().Equal(uint64(500), total)
+}
+
 func (s *memcacheTestSuite) TestGetLatestPublishedVersionByContainer() {
 	s.repoMock.On("GetLatestPublishedVersionByContainer", defaultNamespace, "test-container").Return("test-version", nil).Once()
 

@@ -41,7 +41,8 @@ type Publisher interface {
 	ListNamespaces(ctx context.Context) ([]string, error)
 
 	ListContainers(ctx context.Context, namespace string) ([]string, error)
-
+	ListContainersByPage(ctx context.Context, namespace string, pageNum uint64) (uint64, []string, error)
+	
 	ListPublishedVersions(ctx context.Context, namespace, container string) ([]models.Version, error)
 	ListPublishedVersionsByPage(ctx context.Context, namespace, container string, pageNum uint64) (uint64, []models.Version, error)
 
@@ -54,22 +55,24 @@ type service struct {
 	blobRepo         blob.Repository
 	versionsPageSize uint64
 	objectsPageSize  uint64
+	containersPageSize uint64
 }
 
 func NewManager(mdRepo metadata.Repository, blobRepo blob.Repository) Manager {
-	return newSvc(mdRepo, blobRepo, 50, 50)
+	return newSvc(mdRepo, blobRepo, 50, 50, 50)
 }
 
-func NewPublisher(mdRepo metadata.Repository, blobRepo blob.Repository, versionsPerPage, objectsPerPage uint64) Publisher {
-	return newSvc(mdRepo, blobRepo, versionsPerPage, objectsPerPage)
+func NewPublisher(mdRepo metadata.Repository, blobRepo blob.Repository, versionsPerPage, objectsPerPage, containersPerPage uint64) Publisher {
+	return newSvc(mdRepo, blobRepo, versionsPerPage, objectsPerPage, containersPerPage)
 }
 
-func newSvc(mdRepo metadata.Repository, blobRepo blob.Repository, versionsPerPage, objectsPerPage uint64) *service {
+func newSvc(mdRepo metadata.Repository, blobRepo blob.Repository, versionsPerPage, objectsPerPage, containersPerPage uint64) *service {
 	return &service{
 		mdRepo:           mdRepo,
 		blobRepo:         blobRepo,
 		versionsPageSize: versionsPerPage,
 		objectsPageSize:  objectsPerPage,
+		containersPageSize: containersPerPage,
 	}
 }
 
@@ -126,6 +129,26 @@ func (s *service) RenameContainer(ctx context.Context, namespace, oldName, newNa
 func (s *service) ListContainers(ctx context.Context, namespace string) ([]string, error) {
 	containers, err := s.mdRepo.ListContainers(ctx, namespace)
 	return containers, mapMetadataErrors(err)
+}
+
+func (s *service) ListContainersByPage(ctx context.Context, namespace string, pageNum uint64) (uint64, []string, error) {
+	if pageNum < 1 {
+		pageNum = 1
+	}
+
+	offset := (pageNum - 1) * s.containersPageSize
+	limit := s.containersPageSize
+	totalContainers, containers, err := s.mdRepo.ListContainersByPage(ctx, namespace, offset, limit)
+	if err != nil {
+		return 0, nil, mapMetadataErrors(err)
+	}
+
+	totalPages := (totalContainers / s.containersPageSize)
+	if (totalContainers % s.containersPageSize) != 0 {
+		totalPages++
+	}
+
+	return totalPages, containers, mapMetadataErrors(err)
 }
 
 func (s *service) DeleteContainer(ctx context.Context, namespace, name string) error {

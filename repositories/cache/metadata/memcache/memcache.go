@@ -138,6 +138,55 @@ func (m *memcache) ListContainers(ctx context.Context, namespace string) ([]stri
 	return retrievedValue, nil
 }
 
+
+func (m *memcache) ListContainersByPage(ctx context.Context, namespace string, offset, limit uint64) (uint64, []string, error) {
+	type proxy struct {
+		Total    uint64
+		Containers []string
+	}
+
+	cacheKey := strings.Join([]string{
+		m.keyPrefix,
+		"ListContainersByPage",
+		namespace,
+		strconv.FormatUint(offset, 10),
+		strconv.FormatUint(limit, 10),
+	}, ":")
+
+	item, err := m.cli.Get(cacheKey)
+	if err != nil {
+		if err == memcacheCli.ErrCacheMiss {
+			log.WithFields(log.Fields{
+				"key": cacheKey,
+			}).Tracef("cache miss")
+
+			n, containers, err := m.repo.ListContainersByPage(ctx, namespace, offset, limit)
+			if err != nil {
+				return 0, nil, err
+			}
+
+			if err := store(m, cacheKey, containers); err != nil {
+				return 0, nil, err
+			}
+
+			return n, containers, nil
+		}
+
+		return 0, nil, err
+	}
+	log.WithFields(log.Fields{
+		"key": cacheKey,
+	}).Tracef("cache hit")
+
+	var retrievedValue proxy
+	err = json.Unmarshal(item.Value, &retrievedValue)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	return retrievedValue.Total, retrievedValue.Containers, nil
+}
+
 func (m *memcache) DeleteContainer(ctx context.Context, namespace, name string) error {
 	return m.repo.DeleteContainer(ctx, namespace, name)
 }

@@ -55,8 +55,9 @@ type config struct {
 	HTMLTemplateDir string `envconfig:"HTML_TEMPLATE_DIR" required:"true"`
 	StaticDir       string `envconfig:"STATIC_DIR" required:"true"`
 
-	VersionsPerPage uint64 `envconfig:"VERSIONS_PER_PAGE" default:"50"`
-	ObjectsPerPage  uint64 `envconfig:"OBJECTS_PER_PAGE" default:"50"`
+	VersionsPerPage    uint64 `envconfig:"VERSIONS_PER_PAGE" default:"50"`
+	ObjectsPerPage     uint64 `envconfig:"OBJECTS_PER_PAGE" default:"50"`
+	ContainersPerPage  uint64 `envconfig:"CONTAINERS_PER_PAGE" default:"50"`
 }
 
 func main() {
@@ -119,7 +120,7 @@ func main() {
 
 	blobRepo := awsBlobRepo.New(s3.New(awsSession), cfg.BLOBS3Bucket, cfg.BLOBS3PresignedLinkTTL)
 
-	publisherSvc := service.NewPublisher(repo, blobRepo, cfg.VersionsPerPage, cfg.ObjectsPerPage)
+	publisherSvc := service.NewPublisher(repo, blobRepo, cfg.VersionsPerPage, cfg.ObjectsPerPage, cfg.ContainersPerPage)
 
 	p := htmlPresenter.New(publisherSvc, cfg.HTMLTemplateDir, cfg.StaticDir)
 	p.Register(e)
