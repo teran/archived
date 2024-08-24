@@ -22,6 +22,34 @@ func init() {
 	log.SetLevel(log.TraceLevel)
 }
 
+func (s *serviceTestSuite) TestCreateNamespace() {
+	s.cliMock.On("CreateNamespace", "test-namespace").Return(nil).Once()
+
+	fn := s.svc.CreateNamespace("test-namespace")
+	s.Require().NoError(fn(s.ctx))
+}
+
+func (s *serviceTestSuite) TestRenameNamespace() {
+	s.cliMock.On("RenameNamespace", "old-name", "new-name").Return(nil).Once()
+
+	fn := s.svc.RenameNamespace("old-name", "new-name")
+	s.Require().NoError(fn(s.ctx))
+}
+
+func (s *serviceTestSuite) TestListNamespaces() {
+	s.cliMock.On("ListNamespaces").Return([]string{"namespace1", "namespace2"}, nil).Once()
+
+	fn := s.svc.ListNamespaces()
+	s.Require().NoError(fn(s.ctx))
+}
+
+func (s *serviceTestSuite) TestDeleteNamespace() {
+	s.cliMock.On("DeleteNamespace", "test-namespace").Return(nil).Once()
+
+	fn := s.svc.DeleteNamespace("test-namespace")
+	s.Require().NoError(fn(s.ctx))
+}
+
 func (s *serviceTestSuite) TestCreateContainer() {
 	s.cliMock.On("CreateContainer", defaultNamespace, "test-container").Return(nil).Once()
 
