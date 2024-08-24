@@ -58,3 +58,33 @@ func (s *postgreSQLRepositoryTestSuite) TestContainerOperations() {
 		"and-then-there-was-the-one",
 	}, list)
 }
+
+
+func (s *postgreSQLRepositoryTestSuite) TestContainersPagination() {
+	s.tp.On("Now").Return("2024-01-02T01:02:03Z").Times(4)
+
+	err := s.repo.CreateNamespace(s.ctx, "new-namespace")
+	s.Require().NoError(err)
+
+	total, list, err := s.repo.ListContainersByPage(s.ctx, defaultNamespace, 0, 100)
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(0), total)
+	s.Require().Equal([]string{}, list)
+
+	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "test-container1")
+	s.Require().NoError(err)
+
+	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "test-container2")
+	s.Require().NoError(err)
+
+	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "test-container3")
+	s.Require().NoError(err)
+
+	total, list, err = s.repo.ListContainersByPage(s.ctx, defaultNamespace, 0, 2)
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(3), total)
+	s.Require().Equal([]string{
+		"test-container1",
+		"test-container2",
+	}, list)
+}

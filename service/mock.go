@@ -60,6 +60,11 @@ func (m *Mock) ListContainers(_ context.Context, namespace string) ([]string, er
 	return args.Get(0).([]string), args.Error(1)
 }
 
+func (m *Mock) ListContainersByPage(_ context.Context, namespace string, pageNum uint64) (uint64, []string, error) {
+	args := m.Called(namespace, pageNum)
+	return args.Get(0).(uint64), args.Get(1).([]string), args.Error(2)
+}
+
 func (m *Mock) DeleteContainer(_ context.Context, namespace, name string) error {
 	args := m.Called(namespace, name)
 	return args.Error(0)

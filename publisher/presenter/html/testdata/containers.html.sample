@@ -12,6 +12,12 @@
         <a href="..">..</a><br>
         <a href="/default/test-container-1/">test-container-1/</a><br>
 
+
+        <p>
+            <a href="?page=2">&raquo;</a>
+        </p>
+
+
         <hr>
         Powered by <a href="https://github.com/teran/archived" target="_blank" rel="noopener">archived</a>
     </body>
