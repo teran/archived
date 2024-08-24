@@ -74,23 +74,25 @@ func (h *handlers) ContainerIndex(c echo.Context) error {
 		}
 	}
 
-	total, containers, err := h.svc.ListContainersByPage(c.Request().Context(), namespace, page)
+	pagesCount, containers, err := h.svc.ListContainersByPage(c.Request().Context(), namespace, page)
 	if err != nil {
 		return err
 	}
 
 	type data struct {
-		Title      string
-		Namespace  string
-		Containers []string
-		Total      uint64
+		Title       string
+		CurrentPage uint64
+		PagesCount  uint64
+		Namespace   string
+		Containers  []string
 	}
 
 	return c.Render(http.StatusOK, "container-list.html", &data{
-		Title:      fmt.Sprintf("Container index (%s)", namespace),
-		Namespace:  namespace,
-		Containers: containers,
-		Total:      total,
+		Title:       fmt.Sprintf("Container index (%s)", namespace),
+		CurrentPage: page,
+		PagesCount:  pagesCount,
+		Namespace:   namespace,
+		Containers:  containers,
 	})
 }
 

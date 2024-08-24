@@ -51,6 +51,11 @@ func (s *memcacheTestSuite) TestListContainersByPage() {
 	s.Require().NoError(err)
 	s.Require().Equal([]string{"container1"}, containers)
 	s.Require().Equal(uint64(500), total)
+
+	total, containers, err = s.cache.ListContainersByPage(s.ctx, defaultNamespace, 0, 15)
+	s.Require().NoError(err)
+	s.Require().Equal([]string{"container1"}, containers)
+	s.Require().Equal(uint64(500), total)
 }
 
 func (s *memcacheTestSuite) TestGetLatestPublishedVersionByContainer() {

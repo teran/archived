@@ -165,7 +165,7 @@ func (m *memcache) ListContainersByPage(ctx context.Context, namespace string, o
 				return 0, nil, err
 			}
 
-			if err := store(m, cacheKey, containers); err != nil {
+			if err := store(m, cacheKey, proxy{Total: n, Containers: containers}); err != nil {
 				return 0, nil, err
 			}
 
