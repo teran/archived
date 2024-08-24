@@ -3,12 +3,12 @@ package main
 import (
 	"bytes"
 	"context"
-	"crypto/rand"
 	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	"time"
 
@@ -120,7 +120,9 @@ func main() {
 				for l := 0; l <= cfg.CreateObjectsPerVersion; l++ {
 					key := fmt.Sprintf("object-%06d", l)
 
-					data := make([]byte, cfg.MaxObjectSizeBytes)
+					size := rand.Intn(cfg.MaxObjectSizeBytes)
+
+					data := make([]byte, size)
 					if _, err := rand.Read(data); err != nil {
 						panic(err)
 					}
