@@ -147,7 +147,8 @@ func (y *yumRepo) fetchPackageIndex(ctx context.Context, href models.RepoMDDataL
 		}
 	}
 
-	y.metadata[indexFileName] = buf.Bytes()
+	// FIXME: move after XML decoding
+	// y.metadata[indexFileName] = buf.Bytes()
 
 	primaryMD := models.PrimaryMD{}
 	if err := xml.NewDecoder(trd).Decode(&primaryMD); err != nil {
@@ -157,6 +158,8 @@ func (y *yumRepo) fetchPackageIndex(ctx context.Context, href models.RepoMDDataL
 	if hex.EncodeToString(hasher.Sum(nil)) != checksum.Text {
 		return nil, ErrChecksumMismatch
 	}
+
+	y.metadata[indexFileName] = buf.Bytes()
 
 	packages := []models.Package{}
 	for _, pkg := range primaryMD.Package {
