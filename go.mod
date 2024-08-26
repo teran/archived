@@ -15,9 +15,10 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/labstack/echo-contrib v0.17.1
 	github.com/labstack/echo/v4 v4.12.0
+	github.com/labstack/gommon v0.4.2
 	github.com/lib/pq v1.10.9
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.20.0
+	github.com/prometheus/client_golang v1.20.2
 	github.com/sassoftware/go-rpmutils v0.4.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.9.0
@@ -64,7 +65,6 @@ require (
 	github.com/jackc/pgx/v4 v4.18.3 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
-	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
