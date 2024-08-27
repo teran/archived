@@ -61,6 +61,27 @@ func (s *handlersTestSuite) TestGetObject() {
 	s.Require().Equal("https://example.com/some-addr", v)
 }
 
+func (s *handlersTestSuite) TestGetObjectSchemeMismatch() {
+	s.serviceMock.On("GetObjectURL", defaultNamespace, "test-container-1", "20241011121314", "test-dir/filename.txt").Return("https://example.com/some-addr", nil).Once()
+
+	req, err := http.NewRequest(http.MethodGet, s.srv.URL+"/default/test-container-1/20241011121314/test-dir/filename.txt", nil)
+	s.Require().NoError(err)
+
+	req.Header.Set("X-Forwarded-Scheme", "http")
+
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
+	resp, err := client.Do(req)
+	s.Require().NoError(err)
+
+	v := resp.Header.Get("Location")
+	s.Require().Equal("http://example.com/some-addr", v)
+}
+
 func (s *handlersTestSuite) TestErrNotFound() {
 	s.serviceMock.On("ListPublishedVersionsByPage", defaultNamespace, "test-container-1", uint64(1)).Return(uint64(100), []models.Version(nil), service.ErrNotFound).Once()
 	s.compareHTMLResponse(s.srv.URL+"/default/test-container-1/", "testdata/404.html.sample")
@@ -116,7 +137,7 @@ func (s *handlersTestSuite) SetupTest() {
 
 	s.serviceMock = service.NewMock()
 
-	s.handlers = New(s.serviceMock, "templates", "static")
+	s.handlers = New(s.serviceMock, "templates", "static", true)
 	s.handlers.Register(e)
 
 	s.srv = httptest.NewServer(e)

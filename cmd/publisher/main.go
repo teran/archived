@@ -52,12 +52,14 @@ type config struct {
 	BLOBS3DisableSSL       bool          `envconfig:"BLOB_S3_DISABLE_SSL" default:"false"`
 	BLOBS3ForcePathStyle   bool          `envconfig:"BLOB_S3_FORCE_PATH_STYLE" default:"true"`
 
+	BLOBS3PreserveSchemeOnRedirect bool `envconfig:"BLOB_S3_PRESERVE_SCHEME_ON_REDIRECT" default:"true"`
+
 	HTMLTemplateDir string `envconfig:"HTML_TEMPLATE_DIR" required:"true"`
 	StaticDir       string `envconfig:"STATIC_DIR" required:"true"`
 
-	VersionsPerPage    uint64 `envconfig:"VERSIONS_PER_PAGE" default:"50"`
-	ObjectsPerPage     uint64 `envconfig:"OBJECTS_PER_PAGE" default:"50"`
-	ContainersPerPage  uint64 `envconfig:"CONTAINERS_PER_PAGE" default:"50"`
+	VersionsPerPage   uint64 `envconfig:"VERSIONS_PER_PAGE" default:"50"`
+	ObjectsPerPage    uint64 `envconfig:"OBJECTS_PER_PAGE" default:"50"`
+	ContainersPerPage uint64 `envconfig:"CONTAINERS_PER_PAGE" default:"50"`
 }
 
 func main() {
@@ -122,7 +124,7 @@ func main() {
 
 	publisherSvc := service.NewPublisher(repo, blobRepo, cfg.VersionsPerPage, cfg.ObjectsPerPage, cfg.ContainersPerPage)
 
-	p := htmlPresenter.New(publisherSvc, cfg.HTMLTemplateDir, cfg.StaticDir)
+	p := htmlPresenter.New(publisherSvc, cfg.HTMLTemplateDir, cfg.StaticDir, cfg.BLOBS3PreserveSchemeOnRedirect)
 	p.Register(e)
 
 	g.Go(func() error {
