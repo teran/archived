@@ -208,9 +208,17 @@ func (h *handlers) GetObject(c echo.Context) error {
 	xForwardedScheme := c.Request().Header.Get("X-Forwarded-Scheme")
 	xScheme := c.Request().Header.Get("X-Scheme")
 
-	if h.preserveSchemeOnRedirect && (xForwardedScheme != "" || xScheme != "") {
+	allowedValues := map[string]struct{}{
+		"http":  {},
+		"https": {},
+	}
+
+	_, xForwardedSchemeOk := allowedValues[xForwardedScheme]
+	_, xSchemeOk := allowedValues[xScheme]
+
+	if h.preserveSchemeOnRedirect && (xForwardedSchemeOk || xSchemeOk) {
 		scheme := xForwardedScheme
-		if xForwardedScheme == "" {
+		if !xForwardedSchemeOk {
 			scheme = xScheme
 		}
 

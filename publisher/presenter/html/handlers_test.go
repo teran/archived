@@ -61,13 +61,34 @@ func (s *handlersTestSuite) TestGetObject() {
 	s.Require().Equal("https://example.com/some-addr", v)
 }
 
-func (s *handlersTestSuite) TestGetObjectSchemeMismatch() {
+func (s *handlersTestSuite) TestGetObjectSchemeMismatchXForwardedScheme() {
 	s.serviceMock.On("GetObjectURL", defaultNamespace, "test-container-1", "20241011121314", "test-dir/filename.txt").Return("https://example.com/some-addr", nil).Once()
 
 	req, err := http.NewRequest(http.MethodGet, s.srv.URL+"/default/test-container-1/20241011121314/test-dir/filename.txt", nil)
 	s.Require().NoError(err)
 
 	req.Header.Set("X-Forwarded-Scheme", "http")
+
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
+	resp, err := client.Do(req)
+	s.Require().NoError(err)
+
+	v := resp.Header.Get("Location")
+	s.Require().Equal("http://example.com/some-addr", v)
+}
+
+func (s *handlersTestSuite) TestGetObjectSchemeMismatchXScheme() {
+	s.serviceMock.On("GetObjectURL", defaultNamespace, "test-container-1", "20241011121314", "test-dir/filename.txt").Return("https://example.com/some-addr", nil).Once()
+
+	req, err := http.NewRequest(http.MethodGet, s.srv.URL+"/default/test-container-1/20241011121314/test-dir/filename.txt", nil)
+	s.Require().NoError(err)
+
+	req.Header.Set("X-Scheme", "http")
 
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
