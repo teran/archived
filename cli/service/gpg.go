@@ -3,6 +3,8 @@ package service
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"io"
 	"net/http"
 	"os"
@@ -12,7 +14,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func getGPGKey(ctx context.Context, filepath string) (openpgp.EntityList, error) {
+func getGPGKey(ctx context.Context, filepath string, checksum *string) (openpgp.EntityList, error) {
 	p := strings.SplitN(filepath, "://", 2)
 	if len(p) != 2 {
 		return nil, errors.New("unexpected public key file path format. Please use file:///path/to/file.gpg or http://example.com/file.gpg")
@@ -49,6 +51,22 @@ func getGPGKey(ctx context.Context, filepath string) (openpgp.EntityList, error)
 		}
 	default:
 		return nil, errors.Errorf("unsupported key file access scheme: `%s`", p[0])
+	}
+
+	if checksum != nil && *checksum != "" {
+		h := sha256.New()
+		n, err := h.Write(data)
+		if err != nil {
+			return nil, errors.Wrap(err, "error calculating SHA256")
+		}
+
+		if n != len(data) {
+			return nil, errors.Wrap(io.ErrShortWrite, "error writing data to hasher")
+		}
+
+		if *checksum != hex.EncodeToString(h.Sum(nil)) {
+			return nil, errors.New("GPG Key checksum mismatch")
+		}
 	}
 
 	return openpgp.ReadArmoredKeyRing(bytes.NewReader(data))

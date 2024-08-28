@@ -88,7 +88,7 @@ func (s *serviceTestSuite) TestDeleteContainer() {
 func (s *serviceTestSuite) TestCreateVersion() {
 	s.cliMock.On("CreateVersion", defaultNamespace, "container1").Return("version_id", nil).Once()
 
-	fn := s.svc.CreateVersion(defaultNamespace, "container1", false, nil, nil, nil)
+	fn := s.svc.CreateVersion(defaultNamespace, "container1", false, nil, nil, nil, nil)
 	s.Require().NoError(fn(s.ctx))
 }
 
@@ -96,7 +96,7 @@ func (s *serviceTestSuite) TestCreateVersionAndPublish() {
 	s.cliMock.On("CreateVersion", defaultNamespace, "container1").Return("version_id", nil).Once()
 	s.cliMock.On("PublishVersion", defaultNamespace, "container1", "version_id").Return(nil).Once()
 
-	fn := s.svc.CreateVersion(defaultNamespace, "container1", true, nil, nil, nil)
+	fn := s.svc.CreateVersion(defaultNamespace, "container1", true, nil, nil, nil, nil)
 	s.Require().NoError(fn(s.ctx))
 }
 
@@ -104,7 +104,7 @@ func (s *serviceTestSuite) TestCreateVersionAndPublishWithEmptyPath() {
 	s.cliMock.On("CreateVersion", defaultNamespace, "container1").Return("version_id", nil).Once()
 	s.cliMock.On("PublishVersion", defaultNamespace, "container1", "version_id").Return(nil).Once()
 
-	fn := s.svc.CreateVersion(defaultNamespace, "container1", true, ptr.String(""), nil, nil)
+	fn := s.svc.CreateVersion(defaultNamespace, "container1", true, ptr.String(""), nil, nil, nil)
 	s.Require().NoError(fn(s.ctx))
 }
 
@@ -125,7 +125,7 @@ func (s *serviceTestSuite) TestCreateVersionFromDirAndPublish() {
 		Once()
 	s.cliMock.On("PublishVersion", defaultNamespace, "container1", "version_id").Return(nil).Once()
 
-	fn := s.svc.CreateVersion(defaultNamespace, "container1", true, ptr.String("testdata/repo"), nil, nil)
+	fn := s.svc.CreateVersion(defaultNamespace, "container1", true, ptr.String("testdata/repo"), nil, nil, nil)
 	s.Require().NoError(fn(s.ctx))
 }
 
@@ -430,7 +430,7 @@ func (s *serviceTestSuite) TestCreateVersionFromYumRepoAndPublish() {
 
 	s.cliMock.On("PublishVersion", defaultNamespace, "container1", "version_id").Return(nil).Once()
 
-	fn := s.svc.CreateVersion(defaultNamespace, "container1", true, ptr.String(""), ptr.String(srv.URL), ptr.String(""))
+	fn := s.svc.CreateVersion(defaultNamespace, "container1", true, ptr.String(""), ptr.String(srv.URL), ptr.String(""), nil)
 	s.Require().NoError(fn(s.ctx))
 }
 
@@ -500,7 +500,7 @@ func (s *serviceTestSuite) TestCreateVersionFromYumRepoAndPublishSHA1() {
 		Once()
 	s.cliMock.On("PublishVersion", defaultNamespace, "container1", "version_id").Return(nil).Once()
 
-	fn := s.svc.CreateVersion(defaultNamespace, "container1", true, ptr.String(""), ptr.String(srv.URL), ptr.String(""))
+	fn := s.svc.CreateVersion(defaultNamespace, "container1", true, ptr.String(""), ptr.String(srv.URL), ptr.String(""), nil)
 	s.Require().NoError(fn(s.ctx))
 }
 
@@ -804,7 +804,7 @@ func (s *serviceTestSuite) TestCreateVersionFromYumRepoAndPublishGPGNoSignature(
 
 	s.cliMock.On("PublishVersion", defaultNamespace, "container1", "version_id").Return(nil).Once()
 
-	fn := s.svc.CreateVersion(defaultNamespace, "container1", true, ptr.String(""), ptr.String(srv.URL), ptr.String("file://./testdata/gpg/somekey.gpg"))
+	fn := s.svc.CreateVersion(defaultNamespace, "container1", true, ptr.String(""), ptr.String(srv.URL), ptr.String("file://./testdata/gpg/somekey.gpg"), nil)
 	s.Require().NoError(fn(s.ctx))
 }
 
@@ -874,7 +874,7 @@ func (s *serviceTestSuite) TestCreateVersionFromYumRepoAndPublishGPGSigned() {
 		Once()
 	s.cliMock.On("PublishVersion", defaultNamespace, "container1", "version_id").Return(nil).Once()
 
-	fn := s.svc.CreateVersion(defaultNamespace, "container1", true, ptr.String(""), ptr.String(srv.URL), ptr.String("file://./testdata/gpg/somekey.gpg"))
+	fn := s.svc.CreateVersion(defaultNamespace, "container1", true, ptr.String(""), ptr.String(srv.URL), ptr.String("file://./testdata/gpg/somekey.gpg"), nil)
 	s.Require().NoError(fn(s.ctx))
 }
 
