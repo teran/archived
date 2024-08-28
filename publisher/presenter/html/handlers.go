@@ -29,16 +29,18 @@ type Handlers interface {
 }
 
 type handlers struct {
-	svc         service.Publisher
-	staticDir   string
-	templateDir string
+	svc                      service.Publisher
+	staticDir                string
+	templateDir              string
+	preserveSchemeOnRedirect bool
 }
 
-func New(svc service.Publisher, templateDir, staticDir string) Handlers {
+func New(svc service.Publisher, templateDir, staticDir string, preserveSchemeOnRedirect bool) Handlers {
 	return &handlers{
-		svc:         svc,
-		staticDir:   staticDir,
-		templateDir: templateDir,
+		svc:                      svc,
+		staticDir:                staticDir,
+		templateDir:              templateDir,
+		preserveSchemeOnRedirect: preserveSchemeOnRedirect,
 	}
 }
 
@@ -195,7 +197,7 @@ func (h *handlers) GetObject(c echo.Context) error {
 		return err
 	}
 
-	url, err := h.svc.GetObjectURL(c.Request().Context(), namespace, container, version, key)
+	link, err := h.svc.GetObjectURL(c.Request().Context(), namespace, container, version, key)
 	if err != nil {
 		if err == service.ErrNotFound {
 			return c.Render(http.StatusNotFound, notFoundTemplateFilename, nil)
@@ -203,7 +205,34 @@ func (h *handlers) GetObject(c echo.Context) error {
 		return err
 	}
 
-	return c.Redirect(http.StatusFound, url)
+	xForwardedScheme := c.Request().Header.Get("X-Forwarded-Scheme")
+	xScheme := c.Request().Header.Get("X-Scheme")
+
+	allowedValues := map[string]struct{}{
+		"http":  {},
+		"https": {},
+	}
+
+	_, xForwardedSchemeOk := allowedValues[xForwardedScheme]
+	_, xSchemeOk := allowedValues[xScheme]
+
+	if h.preserveSchemeOnRedirect && (xForwardedSchemeOk || xSchemeOk) {
+		scheme := xForwardedScheme
+		if !xForwardedSchemeOk {
+			scheme = xScheme
+		}
+
+		u, err := url.Parse(link)
+		if err != nil {
+			return c.Blob(http.StatusInternalServerError, "text/plain", []byte("error parsing url"))
+		}
+
+		u.Scheme = scheme
+
+		link = u.String()
+	}
+
+	return c.Redirect(http.StatusFound, link)
 }
 
 func (h *handlers) ErrorHandler(err error, c echo.Context) {
