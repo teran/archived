@@ -1,0 +1,18 @@
+FROM alpine:3.20.0 AS certificates
+
+RUN apk add --update --no-cache \
+  ca-certificates=20240705-r0
+
+FROM alpine:3.20.0 AS passwd
+
+RUN echo 'nobody:x:65534:65534:nobody:/:/sbin/nologin' > /passwd.nobody
+
+FROM scratch
+
+COPY --from=passwd /passwd.nobody /etc/passwd
+COPY --from=certificates /etc/ssl/cert.pem /etc/ssl/cert.pem
+COPY --chmod=0755 --chown=root:root dist/archived-seeder_linux_amd64_v3/archived-seeder /archived-seeder
+
+USER nobody
+
+ENTRYPOINT [ "/archived-seeder" ]

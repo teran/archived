@@ -27,7 +27,7 @@ func TestGetGPGKey(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	m.On("StaticFile", "/").Return(http.StatusOK, "text/plain", data).Once()
+	m.On("StaticFile", "/").Return(http.StatusOK, "text/plain", data).Twice()
 
 	e := echo.New()
 	e.Use(middleware.Logger())
@@ -40,6 +40,7 @@ func TestGetGPGKey(t *testing.T) {
 	type testCase struct {
 		name         string
 		url          string
+		keyChecksum  *string
 		expKeyIDs    []uint64
 		expErrorText *string
 	}
@@ -56,6 +57,18 @@ func TestGetGPGKey(t *testing.T) {
 			expKeyIDs: []uint64{11127004574349501168},
 		},
 		{
+			name:        "read from file w/ checksum",
+			url:         "file://./testdata/gpg/somekey.gpg",
+			keyChecksum: ptr.String("aa392a2005c38f10ce21034d6d1aaace5bbee1c3d98ac1ee06a42336d741473e"),
+			expKeyIDs:   []uint64{11127004574349501168},
+		},
+		{
+			name:        "read form HTTP URL w/ checksum",
+			url:         srv.URL,
+			keyChecksum: ptr.String("aa392a2005c38f10ce21034d6d1aaace5bbee1c3d98ac1ee06a42336d741473e"),
+			expKeyIDs:   []uint64{11127004574349501168},
+		},
+		{
 			name: "incorrect scheme",
 			expErrorText: ptr.String(
 				"unexpected public key file path format. Please use file:///path/to/file.gpg or http://example.com/file.gpg"),
@@ -66,13 +79,27 @@ func TestGetGPGKey(t *testing.T) {
 			expErrorText: ptr.String(
 				"unsupported key file access scheme: `ftp`"),
 		},
+		{
+			name:         "read from file w/ incorrect checksum",
+			url:          "file://./testdata/gpg/somekey.gpg",
+			keyChecksum:  ptr.String("deadbeef"),
+			expKeyIDs:    []uint64{11127004574349501168},
+			expErrorText: ptr.String("GPG Key checksum mismatch"),
+		},
+		{
+			name:         "read form HTTP URL w/ incorrect checksum",
+			url:          srv.URL,
+			keyChecksum:  ptr.String("deadbeef"),
+			expKeyIDs:    []uint64{11127004574349501168},
+			expErrorText: ptr.String("GPG Key checksum mismatch"),
+		},
 	}
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			r := require.New(t)
 
-			keys, err := getGPGKey(ctx, tc.url)
+			keys, err := getGPGKey(ctx, tc.url, tc.keyChecksum)
 			if tc.expErrorText != nil {
 				r.Error(err)
 				r.Equal(*tc.expErrorText, err.Error())

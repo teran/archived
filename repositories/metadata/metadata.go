@@ -9,29 +9,39 @@ import (
 	"github.com/teran/archived/models"
 )
 
-var ErrNotFound = errors.New("not found")
+var (
+	ErrNotFound = errors.New("not found")
+	ErrConflict = errors.New("entity with given identifier already exists")
+)
 
 type Repository interface {
-	CreateContainer(ctx context.Context, name string) error
-	ListContainers(ctx context.Context) ([]string, error)
-	DeleteContainer(ctx context.Context, name string) error
+	CreateNamespace(ctx context.Context, name string) error
+	RenameNamespace(ctx context.Context, oldName, newName string) error
+	ListNamespaces(ctx context.Context) ([]string, error)
+	DeleteNamespace(ctx context.Context, name string) error
 
-	CreateVersion(ctx context.Context, container string) (string, error)
-	GetLatestPublishedVersionByContainer(ctx context.Context, container string) (string, error)
-	ListAllVersionsByContainer(ctx context.Context, container string) ([]models.Version, error)
-	ListPublishedVersionsByContainer(ctx context.Context, container string) ([]models.Version, error)
-	ListPublishedVersionsByContainerAndPage(ctx context.Context, container string, offset, limit uint64) (uint64, []models.Version, error)
-	ListUnpublishedVersionsByContainer(ctx context.Context, container string) ([]models.Version, error)
-	MarkVersionPublished(ctx context.Context, container, version string) error
-	DeleteVersion(ctx context.Context, container, version string) error
+	CreateContainer(ctx context.Context, namespace, name string) error
+	RenameContainer(ctx context.Context, namespace, oldName, newNamespace, newName string) error
+	ListContainers(ctx context.Context, namespace string) ([]string, error)
+	ListContainersByPage(ctx context.Context, namespace string, offset, limit uint64) (uint64, []string, error)
+	DeleteContainer(ctx context.Context, namespace, name string) error
 
-	CreateObject(ctx context.Context, container, version, key, casKey string) error
-	ListObjects(ctx context.Context, container, version string, offset, limit uint64) (uint64, []string, error)
-	DeleteObject(ctx context.Context, container, version string, key ...string) error
-	RemapObject(ctx context.Context, container, version, key, newCASKey string) error
+	CreateVersion(ctx context.Context, namespace, container string) (string, error)
+	GetLatestPublishedVersionByContainer(ctx context.Context, namespace, container string) (string, error)
+	ListAllVersionsByContainer(ctx context.Context, namespace, container string) ([]models.Version, error)
+	ListPublishedVersionsByContainer(ctx context.Context, namespace, container string) ([]models.Version, error)
+	ListPublishedVersionsByContainerAndPage(ctx context.Context, namespace, container string, offset, limit uint64) (uint64, []models.Version, error)
+	ListUnpublishedVersionsByContainer(ctx context.Context, namespace, container string) ([]models.Version, error)
+	MarkVersionPublished(ctx context.Context, namespace, container, version string) error
+	DeleteVersion(ctx context.Context, namespace, container, version string) error
+
+	CreateObject(ctx context.Context, namespace, container, version, key, casKey string) error
+	ListObjects(ctx context.Context, namespace, container, version string, offset, limit uint64) (uint64, []string, error)
+	DeleteObject(ctx context.Context, namespace, container, version string, key ...string) error
+	RemapObject(ctx context.Context, namespace, container, version, key, newCASKey string) error
 
 	CreateBLOB(ctx context.Context, checksum string, size uint64, mimeType string) error
-	GetBlobKeyByObject(ctx context.Context, container, version, key string) (string, error)
+	GetBlobKeyByObject(ctx context.Context, namespace, scontainer, version, key string) (string, error)
 	EnsureBlobKey(ctx context.Context, key string, size uint64) error
 
 	CountStats(ctx context.Context) (*emodels.Stats, error)

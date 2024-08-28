@@ -4,30 +4,74 @@ package manager.presenter.grpc.proto.v1;
 
 option go_package = "github.com/teran/archived/manager/presenter/grpc/proto/v1";
 
-message CreateContainerRequest {
+message CreateNamespaceRequest {
   string name = 1;
+}
+message CreateNamespaceResponse {}
+
+message RenameNamespaceRequest{
+  string old_name = 1;
+  string new_name = 2;
+}
+
+message RenameNamespaceResponse {}
+
+message DeleteNamespaceRequest {
+  string name = 1;
+}
+message DeleteNamespaceResponse {}
+
+message ListNamespacesRequest {}
+message ListNamespacesResponse {
+  repeated string name = 1;
+}
+
+message CreateContainerRequest {
+  string namespace = 1;
+  string name = 2;
 }
 message CreateContainerResponse {}
 
+message MoveContainerRequest {
+  string namespace = 1;
+  string container_name = 2;
+  string destination_namespace = 3;
+}
+message MoveContainerResponse {}
+
+message RenameContainerRequest{
+  string namespace = 1;
+  string old_name = 2;
+  string new_name = 3;
+}
+
+message RenameContainerResponse {}
+
 message DeleteContainerRequest {
-  string name = 1;
+  string namespace = 1;
+  string name = 2;
 }
 message DeleteContainerResponse {}
 
-message ListContainersRequest {}
+message ListContainersRequest {
+  string namespace = 1;
+}
+
 message ListContainersResponse {
   repeated string name = 1;
 }
 
 message CreateVersionRequest {
-  string container = 1;
+  string namespace = 1;
+  string container = 2;
 }
 message CreateVersionResponse {
   string version = 1;
 }
 
 message ListVersionsRequest {
-  string container = 1;
+  string namespace = 1;
+  string container = 2;
 }
 
 message ListVersionsResponse {
@@ -35,33 +79,37 @@ message ListVersionsResponse {
 }
 
 message DeleteVersionRequest {
-  string container = 1;
-  string version = 2;
+  string namespace = 1;
+  string container = 2;
+  string version = 3;
 }
 
 message DeleteVersionResponse {}
 
 message PublishVersionRequest {
-  string container = 1;
-  string version = 2;
+  string namespace = 1;
+  string container = 2;
+  string version = 3;
 }
 
 message PublishVersionResponse {}
 
 message CreateObjectRequest {
-  string container = 1;
-  string version = 2;
-  string key = 3;
-  string checksum = 4;
-  int64 size = 5;
+  string namespace = 1;
+  string container = 2;
+  string version = 3;
+  string key = 4;
+  string checksum = 5;
+  uint64 size = 6;
 }
 message CreateObjectResponse {
   optional string upload_url = 1;
 }
 
 message ListObjectsRequest {
-  string container = 1;
-  string version = 2;
+  string namespace = 1;
+  string container = 2;
+  string version = 3;
 }
 
 message ListObjectsResponse {
@@ -69,9 +117,10 @@ message ListObjectsResponse {
 }
 
 message GetObjectURLRequest {
-  string container = 1;
-  string version = 2;
-  string key = 3;
+  string namespace = 1;
+  string container = 2;
+  string version = 3;
+  string key = 4;
 }
 
 message GetObjectURLResponse {
@@ -79,25 +128,33 @@ message GetObjectURLResponse {
 }
 
 message DeleteObjectRequest {
-  string container = 1;
-  string version = 2;
-  string key = 3;
+  string namespace = 1;
+  string container = 2;
+  string version = 3;
+  string key = 4;
 }
 
 message DeleteObjectResponse {}
 
 service ManageService {
-    rpc CreateContainer(CreateContainerRequest) returns (CreateContainerResponse);
-    rpc DeleteContainer(DeleteContainerRequest) returns (DeleteContainerResponse);
-    rpc ListContainers(ListContainersRequest) returns (ListContainersResponse);
+  rpc CreateNamespace(CreateNamespaceRequest) returns (CreateNamespaceResponse);
+  rpc RenameNamespace(RenameNamespaceRequest) returns (RenameNamespaceResponse);
+  rpc DeleteNamespace(DeleteNamespaceRequest) returns (DeleteNamespaceResponse);
+  rpc ListNamespaces(ListNamespacesRequest) returns (ListNamespacesResponse);
 
-    rpc CreateVersion(CreateVersionRequest) returns (CreateVersionResponse);
-    rpc ListVersions(ListVersionsRequest) returns (ListVersionsResponse);
-    rpc DeleteVersion(DeleteVersionRequest) returns (DeleteVersionResponse);
-    rpc PublishVersion(PublishVersionRequest) returns (PublishVersionResponse);
+  rpc CreateContainer(CreateContainerRequest) returns (CreateContainerResponse);
+  rpc MoveContainer(MoveContainerRequest) returns (MoveContainerResponse);
+  rpc RenameContainer(RenameContainerRequest) returns (RenameContainerResponse);
+  rpc DeleteContainer(DeleteContainerRequest) returns (DeleteContainerResponse);
+  rpc ListContainers(ListContainersRequest) returns (ListContainersResponse);
 
-    rpc CreateObject(CreateObjectRequest) returns (CreateObjectResponse);
-    rpc ListObjects(ListObjectsRequest) returns (ListObjectsResponse);
-    rpc GetObjectURL(GetObjectURLRequest) returns (GetObjectURLResponse);
-    rpc DeleteObject(DeleteObjectRequest) returns (DeleteObjectResponse);
+  rpc CreateVersion(CreateVersionRequest) returns (CreateVersionResponse);
+  rpc ListVersions(ListVersionsRequest) returns (ListVersionsResponse);
+  rpc DeleteVersion(DeleteVersionRequest) returns (DeleteVersionResponse);
+  rpc PublishVersion(PublishVersionRequest) returns (PublishVersionResponse);
+
+  rpc CreateObject(CreateObjectRequest) returns (CreateObjectResponse);
+  rpc ListObjects(ListObjectsRequest) returns (ListObjectsResponse);
+  rpc GetObjectURL(GetObjectURLRequest) returns (GetObjectURLResponse);
+  rpc DeleteObject(DeleteObjectRequest) returns (DeleteObjectResponse);
 }

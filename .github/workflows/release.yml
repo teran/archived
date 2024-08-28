@@ -204,3 +204,15 @@ jobs:
             ghcr.io/${{ github.repository }}/publisher:${{ github.ref_name }}
             ghcr.io/${{ github.repository }}/publisher:${{ github.ref_name }}-${{ steps.timestamp.outputs.now }}
           outputs: type=image,name=ghcr.io/${{ github.repository }}/publisher,annotation-index.org.opencontainers.image.description=${{ github.repository }}
+      - name: Build and push seeder container image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.seeder
+          platforms: amd64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/seeder:latest
+            ghcr.io/${{ github.repository }}/seeder:${{ github.ref_name }}
+            ghcr.io/${{ github.repository }}/seeder:${{ github.ref_name }}-${{ steps.timestamp.outputs.now }}
+          outputs: type=image,name=ghcr.io/${{ github.repository }}/seeder,annotation-index.org.opencontainers.image.description=${{ github.repository }}

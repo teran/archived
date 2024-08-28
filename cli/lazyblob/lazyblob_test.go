@@ -26,7 +26,7 @@ func TestLazyblob(t *testing.T) {
 	m := &testHandlerMock{}
 	defer m.AssertExpectations(t)
 
-	m.On("StaticFile", "/").Return(http.StatusOK, "text/plain", []byte("test data")).Once()
+	m.On("StaticFile", "/first").Return(http.StatusOK, "text/plain", []byte("test data")).Once()
 
 	e := echo.New()
 	e.Use(middleware.Logger())
@@ -36,23 +36,54 @@ func TestLazyblob(t *testing.T) {
 	srv := httptest.NewServer(e)
 	defer srv.Close()
 
-	lb := New(srv.URL, t.TempDir(), 9)
+	lb := New(srv.URL+"/first", t.TempDir(), 9)
 	defer lb.Close()
 
 	fn, err := lb.Filename(ctx)
 	r.NoError(err)
 	r.True(strings.HasSuffix(fn, ".rpm.tmp"))
 
-	fp, err := lb.File(ctx)
+	fp, err := lb.Reader(ctx)
 	r.NoError(err)
-	defer fp.Close()
 
 	data, err := io.ReadAll(fp)
 	r.NoError(err)
 	r.Equal("test data", string(data))
 
 	url := lb.URL()
-	r.Equal(srv.URL, url)
+	r.Equal(srv.URL+"/first", url)
+}
+
+func TestLazyblobNotFound(t *testing.T) {
+	ctx := context.TODO()
+	r := require.New(t)
+
+	m := &testHandlerMock{}
+	defer m.AssertExpectations(t)
+
+	m.On("StaticFile", "/not-found").Return(http.StatusNotFound, "text/plain", []byte("not found")).Twice()
+
+	e := echo.New()
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+	e.GET("/*", m.StaticFile)
+
+	srv := httptest.NewServer(e)
+	defer srv.Close()
+
+	lb := New(srv.URL+"/not-found", t.TempDir(), 9)
+	defer lb.Close()
+
+	_, err := lb.Filename(ctx)
+	r.Error(err)
+	r.Equal(srv.URL+"/not-found: unexpected HTTP response status: 404 Not Found", err.Error())
+
+	_, err = lb.Reader(ctx)
+	r.Error(err)
+	r.Equal("error downloading file: "+srv.URL+"/not-found: unexpected HTTP response status: 404 Not Found", err.Error())
+
+	url := lb.URL()
+	r.Equal(srv.URL+"/not-found", url)
 }
 
 type testHandlerMock struct {

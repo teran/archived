@@ -29,37 +29,77 @@ type Handlers interface {
 }
 
 type handlers struct {
-	svc         service.Publisher
-	staticDir   string
-	templateDir string
+	svc                      service.Publisher
+	staticDir                string
+	templateDir              string
+	preserveSchemeOnRedirect bool
 }
 
-func New(svc service.Publisher, templateDir, staticDir string) Handlers {
+func New(svc service.Publisher, templateDir, staticDir string, preserveSchemeOnRedirect bool) Handlers {
 	return &handlers{
-		svc:         svc,
-		staticDir:   staticDir,
-		templateDir: templateDir,
+		svc:                      svc,
+		staticDir:                staticDir,
+		templateDir:              templateDir,
+		preserveSchemeOnRedirect: preserveSchemeOnRedirect,
 	}
 }
 
-func (h *handlers) ContainerIndex(c echo.Context) error {
-	containers, err := h.svc.ListContainers(c.Request().Context())
+func (h *handlers) NamespaceIndex(c echo.Context) error {
+	namespaces, err := h.svc.ListNamespaces(c.Request().Context())
 	if err != nil {
 		return err
 	}
 
 	type data struct {
 		Title      string
-		Containers []string
+		Namespaces []string
+	}
+
+	return c.Render(http.StatusOK, "namespace-list.html", &data{
+		Title:      "Namespace index",
+		Namespaces: namespaces,
+	})
+}
+
+func (h *handlers) ContainerIndex(c echo.Context) error {
+	namespace := c.Param("namespace")
+
+	pageParam := c.QueryParam("page")
+	var page uint64 = 1
+
+	var err error
+	if pageParam != "" {
+		page, err = strconv.ParseUint(pageParam, 10, 64)
+		if err != nil {
+			log.Warnf("malformed page parameter: `%s`", pageParam)
+			page = 1
+		}
+	}
+
+	pagesCount, containers, err := h.svc.ListContainersByPage(c.Request().Context(), namespace, page)
+	if err != nil {
+		return err
+	}
+
+	type data struct {
+		Title       string
+		CurrentPage uint64
+		PagesCount  uint64
+		Namespace   string
+		Containers  []string
 	}
 
 	return c.Render(http.StatusOK, "container-list.html", &data{
-		Title:      "Container index",
-		Containers: containers,
+		Title:       fmt.Sprintf("Container index (%s)", namespace),
+		CurrentPage: page,
+		PagesCount:  pagesCount,
+		Namespace:   namespace,
+		Containers:  containers,
 	})
 }
 
 func (h *handlers) VersionIndex(c echo.Context) error {
+	namespace := c.Param("namespace")
 	container := c.Param("container")
 
 	pageParam := c.QueryParam("page")
@@ -74,7 +114,7 @@ func (h *handlers) VersionIndex(c echo.Context) error {
 		}
 	}
 
-	pagesCount, versions, err := h.svc.ListPublishedVersionsByPage(c.Request().Context(), container, page)
+	pagesCount, versions, err := h.svc.ListPublishedVersionsByPage(c.Request().Context(), namespace, container, page)
 	if err != nil {
 		if err == service.ErrNotFound {
 			return c.Render(http.StatusNotFound, notFoundTemplateFilename, nil)
@@ -86,20 +126,23 @@ func (h *handlers) VersionIndex(c echo.Context) error {
 		Title       string
 		CurrentPage uint64
 		PagesCount  uint64
+		Namespace   string
 		Container   string
 		Versions    []models.Version
 	}
 
 	return c.Render(http.StatusOK, "version-list.html", &data{
-		Title:       fmt.Sprintf("Version index (%s)", container),
+		Title:       fmt.Sprintf("Version index (%s/%s)", namespace, container),
 		CurrentPage: page,
 		PagesCount:  pagesCount,
+		Namespace:   namespace,
 		Container:   container,
 		Versions:    versions,
 	})
 }
 
 func (h *handlers) ObjectIndex(c echo.Context) error {
+	namespace := c.Param("namespace")
 	container := c.Param("container")
 	version := c.Param("version")
 
@@ -115,7 +158,7 @@ func (h *handlers) ObjectIndex(c echo.Context) error {
 		}
 	}
 
-	pagesCount, objects, err := h.svc.ListObjectsByPage(c.Request().Context(), container, version, page)
+	pagesCount, objects, err := h.svc.ListObjectsByPage(c.Request().Context(), namespace, container, version, page)
 	if err != nil {
 		if err == service.ErrNotFound {
 			return c.Render(http.StatusNotFound, notFoundTemplateFilename, nil)
@@ -127,14 +170,16 @@ func (h *handlers) ObjectIndex(c echo.Context) error {
 		Title       string
 		CurrentPage uint64
 		PagesCount  uint64
+		Namespace   string
 		Container   string
 		Version     string
 		Objects     []string
 	}
 	return c.Render(http.StatusOK, "object-list.html", &data{
-		Title:       fmt.Sprintf("Object index (%s/%s)", container, version),
+		Title:       fmt.Sprintf("Object index (%s/%s/%s)", namespace, container, version),
 		CurrentPage: page,
 		PagesCount:  pagesCount,
+		Namespace:   namespace,
 		Container:   container,
 		Version:     version,
 		Objects:     objects,
@@ -142,6 +187,7 @@ func (h *handlers) ObjectIndex(c echo.Context) error {
 }
 
 func (h *handlers) GetObject(c echo.Context) error {
+	namespace := c.Param("namespace")
 	container := c.Param("container")
 	version := c.Param("version")
 
@@ -151,7 +197,7 @@ func (h *handlers) GetObject(c echo.Context) error {
 		return err
 	}
 
-	url, err := h.svc.GetObjectURL(c.Request().Context(), container, version, key)
+	link, err := h.svc.GetObjectURL(c.Request().Context(), namespace, container, version, key)
 	if err != nil {
 		if err == service.ErrNotFound {
 			return c.Render(http.StatusNotFound, notFoundTemplateFilename, nil)
@@ -159,7 +205,34 @@ func (h *handlers) GetObject(c echo.Context) error {
 		return err
 	}
 
-	return c.Redirect(http.StatusFound, url)
+	xForwardedScheme := c.Request().Header.Get("X-Forwarded-Scheme")
+	xScheme := c.Request().Header.Get("X-Scheme")
+
+	allowedValues := map[string]struct{}{
+		"http":  {},
+		"https": {},
+	}
+
+	_, xForwardedSchemeOk := allowedValues[xForwardedScheme]
+	_, xSchemeOk := allowedValues[xScheme]
+
+	if h.preserveSchemeOnRedirect && (xForwardedSchemeOk || xSchemeOk) {
+		scheme := xForwardedScheme
+		if !xForwardedSchemeOk {
+			scheme = xScheme
+		}
+
+		u, err := url.Parse(link)
+		if err != nil {
+			return c.Blob(http.StatusInternalServerError, "text/plain", []byte("error parsing url"))
+		}
+
+		u.Scheme = scheme
+
+		link = u.String()
+	}
+
+	return c.Redirect(http.StatusFound, link)
 }
 
 func (h *handlers) ErrorHandler(err error, c echo.Context) {
@@ -199,10 +272,11 @@ func (h *handlers) Register(e *echo.Echo) {
 
 	e.HTTPErrorHandler = h.ErrorHandler
 
-	e.GET("/", h.ContainerIndex)
-	e.GET("/:container/", h.VersionIndex)
-	e.GET("/:container/:version/", h.ObjectIndex)
-	e.GET("/:container/:version/:object", h.GetObject)
+	e.GET("/", h.NamespaceIndex)
+	e.GET("/:namespace/", h.ContainerIndex)
+	e.GET("/:namespace/:container/", h.VersionIndex)
+	e.GET("/:namespace/:container/:version/", h.ObjectIndex)
+	e.GET("/:namespace/:container/:version/:object", h.GetObject)
 
 	e.Static(h.staticDir, "static")
 }

@@ -2,13 +2,14 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <title>Container index</title>
+        <title>Namespace index</title>
     </head>
     <body>
-        <h1>Container index</h1>
+        <h1>Namespace index</h1>
         <hr>
 
-        <a href="/test-container-1/">test-container-1/</a><br>
+        <a href="/default/">default/</a><br>
+        <a href="/test-namespace-1/">test-namespace-1/</a><br>
 
         <hr>
         Powered by <a href="https://github.com/teran/archived" target="_blank" rel="noopener">archived</a>

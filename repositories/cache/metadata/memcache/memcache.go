@@ -37,14 +37,18 @@ func New(cli *memcacheCli.Client, repo metadata.Repository, ttl time.Duration, k
 	}
 }
 
-func (m *memcache) CreateContainer(ctx context.Context, name string) error {
-	return m.repo.CreateContainer(ctx, name)
+func (m *memcache) CreateNamespace(ctx context.Context, name string) error {
+	return m.repo.CreateNamespace(ctx, name)
 }
 
-func (m *memcache) ListContainers(ctx context.Context) ([]string, error) {
+func (m *memcache) RenameNamespace(ctx context.Context, oldName, newName string) error {
+	return m.repo.RenameNamespace(ctx, oldName, newName)
+}
+
+func (m *memcache) ListNamespaces(ctx context.Context) ([]string, error) {
 	cacheKey := strings.Join([]string{
 		m.keyPrefix,
-		"ListContainers",
+		"ListNamespaces",
 	}, ":")
 
 	item, err := m.cli.Get(cacheKey)
@@ -54,7 +58,60 @@ func (m *memcache) ListContainers(ctx context.Context) ([]string, error) {
 				"key": cacheKey,
 			}).Tracef("cache miss")
 
-			containers, err := m.repo.ListContainers(ctx)
+			namespaces, err := m.repo.ListNamespaces(ctx)
+			if err != nil {
+				return nil, err
+			}
+
+			if err := store(m, cacheKey, namespaces); err != nil {
+				return nil, err
+			}
+
+			return namespaces, nil
+		}
+
+		return nil, err
+	}
+	log.WithFields(log.Fields{
+		"key": cacheKey,
+	}).Tracef("cache hit")
+
+	var retrievedValue []string
+	err = json.Unmarshal(item.Value, &retrievedValue)
+	if err != nil {
+		return nil, err
+	}
+
+	return retrievedValue, nil
+}
+
+func (m *memcache) DeleteNamespace(ctx context.Context, name string) error {
+	return m.repo.DeleteNamespace(ctx, name)
+}
+
+func (m *memcache) CreateContainer(ctx context.Context, namespace, name string) error {
+	return m.repo.CreateContainer(ctx, namespace, name)
+}
+
+func (m *memcache) RenameContainer(ctx context.Context, namespace, oldName, newNamespace, newName string) error {
+	return m.repo.RenameContainer(ctx, namespace, oldName, newNamespace, newName)
+}
+
+func (m *memcache) ListContainers(ctx context.Context, namespace string) ([]string, error) {
+	cacheKey := strings.Join([]string{
+		m.keyPrefix,
+		"ListContainers",
+		namespace,
+	}, ":")
+
+	item, err := m.cli.Get(cacheKey)
+	if err != nil {
+		if err == memcacheCli.ErrCacheMiss {
+			log.WithFields(log.Fields{
+				"key": cacheKey,
+			}).Tracef("cache miss")
+
+			containers, err := m.repo.ListContainers(ctx, namespace)
 			if err != nil {
 				return nil, err
 			}
@@ -81,18 +138,68 @@ func (m *memcache) ListContainers(ctx context.Context) ([]string, error) {
 	return retrievedValue, nil
 }
 
-func (m *memcache) DeleteContainer(ctx context.Context, name string) error {
-	return m.repo.DeleteContainer(ctx, name)
+
+func (m *memcache) ListContainersByPage(ctx context.Context, namespace string, offset, limit uint64) (uint64, []string, error) {
+	type proxy struct {
+		Total    uint64
+		Containers []string
+	}
+
+	cacheKey := strings.Join([]string{
+		m.keyPrefix,
+		"ListContainersByPage",
+		namespace,
+		strconv.FormatUint(offset, 10),
+		strconv.FormatUint(limit, 10),
+	}, ":")
+
+	item, err := m.cli.Get(cacheKey)
+	if err != nil {
+		if err == memcacheCli.ErrCacheMiss {
+			log.WithFields(log.Fields{
+				"key": cacheKey,
+			}).Tracef("cache miss")
+
+			n, containers, err := m.repo.ListContainersByPage(ctx, namespace, offset, limit)
+			if err != nil {
+				return 0, nil, err
+			}
+
+			if err := store(m, cacheKey, proxy{Total: n, Containers: containers}); err != nil {
+				return 0, nil, err
+			}
+
+			return n, containers, nil
+		}
+
+		return 0, nil, err
+	}
+	log.WithFields(log.Fields{
+		"key": cacheKey,
+	}).Tracef("cache hit")
+
+	var retrievedValue proxy
+	err = json.Unmarshal(item.Value, &retrievedValue)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	return retrievedValue.Total, retrievedValue.Containers, nil
 }
 
-func (m *memcache) CreateVersion(ctx context.Context, container string) (string, error) {
-	return m.repo.CreateVersion(ctx, container)
+func (m *memcache) DeleteContainer(ctx context.Context, namespace, name string) error {
+	return m.repo.DeleteContainer(ctx, namespace, name)
 }
 
-func (m *memcache) GetLatestPublishedVersionByContainer(ctx context.Context, container string) (string, error) {
+func (m *memcache) CreateVersion(ctx context.Context, namespace, container string) (string, error) {
+	return m.repo.CreateVersion(ctx, namespace, container)
+}
+
+func (m *memcache) GetLatestPublishedVersionByContainer(ctx context.Context, namespace, container string) (string, error) {
 	cacheKey := strings.Join([]string{
 		m.keyPrefix,
 		"GetLatestPublishedVersionByContainer",
+		namespace,
 		container,
 	}, ":")
 
@@ -103,7 +210,7 @@ func (m *memcache) GetLatestPublishedVersionByContainer(ctx context.Context, con
 				"key": cacheKey,
 			}).Tracef("cache miss")
 
-			version, err := m.repo.GetLatestPublishedVersionByContainer(ctx, container)
+			version, err := m.repo.GetLatestPublishedVersionByContainer(ctx, namespace, container)
 			if err != nil {
 				return "", err
 			}
@@ -130,10 +237,11 @@ func (m *memcache) GetLatestPublishedVersionByContainer(ctx context.Context, con
 	return retrievedValue, nil
 }
 
-func (m *memcache) ListAllVersionsByContainer(ctx context.Context, container string) ([]models.Version, error) {
+func (m *memcache) ListAllVersionsByContainer(ctx context.Context, namespace, container string) ([]models.Version, error) {
 	cacheKey := strings.Join([]string{
 		m.keyPrefix,
 		"ListAllVersionsByContainer",
+		namespace,
 		container,
 	}, ":")
 
@@ -144,7 +252,7 @@ func (m *memcache) ListAllVersionsByContainer(ctx context.Context, container str
 				"key": cacheKey,
 			}).Tracef("cache miss")
 
-			versions, err := m.repo.ListAllVersionsByContainer(ctx, container)
+			versions, err := m.repo.ListAllVersionsByContainer(ctx, namespace, container)
 			if err != nil {
 				return nil, err
 			}
@@ -171,10 +279,11 @@ func (m *memcache) ListAllVersionsByContainer(ctx context.Context, container str
 	return retrievedValue, nil
 }
 
-func (m *memcache) ListPublishedVersionsByContainer(ctx context.Context, container string) ([]models.Version, error) {
+func (m *memcache) ListPublishedVersionsByContainer(ctx context.Context, namespace, container string) ([]models.Version, error) {
 	cacheKey := strings.Join([]string{
 		m.keyPrefix,
 		"ListPublishedVersionsByContainer",
+		namespace,
 		container,
 	}, ":")
 
@@ -185,7 +294,7 @@ func (m *memcache) ListPublishedVersionsByContainer(ctx context.Context, contain
 				"key": cacheKey,
 			}).Tracef("cache miss")
 
-			versions, err := m.repo.ListPublishedVersionsByContainer(ctx, container)
+			versions, err := m.repo.ListPublishedVersionsByContainer(ctx, namespace, container)
 			if err != nil {
 				return nil, err
 			}
@@ -212,7 +321,7 @@ func (m *memcache) ListPublishedVersionsByContainer(ctx context.Context, contain
 	return retrievedValue, nil
 }
 
-func (m *memcache) ListPublishedVersionsByContainerAndPage(ctx context.Context, container string, offset, limit uint64) (uint64, []models.Version, error) {
+func (m *memcache) ListPublishedVersionsByContainerAndPage(ctx context.Context, namespace, container string, offset, limit uint64) (uint64, []models.Version, error) {
 	type proxy struct {
 		Total    uint64
 		Versions []models.Version
@@ -221,6 +330,7 @@ func (m *memcache) ListPublishedVersionsByContainerAndPage(ctx context.Context, 
 	cacheKey := strings.Join([]string{
 		m.keyPrefix,
 		"ListPublishedVersionsByContainerAndPage",
+		namespace,
 		container,
 		strconv.FormatUint(offset, 10),
 		strconv.FormatUint(limit, 10),
@@ -233,7 +343,7 @@ func (m *memcache) ListPublishedVersionsByContainerAndPage(ctx context.Context, 
 				"key": cacheKey,
 			}).Tracef("cache miss")
 
-			n, versions, err := m.repo.ListPublishedVersionsByContainerAndPage(ctx, container, offset, limit)
+			n, versions, err := m.repo.ListPublishedVersionsByContainerAndPage(ctx, namespace, container, offset, limit)
 			if err != nil {
 				return 0, nil, err
 			}
@@ -260,23 +370,23 @@ func (m *memcache) ListPublishedVersionsByContainerAndPage(ctx context.Context, 
 	return retrievedValue.Total, retrievedValue.Versions, nil
 }
 
-func (m *memcache) ListUnpublishedVersionsByContainer(ctx context.Context, container string) ([]models.Version, error) {
-	return m.repo.ListUnpublishedVersionsByContainer(ctx, container)
+func (m *memcache) ListUnpublishedVersionsByContainer(ctx context.Context, namespace, container string) ([]models.Version, error) {
+	return m.repo.ListUnpublishedVersionsByContainer(ctx, namespace, container)
 }
 
-func (m *memcache) MarkVersionPublished(ctx context.Context, container, version string) error {
-	return m.repo.MarkVersionPublished(ctx, container, version)
+func (m *memcache) MarkVersionPublished(ctx context.Context, namespace, container, version string) error {
+	return m.repo.MarkVersionPublished(ctx, namespace, container, version)
 }
 
-func (m *memcache) DeleteVersion(ctx context.Context, container, version string) error {
-	return m.repo.DeleteVersion(ctx, container, version)
+func (m *memcache) DeleteVersion(ctx context.Context, namespace, container, version string) error {
+	return m.repo.DeleteVersion(ctx, namespace, container, version)
 }
 
-func (m *memcache) CreateObject(ctx context.Context, container, version, key, casKey string) error {
-	return m.repo.CreateObject(ctx, container, version, key, casKey)
+func (m *memcache) CreateObject(ctx context.Context, namespace, container, version, key, casKey string) error {
+	return m.repo.CreateObject(ctx, namespace, container, version, key, casKey)
 }
 
-func (m *memcache) ListObjects(ctx context.Context, container, version string, offset, limit uint64) (uint64, []string, error) {
+func (m *memcache) ListObjects(ctx context.Context, namespace, container, version string, offset, limit uint64) (uint64, []string, error) {
 	type proxy struct {
 		Total   uint64
 		Objects []string
@@ -285,6 +395,7 @@ func (m *memcache) ListObjects(ctx context.Context, container, version string, o
 	cacheKey := strings.Join([]string{
 		m.keyPrefix,
 		"ListObjects",
+		namespace,
 		container,
 		version,
 		strconv.FormatUint(offset, 10),
@@ -298,7 +409,7 @@ func (m *memcache) ListObjects(ctx context.Context, container, version string, o
 				"key": cacheKey,
 			}).Tracef("cache miss")
 
-			n, objects, err := m.repo.ListObjects(ctx, container, version, offset, limit)
+			n, objects, err := m.repo.ListObjects(ctx, namespace, container, version, offset, limit)
 			if err != nil {
 				return 0, nil, err
 			}
@@ -325,22 +436,23 @@ func (m *memcache) ListObjects(ctx context.Context, container, version string, o
 	return retrievedValue.Total, retrievedValue.Objects, nil
 }
 
-func (m *memcache) DeleteObject(ctx context.Context, container, version string, key ...string) error {
-	return m.repo.DeleteObject(ctx, container, version, key...)
+func (m *memcache) DeleteObject(ctx context.Context, namespace, container, version string, key ...string) error {
+	return m.repo.DeleteObject(ctx, namespace, container, version, key...)
 }
 
-func (m *memcache) RemapObject(ctx context.Context, container, version, key, newCASKey string) error {
-	return m.repo.RemapObject(ctx, container, version, key, newCASKey)
+func (m *memcache) RemapObject(ctx context.Context, namespace, container, version, key, newCASKey string) error {
+	return m.repo.RemapObject(ctx, namespace, container, version, key, newCASKey)
 }
 
 func (m *memcache) CreateBLOB(ctx context.Context, checksum string, size uint64, mimeType string) error {
 	return m.repo.CreateBLOB(ctx, checksum, size, mimeType)
 }
 
-func (m *memcache) GetBlobKeyByObject(ctx context.Context, container, version, key string) (string, error) {
+func (m *memcache) GetBlobKeyByObject(ctx context.Context, namespace, container, version, key string) (string, error) {
 	cacheKey := strings.Join([]string{
 		m.keyPrefix,
 		"GetBlobKeyByObject",
+		namespace,
 		container,
 		version,
 		key,
@@ -353,7 +465,7 @@ func (m *memcache) GetBlobKeyByObject(ctx context.Context, container, version, k
 				"key": cacheKey,
 			}).Tracef("cache miss")
 
-			key, err := m.repo.GetBlobKeyByObject(ctx, container, version, key)
+			key, err := m.repo.GetBlobKeyByObject(ctx, namespace, container, version, key)
 			if err != nil {
 				return "", err
 			}

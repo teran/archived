@@ -4,24 +4,37 @@ import (
 	"context"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/pkg/errors"
 )
 
-func (r *repository) CreateObject(ctx context.Context, container, version, key, casKey string) error {
+func (r *repository) CreateObject(ctx context.Context, namespace, container, version, key, casKey string) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return errors.Wrap(err, "error beginning transaction")
+		return mapSQLErrors(err)
 	}
 	defer tx.Rollback()
 
 	row, err := selectQueryRow(ctx, tx, psql.
+		Select("id").
+		From("namespaces").
+		Where(sq.Eq{"name": namespace}))
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+
+	var namespaceID uint
+	if err := row.Scan(&namespaceID); err != nil {
+		return mapSQLErrors(err)
+	}
+
+	row, err = selectQueryRow(ctx, tx, psql.
 		Select("v.id as id").
 		From("containers c").
 		Join("versions v ON v.container_id = c.id").
 		Where(sq.Eq{
-			"c.name":       container,
-			"v.name":       version,
-			"is_published": false,
+			"c.namespace_id": namespaceID,
+			"c.name":         container,
+			"v.name":         version,
+			"is_published":   false,
 		}))
 	if err != nil {
 		return mapSQLErrors(err)
@@ -85,17 +98,31 @@ func (r *repository) CreateObject(ctx context.Context, container, version, key, 
 	}
 
 	if err := tx.Commit(); err != nil {
-		return errors.Wrap(err, "error committing transaction")
+		return mapSQLErrors(err)
 	}
 	return nil
 }
 
-func (r *repository) ListObjects(ctx context.Context, container, version string, offset, limit uint64) (uint64, []string, error) {
+func (r *repository) ListObjects(ctx context.Context, namespace, container, version string, offset, limit uint64) (uint64, []string, error) {
 	row, err := selectQueryRow(ctx, r.db, psql.
+		Select("id").
+		From("namespaces").
+		Where(sq.Eq{"name": namespace}))
+	if err != nil {
+		return 0, nil, mapSQLErrors(err)
+	}
+
+	var namespaceID uint
+	if err := row.Scan(&namespaceID); err != nil {
+		return 0, nil, mapSQLErrors(err)
+	}
+
+	row, err = selectQueryRow(ctx, r.db, psql.
 		Select("id").
 		From("containers").
 		Where(sq.Eq{
-			"name": container,
+			"name":         container,
+			"namespace_id": namespaceID,
 		}))
 	if err != nil {
 		return 0, nil, mapSQLErrors(err)
@@ -154,7 +181,7 @@ func (r *repository) ListObjects(ctx context.Context, container, version string,
 	for rows.Next() {
 		var r string
 		if err := rows.Scan(&r); err != nil {
-			return 0, nil, errors.Wrap(err, "error decoding database result")
+			return 0, nil, mapSQLErrors(err)
 		}
 
 		result = append(result, r)
@@ -163,20 +190,34 @@ func (r *repository) ListObjects(ctx context.Context, container, version string,
 	return objectsTotal, result, nil
 }
 
-func (r *repository) DeleteObject(ctx context.Context, container, version string, key ...string) error {
+func (r *repository) DeleteObject(ctx context.Context, namespace, container, version string, key ...string) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return errors.Wrap(err, "error beginning transaction")
+		return mapSQLErrors(err)
 	}
 	defer tx.Rollback()
 
 	row, err := selectQueryRow(ctx, tx, psql.
+		Select("id").
+		From("namespaces").
+		Where(sq.Eq{"name": namespace}))
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+
+	var namespaceID uint
+	if err := row.Scan(&namespaceID); err != nil {
+		return mapSQLErrors(err)
+	}
+
+	row, err = selectQueryRow(ctx, tx, psql.
 		Select("v.id").
 		From("versions v").
 		Join("containers c ON v.container_id = c.id").
 		Where(sq.Eq{
-			"c.name": container,
-			"v.name": version,
+			"c.namespace_id": namespaceID,
+			"c.name":         container,
+			"v.name":         version,
 		}))
 	if err != nil {
 		return mapSQLErrors(err)
@@ -184,7 +225,7 @@ func (r *repository) DeleteObject(ctx context.Context, container, version string
 
 	var versionID uint
 	if err := row.Scan(&versionID); err != nil {
-		return errors.Wrap(err, "error looking up version")
+		return mapSQLErrors(err)
 	}
 
 	row, err = selectQueryRow(ctx, tx, psql.
@@ -198,7 +239,7 @@ func (r *repository) DeleteObject(ctx context.Context, container, version string
 	}
 	var okID uint
 	if err := row.Scan(&okID); err != nil {
-		return errors.Wrap(err, "error looking up version")
+		return mapSQLErrors(err)
 	}
 
 	_, err = deleteQuery(ctx, tx, psql.
@@ -212,25 +253,39 @@ func (r *repository) DeleteObject(ctx context.Context, container, version string
 	}
 
 	if err := tx.Commit(); err != nil {
-		return errors.Wrap(err, "error committing transaction")
+		return mapSQLErrors(err)
 	}
 	return nil
 }
 
-func (r *repository) RemapObject(ctx context.Context, container, version, key, newCASKey string) error {
+func (r *repository) RemapObject(ctx context.Context, namespace, container, version, key, newCASKey string) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return errors.Wrap(err, "error beginning transaction")
+		return mapSQLErrors(err)
 	}
 	defer tx.Rollback()
 
 	row, err := selectQueryRow(ctx, tx, psql.
+		Select("id").
+		From("namespaces").
+		Where(sq.Eq{"name": namespace}))
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+
+	var namespaceID uint
+	if err := row.Scan(&namespaceID); err != nil {
+		return mapSQLErrors(err)
+	}
+
+	row, err = selectQueryRow(ctx, tx, psql.
 		Select("v.id").
 		From("versions v").
 		Join("containers c ON v.container_id = c.id").
 		Where(sq.Eq{
-			"c.name": container,
-			"v.name": version,
+			"c.namespace_id": namespaceID,
+			"c.name":         container,
+			"v.name":         version,
 		}))
 	if err != nil {
 		return mapSQLErrors(err)
@@ -238,7 +293,7 @@ func (r *repository) RemapObject(ctx context.Context, container, version, key, n
 
 	var versionID uint
 	if err := row.Scan(&versionID); err != nil {
-		return errors.Wrap(err, "error looking up version")
+		return mapSQLErrors(err)
 	}
 
 	row, err = selectQueryRow(ctx, tx, psql.
@@ -251,7 +306,7 @@ func (r *repository) RemapObject(ctx context.Context, container, version, key, n
 
 	var blobID uint
 	if err := row.Scan(&blobID); err != nil {
-		return errors.Wrap(err, "error looking up blob")
+		return mapSQLErrors(err)
 	}
 
 	row, err = selectQueryRow(ctx, tx, psql.
@@ -266,7 +321,7 @@ func (r *repository) RemapObject(ctx context.Context, container, version, key, n
 
 	var okID uint
 	if err := row.Scan(&okID); err != nil {
-		return errors.Wrap(err, "error looking up blob")
+		return mapSQLErrors(err)
 	}
 
 	_, err = updateQuery(ctx, tx, psql.
@@ -281,7 +336,7 @@ func (r *repository) RemapObject(ctx context.Context, container, version, key, n
 	}
 
 	if err := tx.Commit(); err != nil {
-		return errors.Wrap(err, "error committing transaction")
+		return mapSQLErrors(err)
 	}
 	return nil
 }

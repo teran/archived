@@ -135,9 +135,13 @@ func (y *yumRepo) fetchPackageIndex(ctx context.Context, href models.RepoMDDataL
 		return nil, err
 	}
 
-	buf := &bytes.Buffer{}
+	y.metadata[indexFileName], err = io.ReadAll(rd)
+	if err != nil {
+		return nil, err
+	}
+
 	hasher := hfn()
-	trd := io.TeeReader(io.TeeReader(rd, buf), hasher)
+	trd := io.TeeReader(bytes.NewReader(y.metadata[indexFileName]), hasher)
 
 	if strings.HasSuffix(href.Href, ".gz") {
 		log.Tracef(".gz extension detected. Wrapping ...")
@@ -146,8 +150,6 @@ func (y *yumRepo) fetchPackageIndex(ctx context.Context, href models.RepoMDDataL
 			return nil, errors.Wrap(err, "error creating gzip decoder")
 		}
 	}
-
-	y.metadata[indexFileName] = buf.Bytes()
 
 	primaryMD := models.PrimaryMD{}
 	if err := xml.NewDecoder(trd).Decode(&primaryMD); err != nil {

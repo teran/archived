@@ -17,247 +17,273 @@ import (
 	memcacheApp "github.com/teran/go-docker-testsuite/applications/memcache"
 )
 
+const defaultNamespace = "default"
+
 func init() {
 	log.SetLevel(log.TraceLevel)
 }
 
 // Cached methods ...
 func (s *memcacheTestSuite) TestListContainers() {
-	s.repoMock.On("ListContainers").Return([]string{"container1"}, nil).Once()
+	s.repoMock.On("ListContainers", defaultNamespace).Return([]string{"container1"}, nil).Once()
 
-	containers, err := s.cache.ListContainers(s.ctx)
+	containers, err := s.cache.ListContainers(s.ctx, defaultNamespace)
 	s.Require().NoError(err)
 	s.Require().Equal([]string{"container1"}, containers)
 
-	containers, err = s.cache.ListContainers(s.ctx)
+	containers, err = s.cache.ListContainers(s.ctx, defaultNamespace)
 	s.Require().NoError(err)
 	s.Require().Equal([]string{"container1"}, containers)
 }
 
 func (s *memcacheTestSuite) TestListContainersError() {
-	s.repoMock.On("ListContainers").Return([]string{}, errors.New("some error")).Once()
+	s.repoMock.On("ListContainers", defaultNamespace).Return([]string{}, errors.New("some error")).Once()
 
-	_, err := s.cache.ListContainers(s.ctx)
+	_, err := s.cache.ListContainers(s.ctx, defaultNamespace)
 	s.Require().Error(err)
 	s.Require().Equal("some error", err.Error())
 }
 
-func (s *memcacheTestSuite) TestGetLatestPublishedVersionByContainer() {
-	s.repoMock.On("GetLatestPublishedVersionByContainer", "test-container").Return("test-version", nil).Once()
+func (s *memcacheTestSuite) TestListContainersByPage() {
+	s.repoMock.On("ListContainersByPage", defaultNamespace, uint64(0), uint64(15)).Return(uint64(500), []string{"container1"}, nil).Once()
 
-	version, err := s.cache.GetLatestPublishedVersionByContainer(s.ctx, "test-container")
+	total, containers, err := s.cache.ListContainersByPage(s.ctx, defaultNamespace, 0, 15)
+	s.Require().NoError(err)
+	s.Require().Equal([]string{"container1"}, containers)
+	s.Require().Equal(uint64(500), total)
+
+	total, containers, err = s.cache.ListContainersByPage(s.ctx, defaultNamespace, 0, 15)
+	s.Require().NoError(err)
+	s.Require().Equal([]string{"container1"}, containers)
+	s.Require().Equal(uint64(500), total)
+}
+
+func (s *memcacheTestSuite) TestGetLatestPublishedVersionByContainer() {
+	s.repoMock.On("GetLatestPublishedVersionByContainer", defaultNamespace, "test-container").Return("test-version", nil).Once()
+
+	version, err := s.cache.GetLatestPublishedVersionByContainer(s.ctx, defaultNamespace, "test-container")
 	s.Require().NoError(err)
 	s.Require().Equal("test-version", version)
 
-	version, err = s.cache.GetLatestPublishedVersionByContainer(s.ctx, "test-container")
+	version, err = s.cache.GetLatestPublishedVersionByContainer(s.ctx, defaultNamespace, "test-container")
 	s.Require().NoError(err)
 	s.Require().Equal("test-version", version)
 }
 
 func (s *memcacheTestSuite) TestGetLatestPublishedVersionByContainerError() {
-	s.repoMock.On("GetLatestPublishedVersionByContainer", "test-container").Return("", errors.New("some error")).Once()
+	s.repoMock.On("GetLatestPublishedVersionByContainer", defaultNamespace, "test-container").Return("", errors.New("some error")).Once()
 
-	_, err := s.cache.GetLatestPublishedVersionByContainer(s.ctx, "test-container")
+	_, err := s.cache.GetLatestPublishedVersionByContainer(s.ctx, defaultNamespace, "test-container")
 	s.Require().Error(err)
 	s.Require().Equal("some error", err.Error())
 }
 
 func (s *memcacheTestSuite) TestListAllVersionsByContainer() {
-	s.repoMock.On("ListAllVersionsByContainer", "test-container").Return([]models.Version{{Name: "test-version"}}, nil).Once()
+	s.repoMock.On("ListAllVersionsByContainer", defaultNamespace, "test-container").Return([]models.Version{{Name: "test-version"}}, nil).Once()
 
-	versions, err := s.cache.ListAllVersionsByContainer(s.ctx, "test-container")
+	versions, err := s.cache.ListAllVersionsByContainer(s.ctx, defaultNamespace, "test-container")
 	s.Require().NoError(err)
 	s.Require().Equal([]models.Version{{Name: "test-version"}}, versions)
 
-	versions, err = s.cache.ListAllVersionsByContainer(s.ctx, "test-container")
+	versions, err = s.cache.ListAllVersionsByContainer(s.ctx, defaultNamespace, "test-container")
 	s.Require().NoError(err)
 	s.Require().Equal([]models.Version{{Name: "test-version"}}, versions)
 }
 
 func (s *memcacheTestSuite) TestListAllVersionsByContainerError() {
-	s.repoMock.On("ListAllVersionsByContainer", "test-container").Return([]models.Version{}, errors.New("some error")).Once()
+	s.repoMock.On("ListAllVersionsByContainer", defaultNamespace, "test-container").Return([]models.Version{}, errors.New("some error")).Once()
 
-	_, err := s.cache.ListAllVersionsByContainer(s.ctx, "test-container")
+	_, err := s.cache.ListAllVersionsByContainer(s.ctx, defaultNamespace, "test-container")
 	s.Require().Error(err)
 	s.Require().Equal("some error", err.Error())
 }
 
 func (s *memcacheTestSuite) TestListPublishedVersionsByContainer() {
-	s.repoMock.On("ListPublishedVersionsByContainer", "test-container").Return([]models.Version{{Name: "test-version"}}, nil).Once()
+	s.repoMock.On("ListPublishedVersionsByContainer", defaultNamespace, "test-container").Return([]models.Version{{Name: "test-version"}}, nil).Once()
 
-	versions, err := s.cache.ListPublishedVersionsByContainer(s.ctx, "test-container")
+	versions, err := s.cache.ListPublishedVersionsByContainer(s.ctx, defaultNamespace, "test-container")
 	s.Require().NoError(err)
 	s.Require().Equal([]models.Version{{Name: "test-version"}}, versions)
 
-	versions, err = s.cache.ListPublishedVersionsByContainer(s.ctx, "test-container")
+	versions, err = s.cache.ListPublishedVersionsByContainer(s.ctx, defaultNamespace, "test-container")
 	s.Require().NoError(err)
 	s.Require().Equal([]models.Version{{Name: "test-version"}}, versions)
 }
 
 func (s *memcacheTestSuite) TestListPublishedVersionsByContainerError() {
-	s.repoMock.On("ListPublishedVersionsByContainer", "test-container").Return([]models.Version{}, errors.New("some error")).Once()
+	s.repoMock.On("ListPublishedVersionsByContainer", defaultNamespace, "test-container").Return([]models.Version{}, errors.New("some error")).Once()
 
-	_, err := s.cache.ListPublishedVersionsByContainer(s.ctx, "test-container")
+	_, err := s.cache.ListPublishedVersionsByContainer(s.ctx, defaultNamespace, "test-container")
 	s.Require().Error(err)
 	s.Require().Equal("some error", err.Error())
 }
 
 func (s *memcacheTestSuite) TestListPublishedVersionsByContainerAndPage() {
-	s.repoMock.On("ListPublishedVersionsByContainerAndPage", "test-container", uint64(0), uint64(15)).Return(uint64(500), []models.Version{{Name: "test-version"}}, nil).Once()
+	s.repoMock.On("ListPublishedVersionsByContainerAndPage", defaultNamespace, "test-container", uint64(0), uint64(15)).Return(uint64(500), []models.Version{{Name: "test-version"}}, nil).Once()
 
-	total, versions, err := s.cache.ListPublishedVersionsByContainerAndPage(s.ctx, "test-container", 0, 15)
+	total, versions, err := s.cache.ListPublishedVersionsByContainerAndPage(s.ctx, defaultNamespace, "test-container", 0, 15)
 	s.Require().NoError(err)
 	s.Require().Equal([]models.Version{{Name: "test-version"}}, versions)
 	s.Require().Equal(uint64(500), total)
 
-	total, versions, err = s.cache.ListPublishedVersionsByContainerAndPage(s.ctx, "test-container", 0, 15)
+	total, versions, err = s.cache.ListPublishedVersionsByContainerAndPage(s.ctx, defaultNamespace, "test-container", 0, 15)
 	s.Require().NoError(err)
 	s.Require().Equal([]models.Version{{Name: "test-version"}}, versions)
 	s.Require().Equal(uint64(500), total)
 }
 
 func (s *memcacheTestSuite) TestListPublishedVersionsByContainerAndPageError() {
-	s.repoMock.On("ListPublishedVersionsByContainerAndPage", "test-container", uint64(0), uint64(15)).Return(uint64(0), []models.Version{}, errors.New("some error")).Once()
+	s.repoMock.On("ListPublishedVersionsByContainerAndPage", defaultNamespace, "test-container", uint64(0), uint64(15)).Return(uint64(0), []models.Version{}, errors.New("some error")).Once()
 
-	_, _, err := s.cache.ListPublishedVersionsByContainerAndPage(s.ctx, "test-container", 0, 15)
+	_, _, err := s.cache.ListPublishedVersionsByContainerAndPage(s.ctx, defaultNamespace, "test-container", 0, 15)
 	s.Require().Error(err)
 	s.Require().Equal("some error", err.Error())
 }
 
 func (s *memcacheTestSuite) TestListObjects() {
-	s.repoMock.On("ListObjects", "test-container", "test-version", uint64(0), uint64(30)).Return(uint64(500), []string{"obj1"}, nil).Once()
+	s.repoMock.On("ListObjects", defaultNamespace, "test-container", "test-version", uint64(0), uint64(30)).Return(uint64(500), []string{"obj1"}, nil).Once()
 
-	total, objects, err := s.cache.ListObjects(s.ctx, "test-container", "test-version", 0, 30)
+	total, objects, err := s.cache.ListObjects(s.ctx, defaultNamespace, "test-container", "test-version", 0, 30)
 	s.Require().NoError(err)
 	s.Require().Equal([]string{"obj1"}, objects)
 	s.Require().Equal(uint64(500), total)
 
-	total, objects, err = s.cache.ListObjects(s.ctx, "test-container", "test-version", 0, 30)
+	total, objects, err = s.cache.ListObjects(s.ctx, defaultNamespace, "test-container", "test-version", 0, 30)
 	s.Require().NoError(err)
 	s.Require().Equal([]string{"obj1"}, objects)
 	s.Require().Equal(uint64(500), total)
 }
 
 func (s *memcacheTestSuite) TestListObjectsError() {
-	s.repoMock.On("ListObjects", "test-container", "test-version", uint64(0), uint64(30)).Return(uint64(0), []string{}, errors.New("some error")).Once()
+	s.repoMock.On("ListObjects", defaultNamespace, "test-container", "test-version", uint64(0), uint64(30)).Return(uint64(0), []string{}, errors.New("some error")).Once()
 
-	_, _, err := s.cache.ListObjects(s.ctx, "test-container", "test-version", 0, 30)
+	_, _, err := s.cache.ListObjects(s.ctx, defaultNamespace, "test-container", "test-version", 0, 30)
 	s.Require().Error(err)
 	s.Require().Equal("some error", err.Error())
 }
 
 func (s *memcacheTestSuite) TestGetBlobKeyByObject() {
-	s.repoMock.On("GetBlobKeyByObject", "container", "version", "key").Return("deadbeef", nil).Once()
+	s.repoMock.On("GetBlobKeyByObject", defaultNamespace, "container", "version", "key").Return("deadbeef", nil).Once()
 
-	casKey, err := s.cache.GetBlobKeyByObject(s.ctx, "container", "version", "key")
+	casKey, err := s.cache.GetBlobKeyByObject(s.ctx, defaultNamespace, "container", "version", "key")
 	s.Require().NoError(err)
 	s.Require().Equal("deadbeef", casKey)
 
-	casKey, err = s.cache.GetBlobKeyByObject(s.ctx, "container", "version", "key")
+	casKey, err = s.cache.GetBlobKeyByObject(s.ctx, defaultNamespace, "container", "version", "key")
 	s.Require().NoError(err)
 	s.Require().Equal("deadbeef", casKey)
 }
 
 func (s *memcacheTestSuite) TestGetBlobKeyByObjectError() {
-	s.repoMock.On("GetBlobKeyByObject", "container", "version", "key").Return("", errors.New("some error")).Once()
+	s.repoMock.On("GetBlobKeyByObject", defaultNamespace, "container", "version", "key").Return("", errors.New("some error")).Once()
 
-	_, err := s.cache.GetBlobKeyByObject(s.ctx, "container", "version", "key")
+	_, err := s.cache.GetBlobKeyByObject(s.ctx, defaultNamespace, "container", "version", "key")
 	s.Require().Error(err)
 	s.Require().Equal("some error", err.Error())
 }
 
 // Non-cached methods ...
 func (s *memcacheTestSuite) TestCreateContainer() {
-	s.repoMock.On("CreateContainer", "container1").Return(nil).Twice()
+	s.repoMock.On("CreateContainer", defaultNamespace, "container1").Return(nil).Twice()
 
-	err := s.cache.CreateContainer(s.ctx, "container1")
+	err := s.cache.CreateContainer(s.ctx, defaultNamespace, "container1")
 	s.Require().NoError(err)
 
-	err = s.cache.CreateContainer(s.ctx, "container1")
+	err = s.cache.CreateContainer(s.ctx, defaultNamespace, "container1")
+	s.Require().NoError(err)
+}
+
+func (s *memcacheTestSuite) TestRenameContainer() {
+	s.repoMock.On("RenameContainer", defaultNamespace, "old-name", "new-namespace", "new-name").Return(nil).Twice()
+
+	err := s.cache.RenameContainer(s.ctx, defaultNamespace, "old-name", "new-namespace", "new-name")
+	s.Require().NoError(err)
+
+	err = s.cache.RenameContainer(s.ctx, defaultNamespace, "old-name", "new-namespace", "new-name")
 	s.Require().NoError(err)
 }
 
 func (s *memcacheTestSuite) TestDeleteContainer() {
-	s.repoMock.On("DeleteContainer", "container1").Return(nil).Twice()
+	s.repoMock.On("DeleteContainer", defaultNamespace, "container1").Return(nil).Twice()
 
-	err := s.cache.DeleteContainer(s.ctx, "container1")
+	err := s.cache.DeleteContainer(s.ctx, defaultNamespace, "container1")
 	s.Require().NoError(err)
 
-	err = s.cache.DeleteContainer(s.ctx, "container1")
+	err = s.cache.DeleteContainer(s.ctx, defaultNamespace, "container1")
 	s.Require().NoError(err)
 }
 
 func (s *memcacheTestSuite) TestCreateVersion() {
-	s.repoMock.On("CreateVersion", "container1").Return("test-version", nil).Twice()
+	s.repoMock.On("CreateVersion", defaultNamespace, "container1").Return("test-version", nil).Twice()
 
-	version, err := s.cache.CreateVersion(s.ctx, "container1")
+	version, err := s.cache.CreateVersion(s.ctx, defaultNamespace, "container1")
 	s.Require().NoError(err)
 	s.Require().Equal("test-version", version)
 
-	version, err = s.cache.CreateVersion(s.ctx, "container1")
+	version, err = s.cache.CreateVersion(s.ctx, defaultNamespace, "container1")
 	s.Require().NoError(err)
 	s.Require().Equal("test-version", version)
 }
 
 func (s *memcacheTestSuite) TestListUnpublishedVersionsByContainer() {
-	s.repoMock.On("ListUnpublishedVersionsByContainer", "container1").Return([]models.Version{{Name: "test-version"}}, nil).Twice()
+	s.repoMock.On("ListUnpublishedVersionsByContainer", defaultNamespace, "container1").Return([]models.Version{{Name: "test-version"}}, nil).Twice()
 
-	version, err := s.cache.ListUnpublishedVersionsByContainer(s.ctx, "container1")
+	version, err := s.cache.ListUnpublishedVersionsByContainer(s.ctx, defaultNamespace, "container1")
 	s.Require().NoError(err)
 	s.Require().Equal([]models.Version{{Name: "test-version"}}, version)
 
-	version, err = s.cache.ListUnpublishedVersionsByContainer(s.ctx, "container1")
+	version, err = s.cache.ListUnpublishedVersionsByContainer(s.ctx, defaultNamespace, "container1")
 	s.Require().NoError(err)
 	s.Require().Equal([]models.Version{{Name: "test-version"}}, version)
 }
 
 func (s *memcacheTestSuite) TestMarkVersionPublished() {
-	s.repoMock.On("MarkVersionPublished", "test-container", "test-version").Return(nil).Twice()
+	s.repoMock.On("MarkVersionPublished", defaultNamespace, "test-container", "test-version").Return(nil).Twice()
 
-	err := s.cache.MarkVersionPublished(s.ctx, "test-container", "test-version")
+	err := s.cache.MarkVersionPublished(s.ctx, defaultNamespace, "test-container", "test-version")
 	s.Require().NoError(err)
 
-	err = s.cache.MarkVersionPublished(s.ctx, "test-container", "test-version")
+	err = s.cache.MarkVersionPublished(s.ctx, defaultNamespace, "test-container", "test-version")
 	s.Require().NoError(err)
 }
 
 func (s *memcacheTestSuite) TestDeleteVersion() {
-	s.repoMock.On("DeleteVersion", "test-container", "test-version").Return(nil).Twice()
+	s.repoMock.On("DeleteVersion", defaultNamespace, "test-container", "test-version").Return(nil).Twice()
 
-	err := s.cache.DeleteVersion(s.ctx, "test-container", "test-version")
+	err := s.cache.DeleteVersion(s.ctx, defaultNamespace, "test-container", "test-version")
 	s.Require().NoError(err)
 
-	err = s.cache.DeleteVersion(s.ctx, "test-container", "test-version")
+	err = s.cache.DeleteVersion(s.ctx, defaultNamespace, "test-container", "test-version")
 	s.Require().NoError(err)
 }
 
 func (s *memcacheTestSuite) TestCreateObject() {
-	s.repoMock.On("CreateObject", "test-container", "test-version", "test-key", "deadbeef").Return(nil).Twice()
+	s.repoMock.On("CreateObject", defaultNamespace, "test-container", "test-version", "test-key", "deadbeef").Return(nil).Twice()
 
-	err := s.cache.CreateObject(s.ctx, "test-container", "test-version", "test-key", "deadbeef")
+	err := s.cache.CreateObject(s.ctx, defaultNamespace, "test-container", "test-version", "test-key", "deadbeef")
 	s.Require().NoError(err)
 
-	err = s.cache.CreateObject(s.ctx, "test-container", "test-version", "test-key", "deadbeef")
+	err = s.cache.CreateObject(s.ctx, defaultNamespace, "test-container", "test-version", "test-key", "deadbeef")
 	s.Require().NoError(err)
 }
 
 func (s *memcacheTestSuite) TestDeleteObject() {
-	s.repoMock.On("DeleteObject", "test-container", "test-version", []string{"test-key"}).Return(nil).Twice()
+	s.repoMock.On("DeleteObject", defaultNamespace, "test-container", "test-version", []string{"test-key"}).Return(nil).Twice()
 
-	err := s.cache.DeleteObject(s.ctx, "test-container", "test-version", "test-key")
+	err := s.cache.DeleteObject(s.ctx, defaultNamespace, "test-container", "test-version", "test-key")
 	s.Require().NoError(err)
 
-	err = s.cache.DeleteObject(s.ctx, "test-container", "test-version", "test-key")
+	err = s.cache.DeleteObject(s.ctx, defaultNamespace, "test-container", "test-version", "test-key")
 	s.Require().NoError(err)
 }
 
 func (s *memcacheTestSuite) TestRemapObject() {
-	s.repoMock.On("RemapObject", "test-container", "test-version", "test-key", "deadbeef").Return(nil).Twice()
+	s.repoMock.On("RemapObject", defaultNamespace, "test-container", "test-version", "test-key", "deadbeef").Return(nil).Twice()
 
-	err := s.cache.RemapObject(s.ctx, "test-container", "test-version", "test-key", "deadbeef")
+	err := s.cache.RemapObject(s.ctx, defaultNamespace, "test-container", "test-version", "test-key", "deadbeef")
 	s.Require().NoError(err)
 
-	err = s.cache.RemapObject(s.ctx, "test-container", "test-version", "test-key", "deadbeef")
+	err = s.cache.RemapObject(s.ctx, defaultNamespace, "test-container", "test-version", "test-key", "deadbeef")
 	s.Require().NoError(err)
 }
 

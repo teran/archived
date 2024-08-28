@@ -10,22 +10,26 @@ func (s *postgreSQLRepositoryTestSuite) TestBlobs() {
 
 	s.tp.On("Now").Return("2024-01-02T01:02:03Z").Times(6)
 
-	err := s.repo.CreateContainer(s.ctx, containerName)
+	err := s.repo.CreateContainer(s.ctx, defaultNamespace, containerName)
 	s.Require().NoError(err)
 
-	versionID, err := s.repo.CreateVersion(s.ctx, containerName)
+	_, err = s.repo.CreateVersion(s.ctx, defaultNamespace, "not-existent")
+	s.Require().Error(err)
+	s.Require().Equal(metadata.ErrNotFound, err)
+
+	versionID, err := s.repo.CreateVersion(s.ctx, defaultNamespace, containerName)
 	s.Require().NoError(err)
 
 	err = s.repo.CreateBLOB(s.ctx, checksum, 15, "text/plain")
 	s.Require().NoError(err)
 
-	err = s.repo.CreateObject(s.ctx, containerName, versionID, "test-object.txt", checksum)
+	err = s.repo.CreateObject(s.ctx, defaultNamespace, containerName, versionID, "test-object.txt", checksum)
 	s.Require().NoError(err)
 
-	err = s.repo.MarkVersionPublished(s.ctx, containerName, versionID)
+	err = s.repo.MarkVersionPublished(s.ctx, defaultNamespace, containerName, versionID)
 	s.Require().NoError(err)
 
-	casKey, err := s.repo.GetBlobKeyByObject(s.ctx, containerName, versionID, "test-object.txt")
+	casKey, err := s.repo.GetBlobKeyByObject(s.ctx, defaultNamespace, containerName, versionID, "test-object.txt")
 	s.Require().NoError(err)
 	s.Require().Equal(checksum, casKey)
 }
@@ -34,33 +38,33 @@ func (s *postgreSQLRepositoryTestSuite) TestGetBlobKeyByObjectErrors() {
 	s.tp.On("Now").Return("2024-01-02T01:02:03Z").Twice()
 
 	// Nothing exists: container, version, key
-	_, err := s.repo.GetBlobKeyByObject(s.ctx, "container", "version", "key")
+	_, err := s.repo.GetBlobKeyByObject(s.ctx, defaultNamespace, "container", "version", "key")
 	s.Require().Error(err)
 	s.Require().Equal(metadata.ErrNotFound, err)
 
 	// version & key doesn't exist
-	err = s.repo.CreateContainer(s.ctx, "container")
+	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "container")
 	s.Require().NoError(err)
 
-	_, err = s.repo.GetBlobKeyByObject(s.ctx, "container", "version", "key")
+	_, err = s.repo.GetBlobKeyByObject(s.ctx, defaultNamespace, "container", "version", "key")
 	s.Require().Error(err)
 	s.Require().Equal(metadata.ErrNotFound, err)
 
 	// version is unpublished & key doesn't exist
 	s.tp.On("Now").Return("2024-01-02T01:02:03Z").Once()
 
-	version, err := s.repo.CreateVersion(s.ctx, "container")
+	version, err := s.repo.CreateVersion(s.ctx, defaultNamespace, "container")
 	s.Require().NoError(err)
 
-	_, err = s.repo.GetBlobKeyByObject(s.ctx, "container", version, "key")
+	_, err = s.repo.GetBlobKeyByObject(s.ctx, defaultNamespace, "container", version, "key")
 	s.Require().Error(err)
 	s.Require().Equal(metadata.ErrNotFound, err)
 
 	// version is published but key doesn't exist
-	err = s.repo.MarkVersionPublished(s.ctx, "container", version)
+	err = s.repo.MarkVersionPublished(s.ctx, defaultNamespace, "container", version)
 	s.Require().NoError(err)
 
-	_, err = s.repo.GetBlobKeyByObject(s.ctx, "container", version, "key")
+	_, err = s.repo.GetBlobKeyByObject(s.ctx, defaultNamespace, "container", version, "key")
 	s.Require().Error(err)
 	s.Require().Equal(metadata.ErrNotFound, err)
 }

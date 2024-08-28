@@ -31,90 +31,106 @@ func New(cfg *Config) (Service, error) {
 
 func (s *service) Run(ctx context.Context) error {
 	log.Info("running garbage collection ...")
-	containers, err := s.cfg.MdRepo.ListContainers(ctx)
+
+	namespaces, err := s.cfg.MdRepo.ListNamespaces(ctx)
 	if err != nil {
-		return errors.Wrap(err, "error listing containers")
+		return errors.Wrap(err, "error listing namespaces")
 	}
 
-	log.Infof("found %d containers", len(containers))
+	for _, namespace := range namespaces {
 
-	now := s.cfg.TimeNowFunc().UTC()
-
-	for _, container := range containers {
-		log.WithFields(log.Fields{
-			"container": container,
-		}).Debugf("listing unpublished versions ...")
-
-		versions, err := s.cfg.MdRepo.ListUnpublishedVersionsByContainer(ctx, container)
+		containers, err := s.cfg.MdRepo.ListContainers(ctx, namespace)
 		if err != nil {
-			return errors.Wrapf(err, "error listing versions for container `%s`", container)
+			return errors.Wrap(err, "error listing containers")
 		}
 
-		for _, version := range versions {
-			log.WithFields(log.Fields{
-				"container": container,
-				"version":   version.Name,
-			}).Debugf("listing objects ...")
+		log.Infof("found %d containers", len(containers))
 
-			if version.CreatedAt.After(now.Add(-1 * s.cfg.UnpublishedVersionMaxAge)) {
-				log.WithFields(log.Fields{
-					"container": container,
-					"version":   version.Name,
-				}).Debug("version is newer max version age. Skipping ...")
-				continue
+		now := s.cfg.TimeNowFunc().UTC()
+
+		for _, container := range containers {
+			log.WithFields(log.Fields{
+				"namespace": namespace,
+				"container": container,
+			}).Debugf("listing unpublished versions ...")
+
+			versions, err := s.cfg.MdRepo.ListUnpublishedVersionsByContainer(ctx, namespace, container)
+			if err != nil {
+				return errors.Wrapf(err, "error listing versions for container `%s/%s`", namespace, container)
 			}
 
-			var (
-				total  uint64
-				offset uint64
-			)
-
-			for {
+			for _, version := range versions {
 				log.WithFields(log.Fields{
+					"namespace": namespace,
 					"container": container,
-					"version":   version,
-					"offset":    offset,
-					"limit":     defaultLimit,
-				}).Tracef("list objects loop iteration ...")
+					"version":   version.Name,
+				}).Debugf("listing objects ...")
 
-				var objects []string
-				total, objects, err = s.cfg.MdRepo.ListObjects(ctx, container, version.Name, offset, defaultLimit)
-				if err != nil {
-					return errors.Wrapf(err, "error listing objects for container `%s`; version `%s`", container, version.Name)
+				if version.CreatedAt.After(now.Add(-1 * s.cfg.UnpublishedVersionMaxAge)) {
+					log.WithFields(log.Fields{
+						"namespace": namespace,
+						"container": container,
+						"version":   version.Name,
+					}).Debug("version is newer max version age. Skipping ...")
+					continue
 				}
 
-				if total == 0 {
-					break
+				var (
+					total  uint64
+					offset uint64
+				)
+
+				for {
+					log.WithFields(log.Fields{
+						"namespace": namespace,
+						"container": container,
+						"version":   version,
+						"offset":    offset,
+						"limit":     defaultLimit,
+					}).Tracef("list objects loop iteration ...")
+
+					var objects []string
+					total, objects, err = s.cfg.MdRepo.ListObjects(ctx, namespace, container, version.Name, offset, defaultLimit)
+					if err != nil {
+						return errors.Wrapf(err, "error listing objects for container `%s/%s`; version `%s`", namespace, container, version.Name)
+					}
+
+					if total == 0 {
+						break
+					}
+
+					if !s.cfg.DryRun {
+						log.WithFields(log.Fields{
+							"namespace": namespace,
+							"container": container,
+							"version":   version.Name,
+							"amount":    len(objects),
+						}).Info("Performing actual metadata deletion: objects")
+
+						err = s.cfg.MdRepo.DeleteObject(ctx, namespace, container, version.Name, objects...)
+						if err != nil {
+							return errors.Wrapf(err, "error removing object from `%s/%s/%s (%d objects)`", namespace, container, version.Name, len(objects))
+						}
+					}
 				}
+
+				log.WithFields(log.Fields{
+					"namespace": namespace,
+					"container": container,
+					"version":   version.Name,
+				}).Debug("deleting version ...")
 
 				if !s.cfg.DryRun {
 					log.WithFields(log.Fields{
+						"namespace": namespace,
 						"container": container,
 						"version":   version.Name,
-						"amount":    len(objects),
-					}).Info("Performing actual metadata deletion: objects")
+					}).Info("Performing actual metadata deletion: version")
 
-					err = s.cfg.MdRepo.DeleteObject(ctx, container, version.Name, objects...)
+					err = s.cfg.MdRepo.DeleteVersion(ctx, namespace, container, version.Name)
 					if err != nil {
-						return errors.Wrapf(err, "error removing object from `%s/%s (%d objects)`", container, version.Name, len(objects))
+						return err
 					}
-				}
-			}
-
-			log.WithFields(log.Fields{
-				"container": container,
-				"version":   version.Name,
-			}).Debug("deleting version ...")
-
-			if !s.cfg.DryRun {
-				log.WithFields(log.Fields{
-					"container": container,
-					"version":   version.Name,
-				}).Info("Performing actual metadata deletion: version")
-
-				err = s.cfg.MdRepo.DeleteVersion(ctx, container, version.Name)
-				if err != nil {
-					return err
 				}
 			}
 		}

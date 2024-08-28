@@ -6,10 +6,13 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/teran/archived/repositories/metadata"
 )
+
+const defaultNamespace = "default"
 
 var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
@@ -33,9 +36,16 @@ func mapSQLErrors(err error) error {
 	switch err {
 	case sql.ErrNoRows:
 		return metadata.ErrNotFound
-	default:
-		return err
 	}
+
+	if err, ok := err.(*pq.Error); ok {
+		switch err.Code {
+		case "23505":
+			return metadata.ErrConflict
+		}
+	}
+
+	return err
 }
 
 type queryRunner interface {
