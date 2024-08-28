@@ -12,6 +12,7 @@ import (
 
 	"github.com/ProtonMail/go-crypto/openpgp"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 func getGPGKey(ctx context.Context, filepath string, checksum *string) (openpgp.EntityList, error) {
@@ -67,6 +68,10 @@ func getGPGKey(ctx context.Context, filepath string, checksum *string) (openpgp.
 		if *checksum != hex.EncodeToString(h.Sum(nil)) {
 			return nil, errors.New("GPG Key checksum mismatch")
 		}
+
+		log.WithFields(log.Fields{
+			"sha256": *checksum,
+		}).Infof("GPG key checksum verified")
 	}
 
 	return openpgp.ReadArmoredKeyRing(bytes.NewReader(data))
