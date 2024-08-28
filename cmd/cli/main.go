@@ -108,7 +108,7 @@ var (
 					String()
 	versionCreateFromYumRepoGPGKey = versionCreate.Flag("rpm-gpg-key-path", "path to the GPG key for RPM packages verification").
 					String()
-	versionCreateFromYumRepoGPGKeyChecksum = versionCreate.Flag("checksum", "SHA256 checksum for the GPG key provided").
+	versionCreateFromYumRepoGPGKeyChecksum = versionCreate.Flag("rpm-gpg-key-checksum", "SHA256 checksum for the GPG key provided").
 						String()
 
 	versionDelete          = version.Command("delete", "delete the given version")
