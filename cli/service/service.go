@@ -36,7 +36,7 @@ type Service interface {
 	ListContainers(namespaceName string) func(ctx context.Context) error
 	DeleteContainer(namespaceName, containerName string) func(ctx context.Context) error
 
-	CreateVersion(namespaceName, containerName string, shouldPublish bool, fromDir, fromYumRepo, rpmGPGKey *string) func(ctx context.Context) error
+	CreateVersion(namespaceName, containerName string, shouldPublish bool, fromDir, fromYumRepo, rpmGPGKey, rpmGPGKeyChecksum *string) func(ctx context.Context) error
 	DeleteVersion(namespaceName, containerName, versionID string) func(ctx context.Context) error
 	ListVersions(namespaceName, containerName string) func(ctx context.Context) error
 	PublishVersion(namespaceName, containerName, versionID string) func(ctx context.Context) error
@@ -191,7 +191,7 @@ func (s *service) DeleteContainer(namespaceName, containerName string) func(ctx 
 	}
 }
 
-func (s *service) CreateVersion(namespaceName, containerName string, shouldPublish bool, fromDir, fromYumRepo, rpmGPGKey *string) func(ctx context.Context) error {
+func (s *service) CreateVersion(namespaceName, containerName string, shouldPublish bool, fromDir, fromYumRepo, rpmGPGKey, rpmGPGKeyChecksum *string) func(ctx context.Context) error {
 	return func(ctx context.Context) error {
 		resp, err := s.cli.CreateVersion(ctx, &v1proto.CreateVersionRequest{
 			Namespace: namespaceName,
@@ -213,7 +213,7 @@ func (s *service) CreateVersion(namespaceName, containerName string, shouldPubli
 			log.Tracef("--from-yum-repo is requested with `%s`", *fromYumRepo)
 			var gpgKeyring openpgp.EntityList = nil
 			if *rpmGPGKey != "" {
-				gpgKeyring, err = getGPGKey(ctx, *rpmGPGKey)
+				gpgKeyring, err = getGPGKey(ctx, *rpmGPGKey, rpmGPGKeyChecksum)
 				if err != nil {
 					return err
 				}
