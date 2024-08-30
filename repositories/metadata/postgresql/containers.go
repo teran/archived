@@ -133,7 +133,7 @@ func (r *repository) ListContainers(ctx context.Context, namespace string) ([]mo
 	}
 
 	rows, err := selectQuery(ctx, r.db, psql.
-		Select("name", "created_at", "versions_ttl").
+		Select("name", "created_at", "version_ttl_seconds").
 		From("containers").
 		Where(sq.Eq{
 			"namespace_id": namespaceID,
@@ -195,7 +195,7 @@ func (r *repository) ListContainersByPage(ctx context.Context, namespace string,
 	}
 
 	rows, err := selectQuery(ctx, r.db, psql.
-		Select("name", "created_at", "versions_ttl").
+		Select("name", "created_at", "version_ttl_seconds").
 		From("containers").
 		Where(sq.Eq{
 			"namespace_id": namespaceID,

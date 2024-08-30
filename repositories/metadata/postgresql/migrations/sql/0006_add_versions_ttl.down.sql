@@ -1,6 +1,6 @@
 BEGIN;
 
 ALTER TABLE containers
-    DROP COLUMN versions_ttl;
+    DROP COLUMN version_ttl_seconds;
 
 COMMIT;
