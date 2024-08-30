@@ -112,8 +112,13 @@ func (h *handlers) ListContainers(ctx context.Context, in *v1.ListContainersRequ
 		return nil, mapServiceError(err)
 	}
 
+	containerNames := []string{}
+	for _, v := range containers {
+		containerNames = append(containerNames, v.Name)
+	}
+
 	return &v1.ListContainersResponse{
-		Name: containers,
+		Name: containerNames,
 	}, nil
 }
 

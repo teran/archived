@@ -49,14 +49,14 @@ func (m *Mock) RenameContainer(_ context.Context, namespace, oldName, newNamespa
 	return args.Error(0)
 }
 
-func (m *Mock) ListContainers(_ context.Context, namespace string) ([]string, error) {
+func (m *Mock) ListContainers(_ context.Context, namespace string) ([]models.Container, error) {
 	args := m.Called(namespace)
-	return args.Get(0).([]string), args.Error(1)
+	return args.Get(0).([]models.Container), args.Error(1)
 }
 
-func (m *Mock) ListContainersByPage(_ context.Context, namespace string, offset, limit uint64) (uint64, []string, error) {
+func (m *Mock) ListContainersByPage(_ context.Context, namespace string, offset, limit uint64) (uint64, []models.Container, error) {
 	args := m.Called(namespace, offset, limit)
-	return args.Get(0).(uint64), args.Get(1).([]string), args.Error(2)
+	return args.Get(0).(uint64), args.Get(1).([]models.Container), args.Error(2)
 }
 
 func (m *Mock) DeleteContainer(_ context.Context, namespace, name string) error {

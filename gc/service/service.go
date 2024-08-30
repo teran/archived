@@ -54,7 +54,7 @@ func (s *service) Run(ctx context.Context) error {
 				"container": container,
 			}).Debugf("listing unpublished versions ...")
 
-			versions, err := s.cfg.MdRepo.ListUnpublishedVersionsByContainer(ctx, namespace, container)
+			versions, err := s.cfg.MdRepo.ListUnpublishedVersionsByContainer(ctx, namespace, container.Name)
 			if err != nil {
 				return errors.Wrapf(err, "error listing versions for container `%s/%s`", namespace, container)
 			}
@@ -90,7 +90,7 @@ func (s *service) Run(ctx context.Context) error {
 					}).Tracef("list objects loop iteration ...")
 
 					var objects []string
-					total, objects, err = s.cfg.MdRepo.ListObjects(ctx, namespace, container, version.Name, offset, defaultLimit)
+					total, objects, err = s.cfg.MdRepo.ListObjects(ctx, namespace, container.Name, version.Name, offset, defaultLimit)
 					if err != nil {
 						return errors.Wrapf(err, "error listing objects for container `%s/%s`; version `%s`", namespace, container, version.Name)
 					}
@@ -107,7 +107,7 @@ func (s *service) Run(ctx context.Context) error {
 							"amount":    len(objects),
 						}).Info("Performing actual metadata deletion: objects")
 
-						err = s.cfg.MdRepo.DeleteObject(ctx, namespace, container, version.Name, objects...)
+						err = s.cfg.MdRepo.DeleteObject(ctx, namespace, container.Name, version.Name, objects...)
 						if err != nil {
 							return errors.Wrapf(err, "error removing object from `%s/%s/%s (%d objects)`", namespace, container, version.Name, len(objects))
 						}
@@ -127,7 +127,7 @@ func (s *service) Run(ctx context.Context) error {
 						"version":   version.Name,
 					}).Info("Performing actual metadata deletion: version")
 
-					err = s.cfg.MdRepo.DeleteVersion(ctx, namespace, container, version.Name)
+					err = s.cfg.MdRepo.DeleteVersion(ctx, namespace, container.Name, version.Name)
 					if err != nil {
 						return err
 					}

@@ -2,7 +2,7 @@
 {{ template "header" . }}
         <a href="..">..</a><br>
 {{- range $container := .Containers }}
-        <a href="/{{ $namespace }}/{{ $container }}/">{{ $container }}/</a><br>
+        <a href="/{{ $namespace }}/{{ $container.Name }}/">{{ $container.Name }}/</a><br>
 {{- else }}
         <p>No containers found</p>
 {{- end }}

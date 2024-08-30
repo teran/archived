@@ -24,7 +24,7 @@ func (s *serviceTestSuite) TestAll() {
 
 	call0 := s.repoMock.On("ListNamespaces").Return([]string{defaultNamespace}, nil).Once()
 
-	call1 := s.repoMock.On("ListContainers", defaultNamespace).Return([]string{"container1"}, nil).Once().NotBefore(call0)
+	call1 := s.repoMock.On("ListContainers", defaultNamespace).Return([]models.Container{{Name: "container1"}}, nil).Once().NotBefore(call0)
 
 	call2 := s.repoMock.On("ListUnpublishedVersionsByContainer", defaultNamespace, "container1").Return([]models.Version{
 		{

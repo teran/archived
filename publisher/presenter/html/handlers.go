@@ -86,7 +86,7 @@ func (h *handlers) ContainerIndex(c echo.Context) error {
 		CurrentPage uint64
 		PagesCount  uint64
 		Namespace   string
-		Containers  []string
+		Containers  []models.Container
 	}
 
 	return c.Render(http.StatusOK, "container-list.html", &data{

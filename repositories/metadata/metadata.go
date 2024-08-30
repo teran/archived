@@ -22,8 +22,8 @@ type Repository interface {
 
 	CreateContainer(ctx context.Context, namespace, name string) error
 	RenameContainer(ctx context.Context, namespace, oldName, newNamespace, newName string) error
-	ListContainers(ctx context.Context, namespace string) ([]string, error)
-	ListContainersByPage(ctx context.Context, namespace string, offset, limit uint64) (uint64, []string, error)
+	ListContainers(ctx context.Context, namespace string) ([]models.Container, error)
+	ListContainersByPage(ctx context.Context, namespace string, offset, limit uint64) (uint64, []models.Container, error)
 	DeleteContainer(ctx context.Context, namespace, name string) error
 
 	CreateVersion(ctx context.Context, namespace, container string) (string, error)
