@@ -97,7 +97,7 @@ func (m *memcache) RenameContainer(ctx context.Context, namespace, oldName, newN
 	return m.repo.RenameContainer(ctx, namespace, oldName, newNamespace, newName)
 }
 
-func (m *memcache) ListContainers(ctx context.Context, namespace string) ([]string, error) {
+func (m *memcache) ListContainers(ctx context.Context, namespace string) ([]models.Container, error) {
 	cacheKey := strings.Join([]string{
 		m.keyPrefix,
 		"ListContainers",
@@ -129,7 +129,7 @@ func (m *memcache) ListContainers(ctx context.Context, namespace string) ([]stri
 		"key": cacheKey,
 	}).Tracef("cache hit")
 
-	var retrievedValue []string
+	var retrievedValue []models.Container
 	err = json.Unmarshal(item.Value, &retrievedValue)
 	if err != nil {
 		return nil, err
@@ -139,10 +139,10 @@ func (m *memcache) ListContainers(ctx context.Context, namespace string) ([]stri
 }
 
 
-func (m *memcache) ListContainersByPage(ctx context.Context, namespace string, offset, limit uint64) (uint64, []string, error) {
+func (m *memcache) ListContainersByPage(ctx context.Context, namespace string, offset, limit uint64) (uint64, []models.Container, error) {
 	type proxy struct {
-		Total    uint64
-		Containers []string
+		Total      uint64
+		Containers []models.Container
 	}
 
 	cacheKey := strings.Join([]string{

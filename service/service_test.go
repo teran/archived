@@ -169,18 +169,20 @@ func (s *serviceTestSuite) TestDeleteObject() {
 
 func (s *serviceTestSuite) TestListContainers() {
 	// Happy path
-	s.mdRepoMock.On("ListContainers", defaultNamespace).Return([]string{
-		"container1", "container2",
+	s.mdRepoMock.On("ListContainers", defaultNamespace).Return([]models.Container{
+		{Name: "container1"},
+		{Name: "container2"},
 	}, nil).Once()
 
 	containers, err := s.svc.ListContainers(s.ctx, defaultNamespace)
 	s.Require().NoError(err)
-	s.Require().Equal([]string{
-		"container1", "container2",
+	s.Require().Equal([]models.Container{
+		{Name: "container1"},
+		{Name: "container2"},
 	}, containers)
 
 	// return error
-	s.mdRepoMock.On("ListContainers", defaultNamespace).Return([]string(nil), errors.New("test error")).Once()
+	s.mdRepoMock.On("ListContainers", defaultNamespace).Return([]models.Container(nil), errors.New("test error")).Once()
 
 	_, err = s.svc.ListContainers(s.ctx, defaultNamespace)
 	s.Require().Error(err)
@@ -189,15 +191,17 @@ func (s *serviceTestSuite) TestListContainers() {
 
 
 func (s *serviceTestSuite) TestListContainersByPage() {
-	s.mdRepoMock.On("ListContainersByPage", defaultNamespace, uint64(300), uint64(50)).Return(uint64(200), []string{
-		"container1", "container2",
+	s.mdRepoMock.On("ListContainersByPage", defaultNamespace, uint64(300), uint64(50)).Return(uint64(200), []models.Container{
+		{Name: "container1"},
+		{Name: "container2"},
 	}, nil).Once()
 
 	total, containers, err := s.svc.ListContainersByPage(s.ctx, defaultNamespace, 7)
 	s.Require().NoError(err)
 	s.Require().Equal(uint64(4), total)
-	s.Require().Equal([]string{
-		"container1", "container2",
+	s.Require().Equal([]models.Container{
+		{Name: "container1"},
+		{Name: "container2"},
 	}, containers)
 }
 

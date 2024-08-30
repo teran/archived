@@ -2,8 +2,11 @@ package postgresql
 
 import (
 	"context"
+	"time"
 
 	sq "github.com/Masterminds/squirrel"
+
+	"github.com/teran/archived/models"
 )
 
 func (r *repository) CreateContainer(ctx context.Context, namespace, name string) error {
@@ -115,7 +118,7 @@ func (r *repository) RenameContainer(ctx context.Context, namespace, oldName, ne
 	return nil
 }
 
-func (r *repository) ListContainers(ctx context.Context, namespace string) ([]string, error) {
+func (r *repository) ListContainers(ctx context.Context, namespace string) ([]models.Container, error) {
 	row, err := selectQueryRow(ctx, r.db, psql.
 		Select("id").
 		From("namespaces").
@@ -130,7 +133,7 @@ func (r *repository) ListContainers(ctx context.Context, namespace string) ([]st
 	}
 
 	rows, err := selectQuery(ctx, r.db, psql.
-		Select("name").
+		Select("name", "created_at", "versions_ttl").
 		From("containers").
 		Where(sq.Eq{
 			"namespace_id": namespaceID,
@@ -141,12 +144,20 @@ func (r *repository) ListContainers(ctx context.Context, namespace string) ([]st
 	}
 	defer rows.Close()
 
-	result := []string{}
+	result := []models.Container{}
 	for rows.Next() {
-		var r string
-		if err := rows.Scan(&r); err != nil {
+		var (
+			r         models.Container
+			createdAt time.Time
+		)
+		if err := rows.Scan(&r.Name, &createdAt, &r.VersionsTTL); err != nil {
 			return nil, mapSQLErrors(err)
 		}
+		r.CreatedAt = time.Date(
+			createdAt.Year(), createdAt.Month(), createdAt.Day(),
+			createdAt.Hour(), createdAt.Minute(), createdAt.Second(), createdAt.Nanosecond(),
+			time.UTC,
+		)
 
 		result = append(result, r)
 	}
@@ -154,7 +165,7 @@ func (r *repository) ListContainers(ctx context.Context, namespace string) ([]st
 	return result, nil
 }
 
-func (r *repository) ListContainersByPage(ctx context.Context, namespace string, offset, limit uint64) (uint64, []string, error) {
+func (r *repository) ListContainersByPage(ctx context.Context, namespace string, offset, limit uint64) (uint64, []models.Container, error) {
 	row, err := selectQueryRow(ctx, r.db, psql.
 		Select("id").
 		From("namespaces").
@@ -184,7 +195,7 @@ func (r *repository) ListContainersByPage(ctx context.Context, namespace string,
 	}
 
 	rows, err := selectQuery(ctx, r.db, psql.
-		Select("name").
+		Select("name", "created_at", "versions_ttl").
 		From("containers").
 		Where(sq.Eq{
 			"namespace_id": namespaceID,
@@ -197,19 +208,26 @@ func (r *repository) ListContainersByPage(ctx context.Context, namespace string,
 	}
 	defer rows.Close()
 
-	result := []string{}
+	result := []models.Container{}
 	for rows.Next() {
-		var r string
-		if err := rows.Scan(&r); err != nil {
+		var (
+			r         models.Container
+			createdAt time.Time
+		)
+		if err := rows.Scan(&r.Name, &createdAt, &r.VersionsTTL); err != nil {
 			return 0, nil, mapSQLErrors(err)
 		}
+		r.CreatedAt = time.Date(
+			createdAt.Year(), createdAt.Month(), createdAt.Day(),
+			createdAt.Hour(), createdAt.Minute(), createdAt.Second(), createdAt.Nanosecond(),
+			time.UTC,
+		)
 
 		result = append(result, r)
 	}
 
 	return containersTotal, result, nil
 }
-
 
 func (r *repository) DeleteContainer(ctx context.Context, namespace, name string) error {
 	tx, err := r.db.BeginTx(ctx, nil)

@@ -40,9 +40,9 @@ type Manager interface {
 type Publisher interface {
 	ListNamespaces(ctx context.Context) ([]string, error)
 
-	ListContainers(ctx context.Context, namespace string) ([]string, error)
-	ListContainersByPage(ctx context.Context, namespace string, pageNum uint64) (uint64, []string, error)
-	
+	ListContainers(ctx context.Context, namespace string) ([]models.Container, error)
+	ListContainersByPage(ctx context.Context, namespace string, pageNum uint64) (uint64, []models.Container, error)
+
 	ListPublishedVersions(ctx context.Context, namespace, container string) ([]models.Version, error)
 	ListPublishedVersionsByPage(ctx context.Context, namespace, container string, pageNum uint64) (uint64, []models.Version, error)
 
@@ -126,12 +126,12 @@ func (s *service) RenameContainer(ctx context.Context, namespace, oldName, newNa
 	return nil
 }
 
-func (s *service) ListContainers(ctx context.Context, namespace string) ([]string, error) {
+func (s *service) ListContainers(ctx context.Context, namespace string) ([]models.Container, error) {
 	containers, err := s.mdRepo.ListContainers(ctx, namespace)
 	return containers, mapMetadataErrors(err)
 }
 
-func (s *service) ListContainersByPage(ctx context.Context, namespace string, pageNum uint64) (uint64, []string, error) {
+func (s *service) ListContainersByPage(ctx context.Context, namespace string, pageNum uint64) (uint64, []models.Container, error) {
 	if pageNum < 1 {
 		pageNum = 1
 	}

@@ -23,7 +23,7 @@ func (s *handlersTestSuite) TestNamespaceIndex() {
 }
 
 func (s *handlersTestSuite) TestContainerIndex() {
-	s.serviceMock.On("ListContainersByPage", defaultNamespace, uint64(1)).Return(uint64(100), []string{"test-container-1"}, nil).Once()
+	s.serviceMock.On("ListContainersByPage", defaultNamespace, uint64(1)).Return(uint64(100), []models.Container{{Name: "test-container-1"}}, nil).Once()
 
 	s.compareHTMLResponse(s.srv.URL+"/default/", "testdata/containers.html.sample")
 }

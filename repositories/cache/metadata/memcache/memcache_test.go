@@ -25,19 +25,19 @@ func init() {
 
 // Cached methods ...
 func (s *memcacheTestSuite) TestListContainers() {
-	s.repoMock.On("ListContainers", defaultNamespace).Return([]string{"container1"}, nil).Once()
+	s.repoMock.On("ListContainers", defaultNamespace).Return([]models.Container{{Name: "container1"}}, nil).Once()
 
 	containers, err := s.cache.ListContainers(s.ctx, defaultNamespace)
 	s.Require().NoError(err)
-	s.Require().Equal([]string{"container1"}, containers)
+	s.Require().Equal([]models.Container{{Name: "container1"}}, containers)
 
 	containers, err = s.cache.ListContainers(s.ctx, defaultNamespace)
 	s.Require().NoError(err)
-	s.Require().Equal([]string{"container1"}, containers)
+	s.Require().Equal([]models.Container{{Name: "container1"}}, containers)
 }
 
 func (s *memcacheTestSuite) TestListContainersError() {
-	s.repoMock.On("ListContainers", defaultNamespace).Return([]string{}, errors.New("some error")).Once()
+	s.repoMock.On("ListContainers", defaultNamespace).Return([]models.Container{}, errors.New("some error")).Once()
 
 	_, err := s.cache.ListContainers(s.ctx, defaultNamespace)
 	s.Require().Error(err)
@@ -45,16 +45,16 @@ func (s *memcacheTestSuite) TestListContainersError() {
 }
 
 func (s *memcacheTestSuite) TestListContainersByPage() {
-	s.repoMock.On("ListContainersByPage", defaultNamespace, uint64(0), uint64(15)).Return(uint64(500), []string{"container1"}, nil).Once()
+	s.repoMock.On("ListContainersByPage", defaultNamespace, uint64(0), uint64(15)).Return(uint64(500), []models.Container{{Name: "container1"}}, nil).Once()
 
 	total, containers, err := s.cache.ListContainersByPage(s.ctx, defaultNamespace, 0, 15)
 	s.Require().NoError(err)
-	s.Require().Equal([]string{"container1"}, containers)
+	s.Require().Equal([]models.Container{{Name: "container1"}}, containers)
 	s.Require().Equal(uint64(500), total)
 
 	total, containers, err = s.cache.ListContainersByPage(s.ctx, defaultNamespace, 0, 15)
 	s.Require().NoError(err)
-	s.Require().Equal([]string{"container1"}, containers)
+	s.Require().Equal([]models.Container{{Name: "container1"}}, containers)
 	s.Require().Equal(uint64(500), total)
 }
 
