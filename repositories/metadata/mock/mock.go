@@ -2,11 +2,11 @@ package mock
 
 import (
 	"context"
-
 	"github.com/stretchr/testify/mock"
 	emodels "github.com/teran/archived/exporter/models"
 	"github.com/teran/archived/models"
 	"github.com/teran/archived/repositories/metadata"
+	"time"
 )
 
 var _ metadata.Repository = (*Mock)(nil)
@@ -46,6 +46,11 @@ func (m *Mock) CreateContainer(_ context.Context, namespace, name string) error 
 
 func (m *Mock) RenameContainer(_ context.Context, namespace, oldName, newNamespace, newName string) error {
 	args := m.Called(namespace, oldName, newNamespace, newName)
+	return args.Error(0)
+}
+
+func (m *Mock) SetContainerVersionsTTL(_ context.Context, namespace, name string, ttl time.Duration) error {
+	args := m.Called(namespace, name, ttl)
 	return args.Error(0)
 }
 

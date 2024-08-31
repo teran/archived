@@ -97,6 +97,10 @@ func (m *memcache) RenameContainer(ctx context.Context, namespace, oldName, newN
 	return m.repo.RenameContainer(ctx, namespace, oldName, newNamespace, newName)
 }
 
+func (m *memcache) SetContainerVersionsTTL(ctx context.Context, namespace, name string, ttl time.Duration) error {
+	return m.repo.SetContainerVersionsTTL(ctx, namespace, name, ttl)
+}
+
 func (m *memcache) ListContainers(ctx context.Context, namespace string) ([]models.Container, error) {
 	cacheKey := strings.Join([]string{
 		m.keyPrefix,
@@ -137,7 +141,6 @@ func (m *memcache) ListContainers(ctx context.Context, namespace string) ([]mode
 
 	return retrievedValue, nil
 }
-
 
 func (m *memcache) ListContainersByPage(ctx context.Context, namespace string, offset, limit uint64) (uint64, []models.Container, error) {
 	type proxy struct {

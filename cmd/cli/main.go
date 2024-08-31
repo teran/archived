@@ -8,6 +8,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"strings"
+	"time"
 
 	kingpin "github.com/alecthomas/kingpin/v2"
 	log "github.com/sirupsen/logrus"
@@ -91,6 +92,10 @@ var (
 
 	containerDelete     = container.Command("delete", "delete the given container")
 	containerDeleteName = containerDelete.Arg("name", "name of the container to delete").Required().String()
+
+	containerTTL          = container.Command("ttl", "set TTL for container versions")
+	containerTTLContainer = containerTTL.Arg("name", "name of the container to set TTL for").Required().String()
+	containerTTLTTL       = containerTTL.Arg("ttl", "TTL for container versions in hours").Required().Int()
 
 	containerList = container.Command("list", "list containers")
 
@@ -219,15 +224,16 @@ func main() {
 	r := router.New(ctx)
 
 	r.Register(namespaceCreate.FullCommand(), cliSvc.CreateNamespace(*namespaceCreateName))
-	r.Register(namespaceRename.FullCommand(), cliSvc.RenameNamespace(*containerRenameOldName, *containerRenameNewName))
+	r.Register(namespaceRename.FullCommand(), cliSvc.RenameNamespace(*namespaceRenameOldName, *namespaceRenameNewName))
 	r.Register(namespaceList.FullCommand(), cliSvc.ListNamespaces())
-	r.Register(namespaceDelete.FullCommand(), cliSvc.DeleteNamespace(*containerDeleteName))
+	r.Register(namespaceDelete.FullCommand(), cliSvc.DeleteNamespace(*namespaceDeleteName))
 
 	r.Register(containerCreate.FullCommand(), cliSvc.CreateContainer(*namespaceName, *containerCreateName))
 	r.Register(containerMove.FullCommand(), cliSvc.MoveContainer(*namespaceName, *containerMoveName, *containerMoveNamespace))
 	r.Register(containerRename.FullCommand(), cliSvc.RenameContainer(*namespaceName, *containerRenameOldName, *containerRenameNewName))
 	r.Register(containerList.FullCommand(), cliSvc.ListContainers(*namespaceName))
 	r.Register(containerDelete.FullCommand(), cliSvc.DeleteContainer(*namespaceName, *containerDeleteName))
+	r.Register(containerTTL.FullCommand(), cliSvc.SetContainerVersionsTTL(*namespaceName, *containerTTLContainer, time.Duration(*containerTTLTTL)*time.Hour))
 
 	r.Register(versionList.FullCommand(), cliSvc.ListVersions(*namespaceName, *versionListContainer))
 	r.Register(versionCreate.FullCommand(), cliSvc.CreateVersion(
@@ -240,7 +246,8 @@ func main() {
 	r.Register(objectCreate.FullCommand(), cliSvc.CreateObject(*namespaceName, *objectCreateContainer, *objectCreateVersion, *objectCreatePath))
 	r.Register(objectList.FullCommand(), cliSvc.ListObjects(*namespaceName, *objectListContainer, *objectListVersion))
 	r.Register(objectURL.FullCommand(), cliSvc.GetObjectURL(*namespaceName, *objectURLContainer, *objectURLVersion, *objectURLKey))
-
+	r.Register(deleteObject.FullCommand(), cliSvc.DeleteObject(*namespaceName, *deleteObjectContainer, *deleteObjectVersion, *deleteObjectKey))
+	
 	r.Register(statCacheShowPath.FullCommand(), func(ctx context.Context) error {
 		fmt.Println(*cacheDir)
 		return nil

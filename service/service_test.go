@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/suite"
@@ -124,6 +125,13 @@ func (s *serviceTestSuite) TestDeleteContainer() {
 	s.Require().NoError(err)
 }
 
+func (s *serviceTestSuite) TestSetContainerVersionsTTL() {
+	s.mdRepoMock.On("SetContainerVersionsTTL", defaultNamespace, "container", 1*time.Hour).Return(nil).Once()
+
+	err := s.svc.SetContainerVersionsTTL(s.ctx, defaultNamespace, "container", 1*time.Hour)
+	s.Require().NoError(err)
+}
+
 func (s *serviceTestSuite) TestCreateVersion() {
 	s.mdRepoMock.On("CreateVersion", defaultNamespace, "container").Return("versionID", nil).Once()
 
@@ -188,7 +196,6 @@ func (s *serviceTestSuite) TestListContainers() {
 	s.Require().Error(err)
 	s.Require().Equal("test error", err.Error())
 }
-
 
 func (s *serviceTestSuite) TestListContainersByPage() {
 	s.mdRepoMock.On("ListContainersByPage", defaultNamespace, uint64(300), uint64(50)).Return(uint64(200), []models.Container{

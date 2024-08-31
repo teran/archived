@@ -6,6 +6,7 @@ import (
 	v1proto "github.com/teran/archived/manager/presenter/grpc/proto/v1"
 	"github.com/teran/archived/repositories/blob/mock"
 	"google.golang.org/grpc"
+	"time"
 )
 
 var _ v1proto.ManageServiceClient = (*protoClientMock)(nil)
@@ -58,6 +59,11 @@ func (m *protoClientMock) RenameContainer(ctx context.Context, in *v1proto.Renam
 func (m *protoClientMock) DeleteContainer(ctx context.Context, in *v1proto.DeleteContainerRequest, opts ...grpc.CallOption) (*v1proto.DeleteContainerResponse, error) {
 	args := m.Called(in.GetNamespace(), in.GetName())
 	return &v1proto.DeleteContainerResponse{}, args.Error(0)
+}
+
+func (m *protoClientMock) SetContainerVersionsTTL(ctx context.Context, in *v1proto.SetContainerVersionsTTLRequest, opts ...grpc.CallOption) (*v1proto.SetContainerVersionsTTLResponse, error) {
+	args := m.Called(in.GetNamespace(), in.GetName(), time.Duration(in.GetTtlHours())*time.Hour)
+	return &v1proto.SetContainerVersionsTTLResponse{}, args.Error(0)
 }
 
 func (m *protoClientMock) ListContainers(ctx context.Context, in *v1proto.ListContainersRequest, opts ...grpc.CallOption) (*v1proto.ListContainersResponse, error) {

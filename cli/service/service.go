@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/ProtonMail/go-crypto/openpgp"
 	"github.com/pkg/errors"
@@ -35,6 +36,7 @@ type Service interface {
 	RenameContainer(namespaceName, oldName, newName string) func(ctx context.Context) error
 	ListContainers(namespaceName string) func(ctx context.Context) error
 	DeleteContainer(namespaceName, containerName string) func(ctx context.Context) error
+	SetContainerVersionsTTL(namespaceName, containerName string, ttl time.Duration) func(ctx context.Context) error
 
 	CreateVersion(namespaceName, containerName string, shouldPublish bool, fromDir, fromYumRepo, rpmGPGKey, rpmGPGKeyChecksum *string) func(ctx context.Context) error
 	DeleteVersion(namespaceName, containerName, versionID string) func(ctx context.Context) error
@@ -187,6 +189,22 @@ func (s *service) DeleteContainer(namespaceName, containerName string) func(ctx 
 		}
 
 		fmt.Printf("container `%s` has been deleted\n", containerName)
+		return nil
+	}
+}
+
+func (s *service) SetContainerVersionsTTL(namespaceName, containerName string, ttl time.Duration) func(ctx context.Context) error {
+	return func(ctx context.Context) error {
+		_, err := s.cli.SetContainerVersionsTTL(ctx, &v1proto.SetContainerVersionsTTLRequest{
+			Namespace:  namespaceName,
+			Name:       containerName,
+			TtlHours:   uint64(ttl.Hours()),
+		})
+		if err != nil {
+			return errors.Wrap(err, "error setting container versions TTL")
+		}
+
+		fmt.Printf("container `%s` versions TTL set to %s\n", containerName, ttl)
 		return nil
 	}
 }

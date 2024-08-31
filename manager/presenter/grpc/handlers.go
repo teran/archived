@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -104,6 +105,15 @@ func (h *handlers) DeleteContainer(ctx context.Context, in *v1.DeleteContainerRe
 	}
 
 	return &v1.DeleteContainerResponse{}, nil
+}
+
+func (h *handlers) SetContainerVersionsTTL(ctx context.Context, in *v1.SetContainerVersionsTTLRequest) (*v1.SetContainerVersionsTTLResponse, error) {
+	err := h.svc.SetContainerVersionsTTL(ctx, in.GetNamespace(), in.GetName(), time.Duration(in.GetTtlHours())*time.Hour)
+	if err != nil {
+		return nil, mapServiceError(err)
+	}
+
+	return &v1.SetContainerVersionsTTLResponse{}, nil
 }
 
 func (h *handlers) ListContainers(ctx context.Context, in *v1.ListContainersRequest) (*v1.ListContainersResponse, error) {
