@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/suite"
@@ -121,6 +122,13 @@ func (s *serviceTestSuite) TestDeleteContainer() {
 	s.mdRepoMock.On("DeleteContainer", defaultNamespace, "container").Return(nil).Once()
 
 	err := s.svc.DeleteContainer(s.ctx, defaultNamespace, "container")
+	s.Require().NoError(err)
+}
+
+func (s *serviceTestSuite) TestSetContainerVersionsTTL() {
+	s.mdRepoMock.On("SetContainerVersionsTTL", defaultNamespace, "container", 1*time.Hour).Return(nil).Once()
+
+	err := s.svc.SetContainerVersionsTTL(s.ctx, defaultNamespace, "container", 1*time.Hour)
 	s.Require().NoError(err)
 }
 

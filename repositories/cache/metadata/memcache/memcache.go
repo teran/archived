@@ -98,6 +98,10 @@ func (m *memcache) RenameContainer(ctx context.Context, namespace, oldName, newN
 	return m.repo.RenameContainer(ctx, namespace, oldName, newNamespace, newName)
 }
 
+func (m *memcache) SetContainerVersionsTTL(ctx context.Context, namespace, name string, ttl time.Duration) error {
+	return m.repo.SetContainerVersionsTTL(ctx, namespace, name, ttl)
+}
+
 func (m *memcache) ListContainers(ctx context.Context, namespace string) ([]models.Container, error) {
 	cacheKey := strings.Join([]string{
 		m.keyPrefix,

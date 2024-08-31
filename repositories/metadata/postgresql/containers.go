@@ -133,6 +133,66 @@ func (r *repository) RenameContainer(ctx context.Context, namespace, oldName, ne
 	return nil
 }
 
+func (r *repository) SetContainerVersionsTTL(ctx context.Context, namespace, name string, ttl time.Duration) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+	defer func() {
+		err := tx.Rollback()
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Error("error rolling back")
+		}
+	}()
+
+	row, err := selectQueryRow(ctx, tx, psql.
+		Select("id").
+		From("namespaces").
+		Where(sq.Eq{"name": namespace}))
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+
+	var namespaceID uint
+	if err := row.Scan(&namespaceID); err != nil {
+		return mapSQLErrors(err)
+	}
+
+	row, err = selectQueryRow(ctx, tx, psql.
+		Select("id").
+		From("containers").
+		Where(sq.Eq{
+			"name":         name,
+			"namespace_id": namespaceID,
+		}))
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+
+	var containerID uint
+	if err := row.Scan(&containerID); err != nil {
+		return mapSQLErrors(err)
+	}
+
+	_, err = updateQuery(ctx, tx, psql.
+		Update("containers").
+		Set("version_ttl_seconds", ttl.Seconds()).
+		Where(sq.Eq{
+			"name":         name,
+			"namespace_id": namespaceID,
+		}))
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return mapSQLErrors(err)
+	}
+	return nil
+}
+
 func (r *repository) ListContainers(ctx context.Context, namespace string) ([]models.Container, error) {
 	row, err := selectQueryRow(ctx, r.db, psql.
 		Select("id").

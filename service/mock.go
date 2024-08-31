@@ -2,8 +2,10 @@ package service
 
 import (
 	"context"
+	"time"
 
 	"github.com/stretchr/testify/mock"
+
 	"github.com/teran/archived/models"
 )
 
@@ -52,6 +54,11 @@ func (m *Mock) MoveContainer(ctx context.Context, namespace, container, destName
 
 func (m *Mock) RenameContainer(_ context.Context, namespace, oldName, newName string) error {
 	args := m.Called(namespace, oldName, newName)
+	return args.Error(0)
+}
+
+func (m *Mock) SetContainerVersionsTTL(_ context.Context, namespace, name string, ttl time.Duration) error {
+	args := m.Called(namespace, name, ttl)
 	return args.Error(0)
 }
 

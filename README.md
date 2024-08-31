@@ -143,6 +143,9 @@ container rename <old-name> <new-name>
 container delete <name>
     delete the given container
 
+container ttl <name> <ttl>
+    set TTL (in hours) for container versions
+
 container list
     list containers
 

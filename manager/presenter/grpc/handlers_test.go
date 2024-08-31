@@ -108,6 +108,17 @@ func (s *manageHandlersTestSuite) TestRenameContainerNotFound() {
 	s.Require().Equal("rpc error: code = NotFound desc = entity not found", err.Error())
 }
 
+func (s *manageHandlersTestSuite) TestSetContainerVersionsTTL() {
+	s.svcMock.On("SetContainerVersionsTTL", defaultNamespace, "test-container", 1*time.Hour).Return(nil).Once()
+
+	_, err := s.client.SetContainerVersionsTTL(s.ctx, &v1pb.SetContainerVersionsTTLRequest{
+		Namespace: defaultNamespace,
+		Name:      "test-container",
+		TtlHours:  1,
+	})
+	s.Require().NoError(err)
+}
+
 func (s *manageHandlersTestSuite) TestListContainers() {
 	s.svcMock.On("ListContainers", defaultNamespace).Return([]models.Container{
 		{Name: "test-container1"},

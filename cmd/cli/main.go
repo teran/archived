@@ -8,6 +8,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"strings"
+	"time"
 
 	kingpin "github.com/alecthomas/kingpin/v2"
 	log "github.com/sirupsen/logrus"
@@ -94,6 +95,10 @@ var (
 
 	containerDelete     = container.Command("delete", "delete the given container")
 	containerDeleteName = containerDelete.Arg("name", "name of the container to delete").Required().String()
+
+	containerTTL          = container.Command("ttl", "set TTL for container versions")
+	containerTTLContainer = containerTTL.Arg("name", "name of the container to set TTL for").Required().String()
+	containerTTLTTL       = containerTTL.Arg("ttl", "TTL for container versions in hours").Required().Int()
 
 	containerList = container.Command("list", "list containers")
 
@@ -238,6 +243,7 @@ func main() {
 	r.Register(containerRename.FullCommand(), cliSvc.RenameContainer(*namespaceName, *containerRenameOldName, *containerRenameNewName))
 	r.Register(containerList.FullCommand(), cliSvc.ListContainers(*namespaceName))
 	r.Register(containerDelete.FullCommand(), cliSvc.DeleteContainer(*namespaceName, *containerDeleteName))
+	r.Register(containerTTL.FullCommand(), cliSvc.SetContainerVersionsTTL(*namespaceName, *containerTTLContainer, time.Duration(*containerTTLTTL)*time.Hour))
 
 	r.Register(versionList.FullCommand(), cliSvc.ListVersions(*namespaceName, *versionListContainer))
 	r.Register(versionCreate.FullCommand(), cliSvc.CreateVersion(
@@ -249,7 +255,6 @@ func main() {
 	r.Register(objectList.FullCommand(), cliSvc.ListObjects(*namespaceName, *objectListContainer, *objectListVersion))
 	r.Register(objectURL.FullCommand(), cliSvc.GetObjectURL(*namespaceName, *objectURLContainer, *objectURLVersion, *objectURLKey))
 	r.Register(deleteObject.FullCommand(), cliSvc.DeleteObject(*namespaceName, *deleteObjectContainer, *deleteObjectVersion, *deleteObjectKey))
-
 	r.Register(statCacheShowPath.FullCommand(), func(ctx context.Context) error {
 		fmt.Println(*cacheDir)
 		return nil

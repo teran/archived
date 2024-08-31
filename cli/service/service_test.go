@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"testing"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/suite"
@@ -79,6 +80,13 @@ func (s *serviceTestSuite) TestDeleteContainer() {
 	s.cliMock.On("DeleteContainer", defaultNamespace, "test-container1").Return(nil).Once()
 
 	fn := s.svc.DeleteContainer(defaultNamespace, "test-container1")
+	s.Require().NoError(fn(s.ctx))
+}
+
+func (s *serviceTestSuite) TestSetContainerVersionsTTL() {
+	s.cliMock.On("SetContainerVersionsTTL", defaultNamespace, "test-container1", 3600*time.Second).Return(nil).Once()
+
+	fn := s.svc.SetContainerVersionsTTL(defaultNamespace, "test-container1", 3600*time.Second)
 	s.Require().NoError(fn(s.ctx))
 }
 
