@@ -51,10 +51,10 @@ type Publisher interface {
 }
 
 type service struct {
-	mdRepo           metadata.Repository
-	blobRepo         blob.Repository
-	versionsPageSize uint64
-	objectsPageSize  uint64
+	mdRepo             metadata.Repository
+	blobRepo           blob.Repository
+	versionsPageSize   uint64
+	objectsPageSize    uint64
 	containersPageSize uint64
 }
 
@@ -68,10 +68,10 @@ func NewPublisher(mdRepo metadata.Repository, blobRepo blob.Repository, versions
 
 func newSvc(mdRepo metadata.Repository, blobRepo blob.Repository, versionsPerPage, objectsPerPage, containersPerPage uint64) *service {
 	return &service{
-		mdRepo:           mdRepo,
-		blobRepo:         blobRepo,
-		versionsPageSize: versionsPerPage,
-		objectsPageSize:  objectsPerPage,
+		mdRepo:             mdRepo,
+		blobRepo:           blobRepo,
+		versionsPageSize:   versionsPerPage,
+		objectsPageSize:    objectsPerPage,
 		containersPageSize: containersPerPage,
 	}
 }
@@ -228,7 +228,7 @@ func (s *service) ListObjectsByPage(ctx context.Context, namespace, container, v
 	limit := s.objectsPageSize
 	totalObjects, objects, err := s.mdRepo.ListObjects(ctx, namespace, container, versionID, offset, limit)
 	if err != nil {
-		return 0, nil, err
+		return 0, nil, mapMetadataErrors(err)
 	}
 
 	totalPages := (totalObjects / s.objectsPageSize)

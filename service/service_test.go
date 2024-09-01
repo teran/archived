@@ -189,7 +189,6 @@ func (s *serviceTestSuite) TestListContainers() {
 	s.Require().Equal("test error", err.Error())
 }
 
-
 func (s *serviceTestSuite) TestListContainersByPage() {
 	s.mdRepoMock.On("ListContainersByPage", defaultNamespace, uint64(300), uint64(50)).Return(uint64(200), []models.Container{
 		{Name: "container1"},
@@ -291,6 +290,14 @@ func (s *serviceTestSuite) TestListObjectsByLatestVersion() {
 	_, objects, err := s.svc.ListObjectsByPage(s.ctx, defaultNamespace, "container1", "latest", 1)
 	s.Require().NoError(err)
 	s.Require().Equal([]string{"obj1", "obj2"}, objects)
+}
+
+func (s *serviceTestSuite) TestListObjectsErrNotFound() {
+	s.mdRepoMock.On("ListObjects", defaultNamespace, "container1", "versionID", uint64(0), uint64(50)).Return(uint64(100), []string{"obj1", "obj2"}, metadata.ErrNotFound).Once()
+
+	_, _, err := s.svc.ListObjectsByPage(s.ctx, defaultNamespace, "container1", "versionID", 1)
+	s.Require().Error(err)
+	s.Require().Equal(ErrNotFound, err)
 }
 
 func (s *serviceTestSuite) TestGetObjectURLWithLatestVersion() {
