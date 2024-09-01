@@ -78,7 +78,6 @@ func (h *handlers) ContainerIndex(c echo.Context) error {
 
 	pagesCount, containers, err := h.svc.ListContainersByPage(c.Request().Context(), namespace, page)
 	if err != nil {
-		log.Warnf("%s", err)
 		if err == service.ErrNotFound {
 			return c.Render(http.StatusNotFound, notFoundTemplateFilename, nil)
 		}
