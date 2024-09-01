@@ -109,7 +109,10 @@ func (s *manageHandlersTestSuite) TestRenameContainerNotFound() {
 }
 
 func (s *manageHandlersTestSuite) TestListContainers() {
-	s.svcMock.On("ListContainers", defaultNamespace).Return([]string{"test-container1", "test-container2"}, nil).Once()
+	s.svcMock.On("ListContainers", defaultNamespace).Return([]models.Container{
+		{Name: "test-container1"},
+		{Name: "test-container2"},
+	}, nil).Once()
 
 	resp, err := s.client.ListContainers(s.ctx, &v1pb.ListContainersRequest{
 		Namespace: defaultNamespace,
@@ -121,7 +124,7 @@ func (s *manageHandlersTestSuite) TestListContainers() {
 }
 
 func (s *manageHandlersTestSuite) TestListContainersNotFound() {
-	s.svcMock.On("ListContainers", defaultNamespace).Return([]string{}, service.ErrNotFound).Once()
+	s.svcMock.On("ListContainers", defaultNamespace).Return([]models.Container{}, service.ErrNotFound).Once()
 
 	_, err := s.client.ListContainers(s.ctx, &v1pb.ListContainersRequest{
 		Namespace: defaultNamespace,
