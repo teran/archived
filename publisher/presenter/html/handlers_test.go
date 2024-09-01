@@ -104,6 +104,9 @@ func (s *handlersTestSuite) TestGetObjectSchemeMismatchXScheme() {
 }
 
 func (s *handlersTestSuite) TestErrNotFound() {
+	s.serviceMock.On("ListContainersByPage", defaultNamespace, uint64(1)).Return(uint64(100), []models.Container(nil), service.ErrNotFound).Once()
+	s.compareHTMLResponse(s.srv.URL+"/default/", "testdata/404.html.sample")
+
 	s.serviceMock.On("ListPublishedVersionsByPage", defaultNamespace, "test-container-1", uint64(1)).Return(uint64(100), []models.Version(nil), service.ErrNotFound).Once()
 	s.compareHTMLResponse(s.srv.URL+"/default/test-container-1/", "testdata/404.html.sample")
 
@@ -118,6 +121,9 @@ func (s *handlersTestSuite) TestErrNotFound() {
 }
 
 func (s *handlersTestSuite) TestErr5xx() {
+	s.serviceMock.On("ListContainersByPage", defaultNamespace, uint64(1)).Panic("blah").Once()
+	s.compareHTMLResponse(s.srv.URL+"/default/", "testdata/5xx.html.sample")
+
 	s.serviceMock.On("ListPublishedVersionsByPage", defaultNamespace, "test-container-1", uint64(1)).Panic("blah").Once()
 	s.compareHTMLResponse(s.srv.URL+"/default/test-container-1/", "testdata/5xx.html.sample")
 }
