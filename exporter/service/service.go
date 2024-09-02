@@ -31,7 +31,7 @@ func New(repo metadata.Repository) (Service, error) {
 		containersTotal: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Namespace: "archived",
-				Name:      "containers_total",
+				Name:      "containers_amount",
 				Help:      "Total amount of containers",
 			},
 			[]string{},
@@ -58,7 +58,7 @@ func New(repo metadata.Repository) (Service, error) {
 		blobsTotal: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Namespace: "archived",
-				Name:      "blobs_total",
+				Name:      "blobs_amount",
 				Help:      "Total amount of blobs",
 			},
 			[]string{},

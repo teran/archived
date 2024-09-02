@@ -22,6 +22,7 @@ linters:
     - nakedret
     - nilnil
     - noctx
+    - promlinter
     - protogetter
     - staticcheck
     - testifylint
