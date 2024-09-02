@@ -22,4 +22,4 @@ linters:
     - nakedret
     - nilnil
     - protogetter
-
+    - staticcheck
