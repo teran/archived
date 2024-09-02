@@ -195,7 +195,7 @@ func (r *repository) ListObjects(ctx context.Context, namespace, container, vers
 		result = append(result, r)
 	}
 
-	return objectsTotal, result, nil
+	return objectsTotal, result, mapSQLErrors(rows.Err())
 }
 
 func (r *repository) DeleteObject(ctx context.Context, namespace, container, version string, key ...string) error {

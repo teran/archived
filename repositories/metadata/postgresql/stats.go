@@ -49,6 +49,7 @@ func (r *repository) CountStats(ctx context.Context) (*models.Stats, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		vc := models.VersionsCount{}
@@ -57,6 +58,10 @@ func (r *repository) CountStats(ctx context.Context) (*models.Stats, error) {
 		}
 
 		stats.VersionsCount = append(stats.VersionsCount, vc)
+	}
+
+	if rows.Err() != nil {
+		return nil, mapSQLErrors(rows.Err())
 	}
 
 	rows, err = selectQuery(ctx, r.db, psql.
@@ -77,6 +82,7 @@ func (r *repository) CountStats(ctx context.Context) (*models.Stats, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		oc := models.ObjectsCount{}
@@ -85,6 +91,10 @@ func (r *repository) CountStats(ctx context.Context) (*models.Stats, error) {
 		}
 
 		stats.ObjectsCount = append(stats.ObjectsCount, oc)
+	}
+
+	if rows.Err() != nil {
+		return nil, mapSQLErrors(rows.Err())
 	}
 
 	row, err = selectQueryRow(ctx, r.db, psql.
@@ -118,6 +128,7 @@ func (r *repository) CountStats(ctx context.Context) (*models.Stats, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		brsb := models.BlobsRawSizeBytes{}
@@ -126,6 +137,10 @@ func (r *repository) CountStats(ctx context.Context) (*models.Stats, error) {
 		}
 
 		stats.BlobsRawSizeBytes = append(stats.BlobsRawSizeBytes, brsb)
+	}
+
+	if err != nil {
+		return nil, mapSQLErrors(rows.Err())
 	}
 
 	row, err = selectQueryRow(ctx, r.db, psql.

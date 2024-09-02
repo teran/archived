@@ -89,7 +89,7 @@ func selectQuery(ctx context.Context, db queryRunner, q sq.SelectBuilder) (*sql.
 		}).Debug("SQL query executed")
 	}()
 
-	return db.QueryContext(ctx, sql, args...)
+	return db.QueryContext(ctx, sql, args...) //nolint:sqlclosecheck
 }
 
 func insertQuery(ctx context.Context, db execRunner, q sq.InsertBuilder) (sql.Result, error) { // nolint:unparam
