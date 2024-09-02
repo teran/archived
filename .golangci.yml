@@ -24,6 +24,7 @@ linters:
     - nilnil
     - noctx
     - perfsprint
+    - prealloc
     - promlinter
     - protogetter
     - reassign
