@@ -1,6 +1,7 @@
 package html
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -45,7 +46,7 @@ func (s *handlersTestSuite) TestObjectIndex() {
 func (s *handlersTestSuite) TestGetObject() {
 	s.serviceMock.On("GetObjectURL", defaultNamespace, "test-container-1", "20241011121314", "test-dir/filename.txt").Return("https://example.com/some-addr", nil).Once()
 
-	req, err := http.NewRequest(http.MethodGet, s.srv.URL+"/default/test-container-1/20241011121314/test-dir/filename.txt", nil)
+	req, err := http.NewRequestWithContext(s.ctx, http.MethodGet, s.srv.URL+"/default/test-container-1/20241011121314/test-dir/filename.txt", nil)
 	s.Require().NoError(err)
 
 	client := &http.Client{
@@ -65,7 +66,7 @@ func (s *handlersTestSuite) TestGetObject() {
 func (s *handlersTestSuite) TestGetObjectSchemeMismatchXForwardedScheme() {
 	s.serviceMock.On("GetObjectURL", defaultNamespace, "test-container-1", "20241011121314", "test-dir/filename.txt").Return("https://example.com/some-addr", nil).Once()
 
-	req, err := http.NewRequest(http.MethodGet, s.srv.URL+"/default/test-container-1/20241011121314/test-dir/filename.txt", nil)
+	req, err := http.NewRequestWithContext(s.ctx, http.MethodGet, s.srv.URL+"/default/test-container-1/20241011121314/test-dir/filename.txt", nil)
 	s.Require().NoError(err)
 
 	req.Header.Set("X-Forwarded-Scheme", "http")
@@ -87,7 +88,7 @@ func (s *handlersTestSuite) TestGetObjectSchemeMismatchXForwardedScheme() {
 func (s *handlersTestSuite) TestGetObjectSchemeMismatchXScheme() {
 	s.serviceMock.On("GetObjectURL", defaultNamespace, "test-container-1", "20241011121314", "test-dir/filename.txt").Return("https://example.com/some-addr", nil).Once()
 
-	req, err := http.NewRequest(http.MethodGet, s.srv.URL+"/default/test-container-1/20241011121314/test-dir/filename.txt", nil)
+	req, err := http.NewRequestWithContext(s.ctx, http.MethodGet, s.srv.URL+"/default/test-container-1/20241011121314/test-dir/filename.txt", nil)
 	s.Require().NoError(err)
 
 	req.Header.Set("X-Scheme", "http")
@@ -134,7 +135,7 @@ func (s *handlersTestSuite) TestErr5xx() {
 func (s *handlersTestSuite) TestEscapedPath() {
 	s.serviceMock.On("GetObjectURL", defaultNamespace, "test-container-1", "20240101010101", "test object.txt").Return("https://example.com/some-addr", nil).Once()
 
-	req, err := http.NewRequest(http.MethodGet, s.srv.URL+"/default/test-container-1/20240101010101/test%20object.txt", nil)
+	req, err := http.NewRequestWithContext(s.ctx, http.MethodGet, s.srv.URL+"/default/test-container-1/20240101010101/test%20object.txt", nil)
 	s.Require().NoError(err)
 
 	client := &http.Client{
@@ -155,6 +156,8 @@ func (s *handlersTestSuite) TestEscapedPath() {
 type handlersTestSuite struct {
 	suite.Suite
 
+	ctx context.Context
+
 	srv *httptest.Server
 
 	serviceMock *service.Mock
@@ -162,6 +165,8 @@ type handlersTestSuite struct {
 }
 
 func (s *handlersTestSuite) SetupTest() {
+	s.ctx = context.TODO()
+
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
@@ -185,7 +190,7 @@ func TestHandlersTestSuite(t *testing.T) {
 }
 
 func (s *handlersTestSuite) compareHTMLResponse(url, responseSamplePath string) {
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	req, err := http.NewRequestWithContext(s.ctx, http.MethodGet, url, nil)
 	s.Require().NoError(err)
 
 	resp, err := http.DefaultClient.Do(req)

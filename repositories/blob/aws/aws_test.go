@@ -122,7 +122,7 @@ func fetchURL(ctx context.Context, url string) ([]byte, error) {
 }
 
 func uploadToURL(ctx context.Context, url string, payload []byte) error {
-	req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(payload))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, bytes.NewReader(payload))
 	if err != nil {
 		return err
 	}
