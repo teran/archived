@@ -28,6 +28,8 @@ linters:
     - promlinter
     - protogetter
     - reassign
+    - rowserrcheck
+    - sqlclosecheck
     - staticcheck
     - testifylint
     - unparam

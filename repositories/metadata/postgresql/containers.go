@@ -177,7 +177,7 @@ func (r *repository) ListContainers(ctx context.Context, namespace string) ([]mo
 		result = append(result, r)
 	}
 
-	return result, nil
+	return result, mapSQLErrors(rows.Err())
 }
 
 func (r *repository) ListContainersByPage(ctx context.Context, namespace string, offset, limit uint64) (uint64, []models.Container, error) {
@@ -241,7 +241,7 @@ func (r *repository) ListContainersByPage(ctx context.Context, namespace string,
 		result = append(result, r)
 	}
 
-	return containersTotal, result, nil
+	return containersTotal, result, mapSQLErrors(rows.Err())
 }
 
 func (r *repository) DeleteContainer(ctx context.Context, namespace, name string) error {

@@ -85,7 +85,7 @@ func (r *repository) ListNamespaces(ctx context.Context) ([]string, error) {
 		result = append(result, r)
 	}
 
-	return result, nil
+	return result, mapSQLErrors(rows.Err())
 }
 
 func (r *repository) DeleteNamespace(ctx context.Context, name string) error {

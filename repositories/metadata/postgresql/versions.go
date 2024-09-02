@@ -227,7 +227,7 @@ func (r *repository) listVersionsByContainer(ctx context.Context, namespace, con
 		result = append(result, r)
 	}
 
-	return versionsTotal, result, nil
+	return versionsTotal, result, mapSQLErrors(rows.Err())
 }
 
 func (r *repository) MarkVersionPublished(ctx context.Context, namespace, container, version string) error {
