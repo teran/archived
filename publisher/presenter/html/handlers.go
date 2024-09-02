@@ -10,6 +10,7 @@ import (
 
 	sprig "github.com/Masterminds/sprig/v3"
 	echo "github.com/labstack/echo/v4"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/teran/archived/models"
@@ -78,7 +79,7 @@ func (h *handlers) ContainerIndex(c echo.Context) error {
 
 	pagesCount, containers, err := h.svc.ListContainersByPage(c.Request().Context(), namespace, page)
 	if err != nil {
-		if err == service.ErrNotFound {
+		if errors.Is(err, service.ErrNotFound) {
 			return c.Render(http.StatusNotFound, notFoundTemplateFilename, nil)
 		}
 		return err
@@ -119,7 +120,7 @@ func (h *handlers) VersionIndex(c echo.Context) error {
 
 	pagesCount, versions, err := h.svc.ListPublishedVersionsByPage(c.Request().Context(), namespace, container, page)
 	if err != nil {
-		if err == service.ErrNotFound {
+		if errors.Is(err, service.ErrNotFound) {
 			return c.Render(http.StatusNotFound, notFoundTemplateFilename, nil)
 		}
 		return err
@@ -163,7 +164,7 @@ func (h *handlers) ObjectIndex(c echo.Context) error {
 
 	pagesCount, objects, err := h.svc.ListObjectsByPage(c.Request().Context(), namespace, container, version, page)
 	if err != nil {
-		if err == service.ErrNotFound {
+		if errors.Is(err, service.ErrNotFound) {
 			return c.Render(http.StatusNotFound, notFoundTemplateFilename, nil)
 		}
 		return err
@@ -202,7 +203,7 @@ func (h *handlers) GetObject(c echo.Context) error {
 
 	link, err := h.svc.GetObjectURL(c.Request().Context(), namespace, container, version, key)
 	if err != nil {
-		if err == service.ErrNotFound {
+		if errors.Is(err, service.ErrNotFound) {
 			return c.Render(http.StatusNotFound, notFoundTemplateFilename, nil)
 		}
 		return err

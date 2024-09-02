@@ -7,6 +7,7 @@ linters:
     - decorder
     - dogsled
     - durationcheck
+    - err113
     - errname
     - godox
     - gofmt
