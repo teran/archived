@@ -30,3 +30,4 @@ linters:
     - reassign
     - staticcheck
     - testifylint
+    - unparam

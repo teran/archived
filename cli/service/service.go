@@ -351,7 +351,7 @@ func (s *service) createVersionFromYUMRepository(ctx context.Context, namespaceN
 					}
 				}
 
-				err := func(url, uploadURL string) error {
+				err := func(uploadURL string) error {
 					log.Tracef("Upload URL: `%s`", uploadURL)
 
 					fp, err := lb.Reader(ctx)
@@ -360,7 +360,7 @@ func (s *service) createVersionFromYUMRepository(ctx context.Context, namespaceN
 					}
 
 					return uploadBlob(ctx, uploadURL, fp, size)
-				}(url, uploadURL)
+				}(uploadURL)
 				if err != nil {
 					return err
 				}
