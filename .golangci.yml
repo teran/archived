@@ -21,6 +21,7 @@ linters:
     - misspell
     - nakedret
     - nilnil
+    - noctx
     - protogetter
     - staticcheck
     - testifylint
