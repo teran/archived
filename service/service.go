@@ -262,7 +262,7 @@ func (s *service) EnsureBLOBPresenceOrGetUploadURL(ctx context.Context, checksum
 		return "", nil
 	}
 
-	if err == metadata.ErrNotFound {
+	if errors.Is(err, metadata.ErrNotFound) {
 		url, err := s.blobRepo.PutBlobURL(ctx, checksum)
 		if err != nil {
 			return "", err

@@ -51,7 +51,7 @@ func migrateUpWithMigrationsPath(dsn, migrationsPath string) error {
 		return err
 	}
 
-	if err = m.Up(); err != nil && err != migrate.ErrNoChange {
+	if err = m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		return errors.Wrap(err, "error migrating database")
 	}
 
@@ -68,7 +68,7 @@ func migrateDownWithMigrationsPath(dsn, migrationsPath string) error {
 		return err
 	}
 
-	if err = m.Down(); err != nil && err != migrate.ErrNoChange {
+	if err = m.Down(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		return errors.Wrap(err, "error migrating database")
 	}
 

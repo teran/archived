@@ -8,6 +8,7 @@ import (
 	"time"
 
 	memcacheCli "github.com/bradfitz/gomemcache/memcache"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
 	emodels "github.com/teran/archived/exporter/models"
@@ -53,7 +54,7 @@ func (m *memcache) ListNamespaces(ctx context.Context) ([]string, error) {
 
 	item, err := m.cli.Get(cacheKey)
 	if err != nil {
-		if err == memcacheCli.ErrCacheMiss {
+		if errors.Is(err, memcacheCli.ErrCacheMiss) {
 			log.WithFields(log.Fields{
 				"key": cacheKey,
 			}).Tracef("cache miss")
@@ -106,7 +107,7 @@ func (m *memcache) ListContainers(ctx context.Context, namespace string) ([]mode
 
 	item, err := m.cli.Get(cacheKey)
 	if err != nil {
-		if err == memcacheCli.ErrCacheMiss {
+		if errors.Is(err, memcacheCli.ErrCacheMiss) {
 			log.WithFields(log.Fields{
 				"key": cacheKey,
 			}).Tracef("cache miss")
@@ -154,7 +155,7 @@ func (m *memcache) ListContainersByPage(ctx context.Context, namespace string, o
 
 	item, err := m.cli.Get(cacheKey)
 	if err != nil {
-		if err == memcacheCli.ErrCacheMiss {
+		if errors.Is(err, memcacheCli.ErrCacheMiss) {
 			log.WithFields(log.Fields{
 				"key": cacheKey,
 			}).Tracef("cache miss")
@@ -204,7 +205,7 @@ func (m *memcache) GetLatestPublishedVersionByContainer(ctx context.Context, nam
 
 	item, err := m.cli.Get(cacheKey)
 	if err != nil {
-		if err == memcacheCli.ErrCacheMiss {
+		if errors.Is(err, memcacheCli.ErrCacheMiss) {
 			log.WithFields(log.Fields{
 				"key": cacheKey,
 			}).Tracef("cache miss")
@@ -246,7 +247,7 @@ func (m *memcache) ListAllVersionsByContainer(ctx context.Context, namespace, co
 
 	item, err := m.cli.Get(cacheKey)
 	if err != nil {
-		if err == memcacheCli.ErrCacheMiss {
+		if errors.Is(err, memcacheCli.ErrCacheMiss) {
 			log.WithFields(log.Fields{
 				"key": cacheKey,
 			}).Tracef("cache miss")
@@ -288,7 +289,7 @@ func (m *memcache) ListPublishedVersionsByContainer(ctx context.Context, namespa
 
 	item, err := m.cli.Get(cacheKey)
 	if err != nil {
-		if err == memcacheCli.ErrCacheMiss {
+		if errors.Is(err, memcacheCli.ErrCacheMiss) {
 			log.WithFields(log.Fields{
 				"key": cacheKey,
 			}).Tracef("cache miss")
@@ -337,7 +338,7 @@ func (m *memcache) ListPublishedVersionsByContainerAndPage(ctx context.Context, 
 
 	item, err := m.cli.Get(cacheKey)
 	if err != nil {
-		if err == memcacheCli.ErrCacheMiss {
+		if errors.Is(err, memcacheCli.ErrCacheMiss) {
 			log.WithFields(log.Fields{
 				"key": cacheKey,
 			}).Tracef("cache miss")
@@ -403,7 +404,7 @@ func (m *memcache) ListObjects(ctx context.Context, namespace, container, versio
 
 	item, err := m.cli.Get(cacheKey)
 	if err != nil {
-		if err == memcacheCli.ErrCacheMiss {
+		if errors.Is(err, memcacheCli.ErrCacheMiss) {
 			log.WithFields(log.Fields{
 				"key": cacheKey,
 			}).Tracef("cache miss")
@@ -459,7 +460,7 @@ func (m *memcache) GetBlobKeyByObject(ctx context.Context, namespace, container,
 
 	item, err := m.cli.Get(cacheKey)
 	if err != nil {
-		if err == memcacheCli.ErrCacheMiss {
+		if errors.Is(err, memcacheCli.ErrCacheMiss) {
 			log.WithFields(log.Fields{
 				"key": cacheKey,
 			}).Tracef("cache miss")

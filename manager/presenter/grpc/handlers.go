@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 
+	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -186,7 +187,7 @@ func (h *handlers) CreateObject(ctx context.Context, in *v1.CreateObjectRequest)
 func (h *handlers) ListObjects(ctx context.Context, in *v1.ListObjectsRequest) (*v1.ListObjectsResponse, error) {
 	objects, err := h.svc.ListObjects(ctx, in.GetNamespace(), in.GetContainer(), in.GetVersion())
 	if err != nil {
-		if err == service.ErrNotFound {
+		if errors.Is(err, service.ErrNotFound) {
 			return nil, status.Error(codes.NotFound, err.Error())
 		}
 		return nil, mapServiceError(err)
@@ -200,7 +201,7 @@ func (h *handlers) ListObjects(ctx context.Context, in *v1.ListObjectsRequest) (
 func (h *handlers) GetObjectURL(ctx context.Context, in *v1.GetObjectURLRequest) (*v1.GetObjectURLResponse, error) {
 	url, err := h.svc.GetObjectURL(ctx, in.GetNamespace(), in.GetContainer(), in.GetVersion(), in.GetKey())
 	if err != nil {
-		if err == service.ErrNotFound {
+		if errors.Is(err, service.ErrNotFound) {
 			return nil, status.Error(codes.NotFound, err.Error())
 		}
 		return nil, mapServiceError(err)
