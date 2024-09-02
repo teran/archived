@@ -15,6 +15,7 @@ linters:
     - godox
     - gofmt
     - goimports
+    - gosmopolitan
     - govet
     - grouper
     - ineffassign
@@ -22,7 +23,9 @@ linters:
     - nakedret
     - nilnil
     - noctx
+    - perfsprint
     - promlinter
     - protogetter
+    - reassign
     - staticcheck
     - testifylint
