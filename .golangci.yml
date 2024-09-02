@@ -11,6 +11,7 @@ linters:
     - err113
     - errcheck
     - errname
+    - goconst
     - gocritic
     - godox
     - gofmt
