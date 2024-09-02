@@ -5,6 +5,7 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
+	log "github.com/sirupsen/logrus"
 	ptr "github.com/teran/go-ptr"
 
 	"github.com/teran/archived/models"
@@ -18,7 +19,14 @@ func (r *repository) CreateVersion(ctx context.Context, namespace, container str
 	if err != nil {
 		return "", mapSQLErrors(err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		err := tx.Rollback()
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Error("error rolling back")
+		}
+	}()
 
 	row, err := selectQueryRow(ctx, tx, psql.
 		Select("id").
@@ -227,7 +235,14 @@ func (r *repository) MarkVersionPublished(ctx context.Context, namespace, contai
 	if err != nil {
 		return mapSQLErrors(err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		err := tx.Rollback()
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Error("error rolling back")
+		}
+	}()
 
 	row, err := selectQueryRow(ctx, tx, psql.
 		Select("id").
@@ -281,7 +296,14 @@ func (r *repository) DeleteVersion(ctx context.Context, namespace, container, ve
 	if err != nil {
 		return mapSQLErrors(err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		err := tx.Rollback()
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Error("error rolling back")
+		}
+	}()
 
 	row, err := selectQueryRow(ctx, tx, psql.
 		Select("id").
