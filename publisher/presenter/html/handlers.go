@@ -246,7 +246,6 @@ func (h *handlers) ErrorHandler(err error, c echo.Context) {
 	v, ok := err.(*echo.HTTPError)
 	if ok {
 		code = v.Code
-
 		if v.Code == http.StatusNotFound {
 			code = http.StatusNotFound
 			templateFilename = notFoundTemplateFilename
