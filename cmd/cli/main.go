@@ -170,10 +170,15 @@ func main() {
 		})
 	}
 
+	log.WithFields(log.Fields{
+		"version":         appVersion,
+		"build_timestamp": buildTimestamp,
+	}).Debug("Initializing archived-cli ...")
+
 	log.Debugf("Initializing gRPC client ...")
 
 	grpcOpts := []grpc.DialOption{
-		grpc.WithUserAgent("archived-cli/0.1"),
+		grpc.WithUserAgent("archived-cli/" + appVersion),
 	}
 	if *insecureFlag {
 		log.Warn("insecure flag is specified which means no TLS is in use!")
@@ -220,9 +225,9 @@ func main() {
 	r := router.New(ctx)
 
 	r.Register(namespaceCreate.FullCommand(), cliSvc.CreateNamespace(*namespaceCreateName))
-	r.Register(namespaceRename.FullCommand(), cliSvc.RenameNamespace(*containerRenameOldName, *containerRenameNewName))
+	r.Register(namespaceRename.FullCommand(), cliSvc.RenameNamespace(*namespaceRenameOldName, *namespaceRenameNewName))
 	r.Register(namespaceList.FullCommand(), cliSvc.ListNamespaces())
-	r.Register(namespaceDelete.FullCommand(), cliSvc.DeleteNamespace(*containerDeleteName))
+	r.Register(namespaceDelete.FullCommand(), cliSvc.DeleteNamespace(*namespaceDeleteName))
 
 	r.Register(containerCreate.FullCommand(), cliSvc.CreateContainer(*namespaceName, *containerCreateName))
 	r.Register(containerMove.FullCommand(), cliSvc.MoveContainer(*namespaceName, *containerMoveName, *containerMoveNamespace))
@@ -241,6 +246,7 @@ func main() {
 	r.Register(objectCreate.FullCommand(), cliSvc.CreateObject(*namespaceName, *objectCreateContainer, *objectCreateVersion, *objectCreatePath))
 	r.Register(objectList.FullCommand(), cliSvc.ListObjects(*namespaceName, *objectListContainer, *objectListVersion))
 	r.Register(objectURL.FullCommand(), cliSvc.GetObjectURL(*namespaceName, *objectURLContainer, *objectURLVersion, *objectURLKey))
+	r.Register(deleteObject.FullCommand(), cliSvc.DeleteObject(*namespaceName, *deleteObjectContainer, *deleteObjectVersion, *deleteObjectKey))
 
 	r.Register(statCacheShowPath.FullCommand(), func(ctx context.Context) error {
 		fmt.Println(*cacheDir)

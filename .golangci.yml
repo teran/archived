@@ -33,3 +33,4 @@ linters:
     - staticcheck
     - testifylint
     - unparam
+    - unused
