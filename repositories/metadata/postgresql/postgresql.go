@@ -7,6 +7,7 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/lib/pq"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/teran/archived/repositories/metadata"
@@ -33,14 +34,12 @@ func newWithTimeProvider(db *sql.DB, tp func() time.Time) metadata.Repository {
 }
 
 func mapSQLErrors(err error) error {
-	switch err {
-	case sql.ErrNoRows:
+	if errors.Is(err, sql.ErrNoRows) {
 		return metadata.ErrNotFound
 	}
 
 	if err, ok := err.(*pq.Error); ok {
-		switch err.Code {
-		case "23505":
+		if err.Code == "23505" {
 			return metadata.ErrConflict
 		}
 	}

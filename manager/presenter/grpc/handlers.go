@@ -226,8 +226,7 @@ func (h *handlers) Register(gs *grpc.Server) {
 }
 
 func mapServiceError(err error) error {
-	switch err {
-	case service.ErrNotFound:
+	if errors.Is(err, service.ErrNotFound) {
 		return status.Error(codes.NotFound, err.Error())
 	}
 	return status.Error(codes.Internal, err.Error())
