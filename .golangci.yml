@@ -9,6 +9,7 @@ linters:
     - dogsled
     - durationcheck
     - err113
+    - errcheck
     - errname
     - gocritic
     - godox

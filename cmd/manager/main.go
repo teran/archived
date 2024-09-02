@@ -152,7 +152,9 @@ func main() {
 
 		http.HandleFunc("/healthz/startup", func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("ok\n"))
+			if _, err := w.Write([]byte("ok\n")); err != nil {
+				panic(err)
+			}
 		})
 
 		http.HandleFunc("/healthz/readiness", func(w http.ResponseWriter, r *http.Request) {
@@ -160,10 +162,14 @@ func main() {
 				log.Warnf("db.Ping() error on readiness probe: %s", err)
 
 				w.WriteHeader(http.StatusServiceUnavailable)
-				w.Write([]byte("failed\n"))
+				if _, err := w.Write([]byte("failed\n")); err != nil {
+					panic(err)
+				}
 			} else {
 				w.WriteHeader(http.StatusOK)
-				w.Write([]byte("ok\n"))
+				if _, err := w.Write([]byte("ok\n")); err != nil {
+					panic(err)
+				}
 			}
 		})
 
@@ -172,10 +178,14 @@ func main() {
 				log.Warnf("db.Ping() error on liveness probe: %s", err)
 
 				w.WriteHeader(http.StatusServiceUnavailable)
-				w.Write([]byte("failed\n"))
+				if _, err := w.Write([]byte("failed\n")); err != nil {
+					panic(err)
+				}
 			} else {
 				w.WriteHeader(http.StatusOK)
-				w.Write([]byte("ok\n"))
+				if _, err := w.Write([]byte("ok\n")); err != nil {
+					panic(err)
+				}
 			}
 		})
 

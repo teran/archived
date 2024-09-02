@@ -4,6 +4,7 @@ import (
 	"context"
 
 	sq "github.com/Masterminds/squirrel"
+	log "github.com/sirupsen/logrus"
 )
 
 func (r *repository) CreateNamespace(ctx context.Context, name string) error {
@@ -25,7 +26,14 @@ func (r *repository) RenameNamespace(ctx context.Context, oldName, newName strin
 	if err != nil {
 		return mapSQLErrors(err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		err := tx.Rollback()
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Error("error rolling back")
+		}
+	}()
 
 	row, err := selectQueryRow(ctx, tx, psql.
 		Select("id").

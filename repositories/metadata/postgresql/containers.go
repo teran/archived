@@ -5,6 +5,7 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/teran/archived/models"
 )
@@ -14,7 +15,14 @@ func (r *repository) CreateContainer(ctx context.Context, namespace, name string
 	if err != nil {
 		return mapSQLErrors(err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		err := tx.Rollback()
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Error("error rolling back")
+		}
+	}()
 
 	row, err := selectQueryRow(ctx, tx, psql.
 		Select("id").
@@ -56,7 +64,14 @@ func (r *repository) RenameContainer(ctx context.Context, namespace, oldName, ne
 	if err != nil {
 		return mapSQLErrors(err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		err := tx.Rollback()
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Error("error rolling back")
+		}
+	}()
 
 	row, err := selectQueryRow(ctx, tx, psql.
 		Select("id").
@@ -234,7 +249,14 @@ func (r *repository) DeleteContainer(ctx context.Context, namespace, name string
 	if err != nil {
 		return mapSQLErrors(err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		err := tx.Rollback()
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Error("error rolling back")
+		}
+	}()
 
 	row, err := selectQueryRow(ctx, tx, psql.
 		Select("id").
