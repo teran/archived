@@ -138,7 +138,6 @@ func (m *memcache) ListContainers(ctx context.Context, namespace string) ([]mode
 	return retrievedValue, nil
 }
 
-
 func (m *memcache) ListContainersByPage(ctx context.Context, namespace string, offset, limit uint64) (uint64, []models.Container, error) {
 	type proxy struct {
 		Total      uint64
