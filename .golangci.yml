@@ -33,5 +33,6 @@ linters:
     - sqlclosecheck
     - staticcheck
     - testifylint
+    - unconvert
     - unparam
     - unused

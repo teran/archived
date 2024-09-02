@@ -257,7 +257,7 @@ func (s *service) GetObjectURL(ctx context.Context, namespace, container, versio
 }
 
 func (s *service) EnsureBLOBPresenceOrGetUploadURL(ctx context.Context, checksum string, size uint64) (string, error) {
-	err := s.mdRepo.EnsureBlobKey(ctx, checksum, uint64(size))
+	err := s.mdRepo.EnsureBlobKey(ctx, checksum, size)
 	if err == nil {
 		return "", nil
 	}
@@ -267,7 +267,7 @@ func (s *service) EnsureBLOBPresenceOrGetUploadURL(ctx context.Context, checksum
 		if err != nil {
 			return "", err
 		}
-		return url, s.mdRepo.CreateBLOB(ctx, checksum, uint64(size), "application/octet-stream")
+		return url, s.mdRepo.CreateBLOB(ctx, checksum, size, "application/octet-stream")
 	}
 
 	return "", err
