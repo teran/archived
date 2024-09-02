@@ -1,6 +1,12 @@
 linters:
   disable-all: true
   enable:
+    - bidichk
+    - contextcheck
+    - copyloopvar
+    - decorder
+    - dogsled
+    - durationcheck
     - errname
     - godox
     - gofmt
