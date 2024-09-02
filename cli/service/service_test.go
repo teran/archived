@@ -16,7 +16,11 @@ import (
 	cacheMock "github.com/teran/archived/cli/service/stat_cache/mock"
 )
 
-const defaultNamespace = "default"
+const (
+	defaultNamespace = "default"
+
+	mimeTypeMultipartFormData = "multipart/form-data"
+)
 
 func init() {
 	log.SetLevel(log.TraceLevel)
@@ -146,7 +150,7 @@ func (s *serviceTestSuite) TestCreateVersionFromYumRepoAndPublish() {
 			return c.NoContent(http.StatusLengthRequired)
 		}
 
-		if c.Request().Header.Get("Content-Type") != "multipart/form-data" {
+		if c.Request().Header.Get("Content-Type") != mimeTypeMultipartFormData {
 			return c.NoContent(http.StatusUnsupportedMediaType)
 		}
 		return nil
@@ -451,7 +455,7 @@ func (s *serviceTestSuite) TestCreateVersionFromYumRepoAndPublishSHA1() {
 			return c.NoContent(http.StatusLengthRequired)
 		}
 
-		if c.Request().Header.Get("Content-Type") != "multipart/form-data" {
+		if c.Request().Header.Get("Content-Type") != mimeTypeMultipartFormData {
 			return c.NoContent(http.StatusUnsupportedMediaType)
 		}
 		return nil
@@ -521,7 +525,7 @@ func (s *serviceTestSuite) TestCreateVersionFromYumRepoAndPublishGPGNoSignature(
 			return c.NoContent(http.StatusLengthRequired)
 		}
 
-		if c.Request().Header.Get("Content-Type") != "multipart/form-data" {
+		if c.Request().Header.Get("Content-Type") != mimeTypeMultipartFormData {
 			return c.NoContent(http.StatusUnsupportedMediaType)
 		}
 		return nil
@@ -825,7 +829,7 @@ func (s *serviceTestSuite) TestCreateVersionFromYumRepoAndPublishGPGSigned() {
 			return c.NoContent(http.StatusLengthRequired)
 		}
 
-		if c.Request().Header.Get("Content-Type") != "multipart/form-data" {
+		if c.Request().Header.Get("Content-Type") != mimeTypeMultipartFormData {
 			return c.NoContent(http.StatusUnsupportedMediaType)
 		}
 		return nil
@@ -966,7 +970,7 @@ func (s *serviceTestSuite) TestCreateObjectWithUploadURL() {
 		s.Equal("1234\n", string(data))
 
 		s.Equal("/test-url", r.RequestURI)
-		s.Equal("multipart/form-data", r.Header.Get("Content-Type"))
+		s.Equal(mimeTypeMultipartFormData, r.Header.Get("Content-Type"))
 	}))
 	defer srv.Close()
 
