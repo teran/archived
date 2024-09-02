@@ -2,6 +2,7 @@ linters:
   disable-all: true
   enable:
     - bidichk
+    - bodyclose
     - contextcheck
     - copyloopvar
     - decorder

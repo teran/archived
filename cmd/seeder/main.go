@@ -148,6 +148,7 @@ func main() {
 					if err != nil {
 						panic(err)
 					}
+					defer uploadResp.Body.Close()
 
 					if uploadResp.StatusCode > 299 {
 						panic(errors.Errorf("unexpected status code on upload: %s", uploadResp.Status))
