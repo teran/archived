@@ -14,14 +14,30 @@ jobs:
       - uses: bufbuild/buf-setup-action@v1
       - run: buf lint .
 
-  hadolint-publisher:
+  hadolint-cli:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: Dockerfile.publisher
+          dockerfile: Dockerfile.cli
   
+  hadolint-exporter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile.exporter
+
+  hadolint-gc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile.gc
+
   hadolint-manager:
     runs-on: ubuntu-latest
     steps:
@@ -38,6 +54,22 @@ jobs:
         with:
           dockerfile: Dockerfile.migrator
 
+  hadolint-publisher:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile.publisher
+
+  hadolint-seeder:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile.seeder
+
   markdownlint:
     runs-on: ubuntu-latest
     steps:
@@ -46,6 +78,10 @@ jobs:
 
   golangci:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      checks: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -101,10 +137,15 @@ jobs:
       packages: write
     needs:
       - buf
-      - hadolint-publisher
+      - hadolint-cli
+      - hadolint-exporter
+      - hadolint-gc
       - hadolint-manager
       - hadolint-migrator
+      - hadolint-publisher
+      - hadolint-seeder
       - markdownlint
+      - golangci
       - unittests
     steps:
       - name: Define build timestamp
