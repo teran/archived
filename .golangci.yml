@@ -21,4 +21,5 @@ linters:
     - misspell
     - nakedret
     - nilnil
+    - protogetter
 
