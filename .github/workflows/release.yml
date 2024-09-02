@@ -78,6 +78,10 @@ jobs:
 
   golangci:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      checks: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -133,10 +137,15 @@ jobs:
       packages: write
     needs:
       - buf
-      - hadolint-publisher
+      - hadolint-cli
+      - hadolint-exporter
+      - hadolint-gc
       - hadolint-manager
       - hadolint-migrator
+      - hadolint-publisher
+      - hadolint-seeder
       - markdownlint
+      - golangci
       - unittests
     steps:
       - name: Define build timestamp
