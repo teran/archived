@@ -1,5 +1,14 @@
 linters:
   disable-all: true
   enable:
+    - errname
+    - godox
     - gofmt
+    - goimports
+    - govet
+    - grouper
     - ineffassign
+    - misspell
+    - nakedret
+    - nilnil
+
