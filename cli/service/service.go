@@ -627,6 +627,7 @@ func uploadBlob(ctx context.Context, url string, rd io.Reader, size uint64) erro
 	if err != nil {
 		return errors.Wrap(err, "error uploading file")
 	}
+	defer uploadResp.Body.Close()
 
 	log.Debugf("upload HTTP response code: %s", uploadResp.Status)
 

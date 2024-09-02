@@ -56,6 +56,7 @@ func (s *handlersTestSuite) TestGetObject() {
 
 	resp, err := client.Do(req)
 	s.Require().NoError(err)
+	defer resp.Body.Close()
 
 	v := resp.Header.Get("Location")
 	s.Require().Equal("https://example.com/some-addr", v)
@@ -77,6 +78,7 @@ func (s *handlersTestSuite) TestGetObjectSchemeMismatchXForwardedScheme() {
 
 	resp, err := client.Do(req)
 	s.Require().NoError(err)
+	defer resp.Body.Close()
 
 	v := resp.Header.Get("Location")
 	s.Require().Equal("http://example.com/some-addr", v)
@@ -98,6 +100,7 @@ func (s *handlersTestSuite) TestGetObjectSchemeMismatchXScheme() {
 
 	resp, err := client.Do(req)
 	s.Require().NoError(err)
+	defer resp.Body.Close()
 
 	v := resp.Header.Get("Location")
 	s.Require().Equal("http://example.com/some-addr", v)
@@ -142,6 +145,7 @@ func (s *handlersTestSuite) TestEscapedPath() {
 
 	resp, err := client.Do(req)
 	s.Require().NoError(err)
+	defer resp.Body.Close()
 
 	v := resp.Header.Get("Location")
 	s.Require().Equal("https://example.com/some-addr", v)
@@ -186,6 +190,7 @@ func (s *handlersTestSuite) compareHTMLResponse(url, responseSamplePath string) 
 
 	resp, err := http.DefaultClient.Do(req)
 	s.Require().NoError(err)
+	defer resp.Body.Close()
 
 	sampleData, err := os.ReadFile(responseSamplePath)
 	s.Require().NoError(err)
