@@ -9,6 +9,7 @@ linters:
     - durationcheck
     - err113
     - errname
+    - gocritic
     - godox
     - gofmt
     - goimports

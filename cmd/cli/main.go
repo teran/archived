@@ -150,19 +150,20 @@ func main() {
 	ctx := context.Background()
 	appCmd := kingpin.MustParse(app.Parse(os.Args[1:]))
 
-	if *trace {
+	switch {
+	case *trace:
 		log.SetLevel(log.TraceLevel)
 		log.SetFormatter(&log.TextFormatter{
 			FullTimestamp: true,
 		})
 		log.Trace("Trace mode is enabled. Beware of verbosity!")
-	} else if *debug {
+	case *debug:
 		log.SetLevel(log.DebugLevel)
 		log.SetFormatter(&log.TextFormatter{
 			FullTimestamp: true,
 		})
 		log.Debug("Debug mode is enabled.")
-	} else {
+	default:
 		log.SetLevel(log.InfoLevel)
 		log.SetFormatter(&log.TextFormatter{
 			FullTimestamp: true,
