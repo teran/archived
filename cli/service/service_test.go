@@ -960,13 +960,13 @@ func (s *serviceTestSuite) TestCreateObjectWithUploadURL() {
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		data, err := io.ReadAll(r.Body)
-		s.Require().NoError(err)
+		s.NoError(err)
 		defer r.Body.Close()
 
-		s.Require().Equal("1234\n", string(data))
+		s.Equal("1234\n", string(data))
 
-		s.Require().Equal("/test-url", r.RequestURI)
-		s.Require().Equal("multipart/form-data", r.Header.Get("Content-Type"))
+		s.Equal("/test-url", r.RequestURI)
+		s.Equal("multipart/form-data", r.Header.Get("Content-Type"))
 	}))
 	defer srv.Close()
 
