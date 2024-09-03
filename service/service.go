@@ -279,8 +279,8 @@ func (s *service) DeleteObject(ctx context.Context, namespace, container, versio
 }
 
 func mapMetadataErrors(err error) error {
-	switch err {
-	case metadata.ErrNotFound:
+	switch {
+	case errors.Is(err, metadata.ErrNotFound):
 		return ErrNotFound
 	default:
 		return err

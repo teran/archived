@@ -243,7 +243,7 @@ func (h *handlers) ErrorHandler(err error, c echo.Context) {
 	code := 500
 	templateFilename := serverErrorTemplateFilename
 
-	v, ok := err.(*echo.HTTPError)
+	v, ok := err.(*echo.HTTPError) // nolint:errorlint
 	if ok {
 		code = v.Code
 		if v.Code == http.StatusNotFound {

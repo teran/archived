@@ -38,7 +38,7 @@ func mapSQLErrors(err error) error {
 		return metadata.ErrNotFound
 	}
 
-	if err, ok := err.(*pq.Error); ok {
+	if err, ok := err.(*pq.Error); ok { // nolint:errorlint
 		if err.Code == "23505" {
 			return metadata.ErrConflict
 		}
