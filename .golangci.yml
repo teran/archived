@@ -19,6 +19,7 @@ linters:
     - gocritic
     - godox
     - gofmt
+    - gofumpt
     - goimports
     - gosmopolitan
     - govet
