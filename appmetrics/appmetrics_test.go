@@ -161,7 +161,7 @@ func TestMetrics(t *testing.T) {
 	srv := httptest.NewServer(e)
 	defer srv.Close()
 
-	req, err := http.NewRequestWithContext(context.TODO(), http.MethodGet, srv.URL+"/metrics", nil)
+	req, err := http.NewRequestWithContext(context.TODO(), http.MethodGet, srv.URL+metricsURL, nil)
 	r.NoError(err)
 
 	resp, err := http.DefaultClient.Do(req)
