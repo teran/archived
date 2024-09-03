@@ -10,6 +10,7 @@ linters:
     - durationcheck
     - err113
     - errcheck
+    - errchkjson
     - errname
     - goconst
     - gocritic
