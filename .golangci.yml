@@ -36,3 +36,4 @@ linters:
     - unconvert
     - unparam
     - unused
+    - usestdlibvars

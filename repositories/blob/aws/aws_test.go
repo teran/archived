@@ -135,8 +135,8 @@ func uploadToURL(ctx context.Context, url string, payload []byte) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
-		return errors.Errorf("status code 200 != %d", resp.StatusCode)
+	if resp.StatusCode != http.StatusOK {
+		return errors.Errorf("status code %d != %d", http.StatusOK, resp.StatusCode)
 	}
 	return nil
 }
