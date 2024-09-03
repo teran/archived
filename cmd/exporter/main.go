@@ -6,11 +6,14 @@ import (
 	"net/http"
 
 	"github.com/kelseyhightower/envconfig"
+	"github.com/labstack/echo-contrib/echoprometheus"
+	echo "github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/teran/archived/appmetrics"
 	"github.com/teran/archived/exporter/service"
 	"github.com/teran/archived/repositories/metadata/postgresql"
 )
@@ -62,49 +65,29 @@ func main() {
 		return svc.Run(ctx)
 	})
 
+	me := echo.New()
+	me.Use(middleware.Logger())
+	me.Use(echoprometheus.NewMiddleware("exporter_metrics"))
+	me.Use(middleware.Recover())
+
+	checkFn := func() error {
+		if err := db.Ping(); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	metrics := appmetrics.New(checkFn, checkFn, checkFn)
+	metrics.Register(me)
+
 	g.Go(func() error {
-		http.Handle("/metrics", promhttp.Handler())
+		srv := http.Server{
+			Addr:    cfg.Addr,
+			Handler: me,
+		}
 
-		http.HandleFunc("/healthz/startup", func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusOK)
-			if _, err := w.Write([]byte("ok\n")); err != nil {
-				panic(err)
-			}
-		})
-
-		http.HandleFunc("/healthz/readiness", func(w http.ResponseWriter, r *http.Request) {
-			if err := db.Ping(); err != nil {
-				log.Warnf("db.Ping() error on readiness probe: %s", err)
-
-				w.WriteHeader(http.StatusServiceUnavailable)
-				if _, err := w.Write([]byte("failed\n")); err != nil {
-					panic(err)
-				}
-			} else {
-				w.WriteHeader(http.StatusOK)
-				if _, err := w.Write([]byte("ok\n")); err != nil {
-					panic(err)
-				}
-			}
-		})
-
-		http.HandleFunc("/healthz/liveness", func(w http.ResponseWriter, r *http.Request) {
-			if err := db.Ping(); err != nil {
-				log.Warnf("db.Ping() error on liveness probe: %s", err)
-
-				w.WriteHeader(http.StatusServiceUnavailable)
-				if _, err := w.Write([]byte("failed\n")); err != nil {
-					panic(err)
-				}
-			} else {
-				w.WriteHeader(http.StatusOK)
-				if _, err := w.Write([]byte("ok\n")); err != nil {
-					panic(err)
-				}
-			}
-		})
-
-		return http.ListenAndServe(cfg.Addr, nil)
+		return srv.ListenAndServe()
 	})
 
 	if err := g.Wait(); err != nil {
