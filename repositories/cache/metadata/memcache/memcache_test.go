@@ -24,6 +24,18 @@ func init() {
 }
 
 // Cached methods ...
+func (s *memcacheTestSuite) TestListNamespaces() {
+	s.repoMock.On("ListNamespaces").Return([]string{"namespace1", "namespace2"}, nil).Once()
+
+	containers, err := s.cache.ListNamespaces(s.ctx)
+	s.Require().NoError(err)
+	s.Require().Equal([]string{"namespace1", "namespace2"}, containers)
+
+	containers, err = s.cache.ListNamespaces(s.ctx)
+	s.Require().NoError(err)
+	s.Require().Equal([]string{"namespace1", "namespace2"}, containers)
+}
+
 func (s *memcacheTestSuite) TestListContainers() {
 	s.repoMock.On("ListContainers", defaultNamespace).Return([]models.Container{{Name: "container1"}}, nil).Once()
 
@@ -183,6 +195,36 @@ func (s *memcacheTestSuite) TestGetBlobKeyByObjectError() {
 }
 
 // Non-cached methods ...
+func (s *memcacheTestSuite) TestCreateNamespace() {
+	s.repoMock.On("CreateNamespace", "namespace1").Return(nil).Twice()
+
+	err := s.cache.CreateNamespace(s.ctx, "namespace1")
+	s.Require().NoError(err)
+
+	err = s.cache.CreateNamespace(s.ctx, "namespace1")
+	s.Require().NoError(err)
+}
+
+func (s *memcacheTestSuite) TestRenameNamespace() {
+	s.repoMock.On("RenameNamespace", "old-name", "new-name").Return(nil).Twice()
+
+	err := s.cache.RenameNamespace(s.ctx, "old-name", "new-name")
+	s.Require().NoError(err)
+
+	err = s.cache.RenameNamespace(s.ctx, "old-name", "new-name")
+	s.Require().NoError(err)
+}
+
+func (s *memcacheTestSuite) TestDeleteNamespace() {
+	s.repoMock.On("DeleteNamespace", "namespace1").Return(nil).Twice()
+
+	err := s.cache.DeleteNamespace(s.ctx, "namespace1")
+	s.Require().NoError(err)
+
+	err = s.cache.DeleteNamespace(s.ctx, "namespace1")
+	s.Require().NoError(err)
+}
+
 func (s *memcacheTestSuite) TestCreateContainer() {
 	s.repoMock.On("CreateContainer", defaultNamespace, "container1").Return(nil).Twice()
 
