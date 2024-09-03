@@ -16,10 +16,10 @@ import (
 	echo "github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/teran/archived/appmetrics"
 	htmlPresenter "github.com/teran/archived/publisher/presenter/html"
 	awsBlobRepo "github.com/teran/archived/repositories/blob/aws"
 	"github.com/teran/archived/repositories/cache/metadata/memcache"
@@ -136,71 +136,35 @@ func main() {
 		return srv.ListenAndServe()
 	})
 
+	me := echo.New()
+	me.Use(middleware.Logger())
+	me.Use(echoprometheus.NewMiddleware("publisher_metrics"))
+	me.Use(middleware.Recover())
+
+	checkFn := func() error {
+		if len(cfg.MemcacheServers) > 0 {
+			if err := cli.Ping(); err != nil {
+				return err
+			}
+		}
+
+		if err := db.Ping(); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	metrics := appmetrics.New(checkFn, checkFn, checkFn)
+	metrics.Register(me)
+
 	g.Go(func() error {
-		http.Handle("/metrics", promhttp.Handler())
+		srv := http.Server{
+			Addr:    cfg.MetricsAddr,
+			Handler: me,
+		}
 
-		http.HandleFunc("/healthz/startup", func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusOK)
-			if _, err := w.Write([]byte("ok\n")); err != nil {
-				panic(err)
-			}
-		})
-
-		http.HandleFunc("/healthz/readiness", func(w http.ResponseWriter, r *http.Request) {
-			if len(cfg.MemcacheServers) > 0 {
-				if err := cli.Ping(); err != nil {
-					log.Warnf("memcache.Ping() error on readiness probe: %s", err)
-
-					w.WriteHeader(http.StatusServiceUnavailable)
-					if _, err := w.Write([]byte("failed\n")); err != nil {
-						panic(err)
-					}
-					return
-				}
-			}
-			if err := db.Ping(); err != nil {
-				log.Warnf("db.Ping() error on readiness probe: %s", err)
-
-				w.WriteHeader(http.StatusServiceUnavailable)
-				if _, err := w.Write([]byte("failed\n")); err != nil {
-					panic(err)
-				}
-				return
-			}
-			w.WriteHeader(http.StatusOK)
-			if _, err := w.Write([]byte("ok\n")); err != nil {
-				panic(err)
-			}
-		})
-
-		http.HandleFunc("/healthz/liveness", func(w http.ResponseWriter, r *http.Request) {
-			if len(cfg.MemcacheServers) > 0 {
-				if err := cli.Ping(); err != nil {
-					log.Warnf("memcache.Ping() error on readiness probe: %s", err)
-
-					w.WriteHeader(http.StatusServiceUnavailable)
-					if _, err := w.Write([]byte("failed\n")); err != nil {
-						panic(err)
-					}
-					return
-				}
-			}
-			if err := db.Ping(); err != nil {
-				log.Warnf("db.Ping() error on readiness probe: %s", err)
-
-				w.WriteHeader(http.StatusServiceUnavailable)
-				if _, err := w.Write([]byte("failed\n")); err != nil {
-					panic(err)
-				}
-				return
-			}
-			w.WriteHeader(http.StatusOK)
-			if _, err := w.Write([]byte("ok\n")); err != nil {
-				panic(err)
-			}
-		})
-
-		return http.ListenAndServe(cfg.MetricsAddr, nil)
+		return srv.ListenAndServe()
 	})
 
 	if err := g.Wait(); err != nil {

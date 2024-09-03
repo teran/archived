@@ -17,9 +17,11 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/labstack/echo-contrib/echoprometheus"
+	echo "github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
@@ -27,6 +29,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/teran/archived/appmetrics"
 	grpcManagePresenter "github.com/teran/archived/manager/presenter/grpc"
 	awsBlobRepo "github.com/teran/archived/repositories/blob/aws"
 	"github.com/teran/archived/repositories/metadata/postgresql"
@@ -147,49 +150,29 @@ func main() {
 		return gs.Serve(listener)
 	})
 
+	me := echo.New()
+	me.Use(middleware.Logger())
+	me.Use(echoprometheus.NewMiddleware("manager_metrics"))
+	me.Use(middleware.Recover())
+
+	checkFn := func() error {
+		if err := db.Ping(); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	metrics := appmetrics.New(checkFn, checkFn, checkFn)
+	metrics.Register(me)
+
 	g.Go(func() error {
-		http.Handle("/metrics", promhttp.Handler())
+		srv := http.Server{
+			Addr:    cfg.MetricsAddr,
+			Handler: me,
+		}
 
-		http.HandleFunc("/healthz/startup", func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusOK)
-			if _, err := w.Write([]byte("ok\n")); err != nil {
-				panic(err)
-			}
-		})
-
-		http.HandleFunc("/healthz/readiness", func(w http.ResponseWriter, r *http.Request) {
-			if err := db.Ping(); err != nil {
-				log.Warnf("db.Ping() error on readiness probe: %s", err)
-
-				w.WriteHeader(http.StatusServiceUnavailable)
-				if _, err := w.Write([]byte("failed\n")); err != nil {
-					panic(err)
-				}
-			} else {
-				w.WriteHeader(http.StatusOK)
-				if _, err := w.Write([]byte("ok\n")); err != nil {
-					panic(err)
-				}
-			}
-		})
-
-		http.HandleFunc("/healthz/liveness", func(w http.ResponseWriter, r *http.Request) {
-			if err := db.Ping(); err != nil {
-				log.Warnf("db.Ping() error on liveness probe: %s", err)
-
-				w.WriteHeader(http.StatusServiceUnavailable)
-				if _, err := w.Write([]byte("failed\n")); err != nil {
-					panic(err)
-				}
-			} else {
-				w.WriteHeader(http.StatusOK)
-				if _, err := w.Write([]byte("ok\n")); err != nil {
-					panic(err)
-				}
-			}
-		})
-
-		return http.ListenAndServe(cfg.MetricsAddr, nil)
+		return srv.ListenAndServe()
 	})
 
 	if err := g.Wait(); err != nil {
