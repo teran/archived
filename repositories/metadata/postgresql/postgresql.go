@@ -38,7 +38,7 @@ func mapSQLErrors(err error) error {
 		return metadata.ErrNotFound
 	}
 
-	if err, ok := err.(*pq.Error); ok { // nolint:errorlint
+	if err, ok := err.(*pq.Error); ok { //nolint:errorlint
 		if err.Code == "23505" {
 			return metadata.ErrConflict
 		}
@@ -92,7 +92,7 @@ func selectQuery(ctx context.Context, db queryRunner, q sq.SelectBuilder) (*sql.
 	return db.QueryContext(ctx, sql, args...) //nolint:sqlclosecheck
 }
 
-func insertQuery(ctx context.Context, db execRunner, q sq.InsertBuilder) (sql.Result, error) { // nolint:unparam
+func insertQuery(ctx context.Context, db execRunner, q sq.InsertBuilder) (sql.Result, error) { //nolint:unparam
 	sql, args, err := q.ToSql()
 	if err != nil {
 		return nil, err
@@ -128,7 +128,7 @@ func insertQueryRow(ctx context.Context, db queryRunner, q sq.InsertBuilder) (sq
 	return db.QueryRowContext(ctx, sql, args...), nil
 }
 
-func updateQuery(ctx context.Context, db execRunner, q sq.UpdateBuilder) (sql.Result, error) { // nolint:unparam
+func updateQuery(ctx context.Context, db execRunner, q sq.UpdateBuilder) (sql.Result, error) { //nolint:unparam
 	sql, args, err := q.ToSql()
 	if err != nil {
 		return nil, err
@@ -146,7 +146,7 @@ func updateQuery(ctx context.Context, db execRunner, q sq.UpdateBuilder) (sql.Re
 	return db.ExecContext(ctx, sql, args...)
 }
 
-func deleteQuery(ctx context.Context, db execRunner, q sq.DeleteBuilder) (sql.Result, error) { // nolint:unparam
+func deleteQuery(ctx context.Context, db execRunner, q sq.DeleteBuilder) (sql.Result, error) { //nolint:unparam
 	sql, args, err := q.ToSql()
 	if err != nil {
 		return nil, err

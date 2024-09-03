@@ -28,6 +28,7 @@ linters:
     - nakedret
     - nilnil
     - noctx
+    - nolintlint
     - perfsprint
     - prealloc
     - promlinter
