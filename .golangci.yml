@@ -1,6 +1,8 @@
 linters:
   disable-all: true
   enable:
+    - asasalint
+    - asciicheck
     - bidichk
     - bodyclose
     - contextcheck
