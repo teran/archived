@@ -38,7 +38,6 @@ func (s *service) Run(ctx context.Context) error {
 	}
 
 	for _, namespace := range namespaces {
-
 		containers, err := s.cfg.MdRepo.ListContainers(ctx, namespace)
 		if err != nil {
 			return errors.Wrap(err, "error listing containers")
