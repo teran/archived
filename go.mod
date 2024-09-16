@@ -29,7 +29,7 @@ require (
 	github.com/teran/go-time v0.0.2
 	go.opentelemetry.io/otel/trace v1.29.0
 	golang.org/x/sync v0.8.0
-	google.golang.org/grpc v1.66.0
+	google.golang.org/grpc v1.66.2
 )
 
 require (
