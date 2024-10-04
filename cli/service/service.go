@@ -19,6 +19,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/teran/archived/cli/lazyblob"
+	"github.com/teran/archived/cli/service/source"
 	cache "github.com/teran/archived/cli/service/stat_cache"
 	"github.com/teran/archived/cli/yum"
 	v1proto "github.com/teran/archived/manager/presenter/grpc/proto/v1"
@@ -36,7 +37,7 @@ type Service interface {
 	ListContainers(namespaceName string) func(ctx context.Context) error
 	DeleteContainer(namespaceName, containerName string) func(ctx context.Context) error
 
-	CreateVersion(namespaceName, containerName string, shouldPublish bool, fromDir, fromYumRepo, rpmGPGKey, rpmGPGKeyChecksum *string) func(ctx context.Context) error
+	CreateVersion(namespaceName, containerName string, shouldPublish bool, src source.Source) func(ctx context.Context) error
 	DeleteVersion(namespaceName, containerName, versionID string) func(ctx context.Context) error
 	ListVersions(namespaceName, containerName string) func(ctx context.Context) error
 	PublishVersion(namespaceName, containerName, versionID string) func(ctx context.Context) error
@@ -191,7 +192,7 @@ func (s *service) DeleteContainer(namespaceName, containerName string) func(ctx 
 	}
 }
 
-func (s *service) CreateVersion(namespaceName, containerName string, shouldPublish bool, fromDir, fromYumRepo, rpmGPGKey, rpmGPGKeyChecksum *string) func(ctx context.Context) error {
+func (s *service) CreateVersion(namespaceName, containerName string, shouldPublish bool, src source.Source) func(ctx context.Context) error {
 	return func(ctx context.Context) error {
 		log.Tracef("creating version ...")
 		resp, err := s.cli.CreateVersion(ctx, &v1proto.CreateVersionRequest{
@@ -205,27 +206,10 @@ func (s *service) CreateVersion(namespaceName, containerName string, shouldPubli
 		versionID := resp.GetVersion()
 		log.Tracef("version created: `%s`", versionID)
 
-		if fromDir != nil && *fromDir != "" {
-			log.Tracef("--from-dir is requested with `%s`", *fromDir)
-			err = s.CreateObject(namespaceName, containerName, versionID, *fromDir)(ctx)
-			if err != nil {
-				return errors.Wrap(err, "error creating objects")
-			}
-		} else if fromYumRepo != nil && *fromYumRepo != "" {
-			log.Tracef("--from-yum-repo is requested with `%s`", *fromYumRepo)
-			var gpgKeyring openpgp.EntityList = nil
-			if *rpmGPGKey != "" {
-				log.Tracef("RPM GPG Key was passed so initialing GPG keyring ...")
-				gpgKeyring, err = getGPGKey(ctx, *rpmGPGKey, rpmGPGKeyChecksum)
-				if err != nil {
-					return err
-				}
-			}
-
-			err := s.createVersionFromYUMRepository(ctx, namespaceName, containerName, versionID, *fromYumRepo, gpgKeyring)
-			if err != nil {
-				return errors.Wrap(err, "error creating objects")
-			}
+		if err := src.Process(ctx, func(ctx context.Context, obj source.Object) error {
+			return s.CreateObject(namespaceName, containerName, versionID, obj.Path)(ctx)
+		}); err != nil {
+			return errors.Wrap(err, "error processing source")
 		}
 
 		if shouldPublish {
