@@ -17,6 +17,9 @@ import (
 
 	"github.com/teran/archived/cli/router"
 	"github.com/teran/archived/cli/service"
+	"github.com/teran/archived/cli/service/source"
+	localSource "github.com/teran/archived/cli/service/source/local"
+	yumSource "github.com/teran/archived/cli/service/source/yum"
 	"github.com/teran/archived/cli/service/stat_cache/local"
 	"github.com/teran/archived/cli/yum/mirrorlist"
 	v1proto "github.com/teran/archived/manager/presenter/grpc/proto/v1"
@@ -210,19 +213,25 @@ func main() {
 		panic(err)
 	}
 
-	yumRepository := *versionCreateFromYumRepo
-	if versionCreateFromYumMirrorlist != nil && *versionCreateFromYumMirrorlist != "" {
+	cliSvc := service.New(cli, cacheRepo)
+
+	r := router.New(ctx)
+
+	var src source.Source
+	switch {
+	case *versionCreateFromDir != "":
+		src = localSource.New(*versionCreateFromDir, cacheRepo)
+	case *versionCreateFromYumRepo != "":
+		src = yumSource.New()
+	case *versionCreateFromYumMirrorlist != "":
 		ml, err := mirrorlist.New(ctx, *versionCreateFromYumMirrorlist)
 		if err != nil {
 			panic(err)
 		}
 
-		yumRepository = ml.URL(mirrorlist.SelectModeRandom)
+		yumRepository := ml.URL(mirrorlist.SelectModeRandom)
+		src = yumSource.New(yumRepository)
 	}
-
-	cliSvc := service.New(cli, cacheRepo)
-
-	r := router.New(ctx)
 
 	r.Register(namespaceCreate.FullCommand(), cliSvc.CreateNamespace(*namespaceCreateName))
 	r.Register(namespaceRename.FullCommand(), cliSvc.RenameNamespace(*namespaceRenameOldName, *namespaceRenameNewName))
@@ -237,8 +246,7 @@ func main() {
 
 	r.Register(versionList.FullCommand(), cliSvc.ListVersions(*namespaceName, *versionListContainer))
 	r.Register(versionCreate.FullCommand(), cliSvc.CreateVersion(
-		*namespaceName, *versionCreateContainer, *versionCreatePublish, versionCreateFromDir,
-		&yumRepository, versionCreateFromYumRepoGPGKey, versionCreateFromYumRepoGPGKeyChecksum,
+		*namespaceName, *versionCreateContainer, *versionCreatePublish, src,
 	))
 	r.Register(versionDelete.FullCommand(), cliSvc.DeleteVersion(*namespaceName, *versionDeleteContainer, *versionDeleteVersion))
 	r.Register(versionPublish.FullCommand(), cliSvc.PublishVersion(*namespaceName, *versionPublishContainer, *versionPublishVersion))
