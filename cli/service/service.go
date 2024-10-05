@@ -193,6 +193,7 @@ func (s *service) DeleteContainer(namespaceName, containerName string) func(ctx 
 
 func (s *service) CreateVersion(namespaceName, containerName string, shouldPublish bool, fromDir, fromYumRepo, rpmGPGKey, rpmGPGKeyChecksum *string) func(ctx context.Context) error {
 	return func(ctx context.Context) error {
+		log.Tracef("creating version ...")
 		resp, err := s.cli.CreateVersion(ctx, &v1proto.CreateVersionRequest{
 			Namespace: namespaceName,
 			Container: containerName,
@@ -202,6 +203,7 @@ func (s *service) CreateVersion(namespaceName, containerName string, shouldPubli
 		}
 
 		versionID := resp.GetVersion()
+		log.Tracef("version created: `%s`", versionID)
 
 		if fromDir != nil && *fromDir != "" {
 			log.Tracef("--from-dir is requested with `%s`", *fromDir)
@@ -213,6 +215,7 @@ func (s *service) CreateVersion(namespaceName, containerName string, shouldPubli
 			log.Tracef("--from-yum-repo is requested with `%s`", *fromYumRepo)
 			var gpgKeyring openpgp.EntityList = nil
 			if *rpmGPGKey != "" {
+				log.Tracef("RPM GPG Key was passed so initialing GPG keyring ...")
 				gpgKeyring, err = getGPGKey(ctx, *rpmGPGKey, rpmGPGKeyChecksum)
 				if err != nil {
 					return err
@@ -226,6 +229,7 @@ func (s *service) CreateVersion(namespaceName, containerName string, shouldPubli
 		}
 
 		if shouldPublish {
+			log.Tracef("publishing is requested so publishing version ...")
 			_, err = s.cli.PublishVersion(ctx, &v1proto.PublishVersionRequest{
 				Namespace: namespaceName,
 				Container: containerName,
