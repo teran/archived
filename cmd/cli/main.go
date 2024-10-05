@@ -265,5 +265,10 @@ func normalizeHomeDir(in string) (out string) {
 	if strings.HasPrefix(in, "~/") {
 		out = filepath.Join(dir, in[2:])
 	}
+
+	log.WithFields(log.Fields{
+		"function": "normalizeHomeDir",
+	}).Tracef("`%s` resolved to `%s`", in, out)
+
 	return out
 }
