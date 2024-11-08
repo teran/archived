@@ -5,11 +5,16 @@ RUN apk add --update --no-cache \
 
 FROM alpine:3.20.3 AS passwd
 
-RUN echo 'nobody:x:65534:65534:nobody:/:/sbin/nologin' > /passwd.nobody
+RUN echo 'root:x:0:0:root:/root:/sbin/nologin' > /passwd.nobody
+RUN echo 'nobody:x:65534:65534:nobody:/:/sbin/nologin' >> /passwd.nobody
+RUN echo 'root:x:0:root' > /group.nobody
+RUN echo 'nogroup:x:65533:' >> /group.nobody
 
 FROM scratch
 
 COPY --from=passwd /passwd.nobody /etc/passwd
+COPY --from=passwd /group.nobody /etc/group
+
 COPY --from=certificates /etc/ssl/cert.pem /etc/ssl/cert.pem
 COPY --chmod=0755 --chown=root:root dist/archived-seeder_linux_amd64_v3/archived-seeder /archived-seeder
 
