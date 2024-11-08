@@ -35,7 +35,7 @@ services:
   migrator:
     build:
       context: .
-      dockerfile: Dockerfile.migrator
+      dockerfile: dockerfiles/Dockerfile.migrator
     image: ghcr.io/teran/archived/migrator:latest
     environment:
       LOG_LEVEL: trace
@@ -46,7 +46,7 @@ services:
   publisher:
     build:
       context: .
-      dockerfile: Dockerfile.publisher
+      dockerfile: dockerfiles/Dockerfile.publisher
     image: ghcr.io/teran/archived/publisher:latest
     environment:
       LOG_LEVEL: trace
@@ -66,7 +66,7 @@ services:
   manager:
     build:
       context: .
-      dockerfile: Dockerfile.manager
+      dockerfile: dockerfiles/Dockerfile.manager
     image: ghcr.io/teran/archived/manager:latest
     environment:
       LOG_LEVEL: trace
@@ -89,7 +89,7 @@ services:
   # seeder:
   #   build:
   #     context: .
-  #     dockerfile: Dockerfile.seeder
+  #     dockerfile: dockerfiles/Dockerfile.seeder
   #   image: ghcr.io/teran/archived/seeder:latest
   #   environment:
   #     LOG_LEVEL: info
