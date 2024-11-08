@@ -195,7 +195,7 @@ docker-compose build
 or build them manually by running:
 
 ```shell
-docker build -f Dockerfile.component .
+docker build -f dockerfiles/Dockerfile.component .
 ```
 
 Where component is one of publisher, manager, migrator, etc.
