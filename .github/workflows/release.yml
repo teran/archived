@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: Dockerfile.cli
+          dockerfile: dockerfiles/Dockerfile.cli
   
   hadolint-exporter:
     runs-on: ubuntu-latest
@@ -28,7 +28,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: Dockerfile.exporter
+          dockerfile: dockerfiles/Dockerfile.exporter
 
   hadolint-gc:
     runs-on: ubuntu-latest
@@ -36,7 +36,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: Dockerfile.gc
+          dockerfile: dockerfiles/Dockerfile.gc
 
   hadolint-manager:
     runs-on: ubuntu-latest
@@ -44,7 +44,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: Dockerfile.manager
+          dockerfile: dockerfiles/Dockerfile.manager
 
   hadolint-migrator:
     runs-on: ubuntu-latest
@@ -52,7 +52,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: Dockerfile.migrator
+          dockerfile: dockerfiles/Dockerfile.migrator
 
   hadolint-publisher:
     runs-on: ubuntu-latest
@@ -60,7 +60,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: Dockerfile.publisher
+          dockerfile: dockerfiles/Dockerfile.publisher
 
   hadolint-seeder:
     runs-on: ubuntu-latest
@@ -68,7 +68,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: Dockerfile.seeder
+          dockerfile: dockerfiles/Dockerfile.seeder
 
   markdownlint:
     runs-on: ubuntu-latest
@@ -185,7 +185,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile.cli
+          file: ./dockerfiles/Dockerfile.cli
           platforms: amd64
           push: true
           tags: |
@@ -197,7 +197,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile.exporter
+          file: ./dockerfiles/Dockerfile.exporter
           platforms: amd64
           push: true
           tags: |
@@ -209,7 +209,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile.gc
+          file: ./dockerfiles/Dockerfile.gc
           platforms: amd64
           push: true
           tags: |
@@ -221,7 +221,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile.manager
+          file: ./dockerfiles/Dockerfile.manager
           platforms: amd64
           push: true
           tags: |
@@ -233,7 +233,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile.migrator
+          file: ./dockerfiles/Dockerfile.migrator
           platforms: amd64
           push: true
           tags: |
@@ -245,7 +245,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile.publisher
+          file: ./dockerfiles/Dockerfile.publisher
           platforms: amd64
           push: true
           tags: |
@@ -257,7 +257,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile.seeder
+          file: ./dockerfiles/Dockerfile.seeder
           platforms: amd64
           push: true
           tags: |
