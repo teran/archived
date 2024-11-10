@@ -29,7 +29,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/teran/archived/appmetrics"
+	"github.com/teran/appmetrics"
 	grpcManagePresenter "github.com/teran/archived/manager/presenter/grpc"
 	awsBlobRepo "github.com/teran/archived/repositories/blob/aws"
 	"github.com/teran/archived/repositories/metadata/postgresql"

@@ -1,6 +1,6 @@
 module github.com/teran/archived
 
-go 1.23.0
+go 1.23.3
 
 require (
 	github.com/Masterminds/sprig/v3 v3.3.0
@@ -23,6 +23,7 @@ require (
 	github.com/sassoftware/go-rpmutils v0.4.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.9.0
+	github.com/teran/appmetrics v0.0.1
 	github.com/teran/go-docker-testsuite v1.0.1
 	github.com/teran/go-grpctest v0.0.6
 	github.com/teran/go-ptr v1.1.0
@@ -30,6 +31,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.31.0
 	golang.org/x/sync v0.8.0
 	google.golang.org/grpc v1.67.1
+	google.golang.org/protobuf v1.34.2
 )
 
 require (
@@ -101,6 +103,5 @@ require (
 	golang.org/x/text v0.19.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240814211410-ddb44dafa142 // indirect
-	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
