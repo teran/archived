@@ -13,7 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/teran/archived/appmetrics"
+	"github.com/teran/appmetrics"
 	"github.com/teran/archived/exporter/service"
 	"github.com/teran/archived/repositories/metadata/postgresql"
 )

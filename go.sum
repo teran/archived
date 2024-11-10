@@ -267,6 +267,8 @@ github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
+github.com/teran/appmetrics v0.0.1 h1:aUk1YWCjWopIEqbR4t4jzh5TTJXJUP/OfPJ5ag8fuTc=
+github.com/teran/appmetrics v0.0.1/go.mod h1:MUAqVvMrihIM6OYFFH3pbWp+ACgr9/humdeaDpz3XWA=
 github.com/teran/echo-grpc-server v0.0.2 h1:2+5zgDdRvYY2eXv4Z6o5Ku72NFKRMNAe9W3/i9YKzyo=
 github.com/teran/echo-grpc-server v0.0.2/go.mod h1:chEwqVEY4z4awjWY3+GR4iXOcB0iq0fZk/lkzdzy/nk=
 github.com/teran/go-docker-testsuite v1.0.1 h1:jhsKSLwJ67db8TAyG3eOu50EdlHyR5WwQl8Gtx6ssFk=
