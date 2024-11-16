@@ -1,6 +1,6 @@
 services:
   postgresql:
-    image: index.docker.io/library/postgres:16.3
+    image: ${IMAGE_PREFIX:-}index.docker.io/library/postgres:16.3
     environment:
       POSTGRES_PASSWORD: password
     ports:
@@ -12,7 +12,7 @@ services:
       retries: 5
 
   minio:
-    image: quay.io/minio/minio:latest
+    image: ${IMAGE_PREFIX:-}quay.io/minio/minio:latest
     environment:
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin
@@ -36,7 +36,7 @@ services:
     build:
       context: .
       dockerfile: dockerfiles/Dockerfile.migrator
-    image: ghcr.io/teran/archived/migrator:latest
+    image: ${IMAGE_PREFIX:-}ghcr.io/teran/archived/migrator:latest
     environment:
       LOG_LEVEL: trace
       METADATA_DSN: postgres://postgres:password@postgresql?sslmode=disable
@@ -47,7 +47,7 @@ services:
     build:
       context: .
       dockerfile: dockerfiles/Dockerfile.publisher
-    image: ghcr.io/teran/archived/publisher:latest
+    image: ${IMAGE_PREFIX:-}ghcr.io/teran/archived/publisher:latest
     environment:
       LOG_LEVEL: trace
       METADATA_DSN: postgres://postgres:password@postgresql?sslmode=disable
@@ -67,7 +67,7 @@ services:
     build:
       context: .
       dockerfile: dockerfiles/Dockerfile.manager
-    image: ghcr.io/teran/archived/manager:latest
+    image: ${IMAGE_PREFIX:-}ghcr.io/teran/archived/manager:latest
     environment:
       LOG_LEVEL: trace
       METADATA_DSN: postgres://postgres:password@postgresql?sslmode=disable
@@ -90,7 +90,7 @@ services:
   #   build:
   #     context: .
   #     dockerfile: dockerfiles/Dockerfile.seeder
-  #   image: ghcr.io/teran/archived/seeder:latest
+  #   image: ${IMAGE_PREFIX:-}ghcr.io/teran/archived/seeder:latest
   #   environment:
   #     LOG_LEVEL: info
   #     METADATA_DSN: postgres://postgres:password@postgresql?sslmode=disable
