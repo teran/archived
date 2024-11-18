@@ -222,7 +222,7 @@ func main() {
 	case *versionCreateFromDir != "":
 		src = localSource.New(*versionCreateFromDir, cacheRepo)
 	case *versionCreateFromYumRepo != "":
-		src = yumSource.New(*versionCreateFromYumRepo, *versionCreateFromYumRepoGPGKey, *versionCreateFromYumRepoGPGKeyChecksum)
+		src = yumSource.New(*versionCreateFromYumRepo, versionCreateFromYumRepoGPGKey, versionCreateFromYumRepoGPGKeyChecksum)
 	case *versionCreateFromYumMirrorlist != "":
 		ml, err := mirrorlist.New(ctx, *versionCreateFromYumMirrorlist)
 		if err != nil {
@@ -230,7 +230,7 @@ func main() {
 		}
 
 		yumRepository := ml.URL(mirrorlist.SelectModeRandom)
-		src = yumSource.New(yumRepository, *versionCreateFromYumRepoGPGKey, *versionCreateFromYumRepoGPGKeyChecksum)
+		src = yumSource.New(yumRepository, versionCreateFromYumRepoGPGKey, versionCreateFromYumRepoGPGKeyChecksum)
 	}
 
 	r.Register(namespaceCreate.FullCommand(), cliSvc.CreateNamespace(*namespaceCreateName))

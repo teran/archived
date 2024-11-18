@@ -48,7 +48,7 @@ type yumRepo struct {
 	metadata map[string][]byte
 }
 
-func New(url string) *yumRepo {
+func New(url string) YumRepo {
 	return &yumRepo{
 		url:      strings.TrimSuffix(url, "/"),
 		metadata: make(map[string][]byte),
