@@ -202,7 +202,7 @@ func (s *service) CreateVersion(namespaceName, containerName string, shouldPubli
 		log.Tracef("version created: `%s`", versionID)
 
 		if err := src.Process(ctx, func(ctx context.Context, obj source.Object) error {
-			return s.CreateObject(namespaceName, containerName, versionID, obj.Path)(ctx)
+			return s.createObject(ctx, namespaceName, containerName, versionID, obj)
 		}); err != nil {
 			return errors.Wrap(err, "error processing source")
 		}
@@ -276,6 +276,40 @@ func (s *service) PublishVersion(namespaceName, containerName, versionID string)
 		fmt.Printf("version `%s` of container `%s/%s` is published now\n", namespaceName, containerName, versionID)
 		return nil
 	}
+}
+
+func (s *service) createObject(ctx context.Context, namespaceName, containerName, versionID string, object source.Object) error {
+	log.WithFields(log.Fields{
+		"path":   object.Path,
+		"sha256": object.SHA256,
+		"length": object.Size,
+	}).Info("creating object ...")
+
+	resp, err := s.cli.CreateObject(ctx, &v1proto.CreateObjectRequest{
+		Namespace: namespaceName,
+		Container: containerName,
+		Version:   versionID,
+		Key:       object.Path,
+		Checksum:  object.SHA256,
+		Size:      object.Size,
+	})
+	if err != nil {
+		return errors.Wrap(err, "error creating object")
+	}
+
+	if url := resp.GetUploadUrl(); url != "" {
+		log.WithFields(log.Fields{
+			"path":   object.Path,
+			"sha256": object.SHA256,
+			"length": object.Size,
+			"url":    url,
+		}).Info("uploading BLOB ...")
+
+		if err := uploadBlob(ctx, url, object.Contents, object.Size); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (s *service) CreateObject(namespaceName, containerName, versionID, directoryPath string) func(ctx context.Context) error {
