@@ -98,6 +98,13 @@ func (r *repository) Process(ctx context.Context, handler func(ctx context.Conte
 	}).Info("handling package files ...")
 
 	for cnt, pkg := range packages {
+		log.WithFields(log.Fields{
+			"name":     pkg.Name,
+			"checksum": pkg.Checksum,
+			"path":     strings.TrimSuffix(r.repoURL, "/") + "/" + strings.TrimPrefix(pkg.Name, "/"),
+			"size":     pkg.Size,
+		}).Trace("processing package ...")
+
 		err := func(name, checksum, sourceURL string, size uint64) error {
 			lb := lazyblob.New(sourceURL, os.TempDir(), size)
 			defer func() {
