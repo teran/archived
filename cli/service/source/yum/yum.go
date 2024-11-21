@@ -54,7 +54,8 @@ func (r *repository) Process(ctx context.Context, handler func(ctx context.Conte
 	}
 
 	var gpgKeyring openpgp.EntityList = nil
-	if *r.rpmGPGKeyURL != "" {
+
+	if r.rpmGPGKeyURL != nil && *r.rpmGPGKeyURL != "" {
 		log.Tracef("RPM GPG Key was passed so initialing GPG keyring ...")
 		gpgKeyring, err = getGPGKey(ctx, *r.rpmGPGKeyURL, r.rpmGPGKeySHA256)
 		if err != nil {
@@ -95,6 +96,7 @@ func (r *repository) Process(ctx context.Context, handler func(ctx context.Conte
 		"repository_url": r.repoURL,
 		"packages_count": len(packages),
 	}).Info("handling package files ...")
+
 	for cnt, pkg := range packages {
 		err := func(name, checksum, sourceURL string, size uint64) error {
 			lb := lazyblob.New(sourceURL, os.TempDir(), size)
