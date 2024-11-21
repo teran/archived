@@ -134,7 +134,7 @@ func (r *repository) Process(ctx context.Context, handler func(ctx context.Conte
 				Path:     name,
 				Contents: fp,
 				SHA256:   checksum,
-				Size:     uint64(size),
+				Size:     size,
 			}); err != nil {
 				return errors.Wrap(err, "error calling object handler")
 			}

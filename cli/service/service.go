@@ -1,7 +1,6 @@
 package service
 
 import (
-	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -13,15 +12,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ProtonMail/go-crypto/openpgp"
 	"github.com/pkg/errors"
-	rpmutils "github.com/sassoftware/go-rpmutils"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/teran/archived/cli/lazyblob"
 	"github.com/teran/archived/cli/service/source"
 	cache "github.com/teran/archived/cli/service/stat_cache"
-	"github.com/teran/archived/cli/yum"
 	v1proto "github.com/teran/archived/manager/presenter/grpc/proto/v1"
 )
 
@@ -230,143 +225,6 @@ func (s *service) CreateVersion(namespaceName, containerName string, shouldPubli
 
 		return nil
 	}
-}
-
-func (s *service) createVersionFromYUMRepository(ctx context.Context, namespaceName string, containerName, versionID, url string, gpgKeyring openpgp.EntityList) error {
-	log.WithFields(log.Fields{
-		"repository_url": url,
-	}).Info("running creating version from YUM repository ...")
-
-	repo := yum.New(url)
-	packages, err := repo.Packages(ctx)
-	if err != nil {
-		return errors.Wrap(err, "error getting repository data")
-	}
-
-	log.WithFields(log.Fields{
-		"repository_url": url,
-	}).Info("handling YUM repository metadata files ...")
-	for k, v := range repo.Metadata() {
-		size := len(v)
-
-		hasher := sha256.New()
-		n, err := hasher.Write(v)
-		if err != nil {
-			return err
-		}
-
-		if n != size {
-			return io.ErrShortWrite
-		}
-
-		checksum := hex.EncodeToString(hasher.Sum(nil))
-
-		log.Tracef("rpc CreateObject(%s, %s, %s, %s, %s, %d)", namespaceName, containerName, versionID, k, checksum, size)
-		resp, err := s.cli.CreateObject(ctx, &v1proto.CreateObjectRequest{
-			Namespace: namespaceName,
-			Container: containerName,
-			Version:   versionID,
-			Key:       k,
-			Checksum:  checksum,
-			Size:      uint64(size),
-		})
-		if err != nil {
-			return errors.Wrap(err, "error creating object")
-		}
-
-		if uploadURL := resp.GetUploadUrl(); uploadURL != "" {
-			err := uploadBlob(ctx, uploadURL, bytes.NewReader(v), uint64(size))
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	log.WithFields(log.Fields{
-		"repository_url": url,
-		"packages_count": len(packages),
-	}).Info("handling package files ...")
-	for cnt, pkg := range packages {
-		err := func(name, checksum, sourceURL string, size uint64) error {
-			lb := lazyblob.New(sourceURL, os.TempDir(), size)
-			defer func() {
-				if err := lb.Close(); err != nil {
-					log.Warnf("error removing scratch data: %s", err)
-				}
-			}()
-
-			if pkg.ChecksumType != "sha256" {
-				filename, err := lb.Filename(ctx)
-				if err != nil {
-					return errors.Wrap(err, "error getting package filename")
-				}
-
-				checksum, err = checksumFile(filename)
-				if err != nil {
-					return errors.Wrap(err, "error calculating checksum")
-				}
-			}
-
-			log.Tracef("rpc CreateObject(%s, %s, %s, %s, %s, %d)", namespaceName, containerName, versionID, name, checksum, size)
-			resp, err := s.cli.CreateObject(ctx, &v1proto.CreateObjectRequest{
-				Namespace: namespaceName,
-				Container: containerName,
-				Version:   versionID,
-				Key:       name,
-				Checksum:  checksum,
-				Size:      size,
-			})
-			if err != nil {
-				return errors.Wrap(err, "error creating object")
-			}
-
-			if uploadURL := resp.GetUploadUrl(); uploadURL != "" {
-				if gpgKeyring != nil {
-					log.Debug("verifying RPM GPG signature ...")
-
-					fp, err := lb.Reader(ctx)
-					if err != nil {
-						return errors.Wrap(err, "error opening package file")
-					}
-
-					_, sigs, err := rpmutils.Verify(fp, gpgKeyring)
-					if err != nil {
-						return errors.Wrapf(err, "error verifying package signature: %s", name)
-					}
-
-					if len(sigs) == 0 {
-						log.Warnf("package `%s` does not contain signature", name)
-					}
-				}
-
-				err := func(uploadURL string) error {
-					log.Tracef("Upload URL: `%s`", uploadURL)
-
-					fp, err := lb.Reader(ctx)
-					if err != nil {
-						return errors.Wrap(err, "error getting reader for package file")
-					}
-
-					return uploadBlob(ctx, uploadURL, fp, size)
-				}(uploadURL)
-				if err != nil {
-					return err
-				}
-			}
-
-			if cnt%processStatusInterval == 0 {
-				log.WithFields(log.Fields{
-					"repository_url": url,
-				}).Infof("%d files processed ...", cnt+1)
-			}
-
-			return nil
-		}(pkg.Name, pkg.Checksum, strings.TrimSuffix(url, "/")+"/"+strings.TrimPrefix(pkg.Name, "/"), pkg.Size)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func (s *service) DeleteVersion(namespaceName, containerName, versionID string) func(ctx context.Context) error {
