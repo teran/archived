@@ -139,6 +139,11 @@ func (r *repository) Process(ctx context.Context, handler func(ctx context.Conte
 				log.Warnf("package `%s` does not contain signature", name)
 			}
 
+			fp, err = lb.Reader(ctx)
+			if err != nil {
+				return errors.Wrap(err, "error getting object reader")
+			}
+
 			if err := handler(ctx, source.Object{
 				Path:     name,
 				Contents: fp,
