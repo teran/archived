@@ -34,7 +34,7 @@ func New(url, tempDir string, length uint64) LazyBLOB {
 		"url":     url,
 		"length":  length,
 		"tempdir": tempDir,
-	}).Debug("lazyblob initialized")
+	}).Trace("initializing lazyblob ...")
 
 	return &lazyblob{
 		url:      url,

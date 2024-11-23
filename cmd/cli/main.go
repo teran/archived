@@ -275,8 +275,9 @@ func normalizeHomeDir(in string) (out string) {
 	}
 
 	log.WithFields(log.Fields{
-		"function": "normalizeHomeDir",
-	}).Tracef("`%s` resolved to `%s`", in, out)
+		"from": in,
+		"to":   out,
+	}).Tracef("directory path normalized")
 
 	return out
 }

@@ -35,6 +35,12 @@ type repository struct {
 }
 
 func New(repoURL string, rpmGPGKeyURL, rpmGPGKeySHA256 *string) source.Source {
+	log.WithFields(log.Fields{
+		"url":            repoURL,
+		"gpg_key_url":    rpmGPGKeyURL,
+		"gpg_key_sha256": rpmGPGKeySHA256,
+	}).Trace("initializing YUM source ...")
+
 	return &repository{
 		repo:            yum.New(repoURL),
 		repoURL:         repoURL,

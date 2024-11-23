@@ -31,6 +31,10 @@ type local struct {
 }
 
 func New(dir string, c cache.CacheRepository) source.Source {
+	log.WithFields(log.Fields{
+		"dir": dir,
+	}).Trace("initializing local source ...")
+
 	return &local{
 		dir:   dir,
 		cache: c,
