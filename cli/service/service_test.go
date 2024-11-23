@@ -2,14 +2,10 @@ package service
 
 import (
 	"context"
-	"io"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/suite"
-	ptr "github.com/teran/go-ptr"
 
 	sourceMock "github.com/teran/archived/cli/service/source/mock"
 	cacheMock "github.com/teran/archived/cli/service/stat_cache/mock"
@@ -17,8 +13,6 @@ import (
 
 const (
 	defaultNamespace = "default"
-
-	mimeTypeMultipartFormData = "multipart/form-data"
 )
 
 func init() {
@@ -125,90 +119,6 @@ func (s *serviceTestSuite) TestPublishVersion() {
 	s.cliMock.On("PublishVersion", defaultNamespace, "container1", "version1").Return(nil).Once()
 
 	fn := s.svc.PublishVersion(defaultNamespace, "container1", "version1")
-	s.Require().NoError(fn(s.ctx))
-}
-
-func (s *serviceTestSuite) TestCreateObjectWithoutEndingSlashInThePath() {
-	s.cacheMock.On("Get", "testdata/repo/somefile1").Return("", nil).Once()
-	s.cacheMock.On("Get", "testdata/repo/somefile2").Return("", nil).Once()
-	s.cacheMock.On("Put", "testdata/repo/somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4").Return(nil).Once()
-	s.cacheMock.On("Put", "testdata/repo/somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61").Return(nil).Once()
-
-	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version1", "somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", uint64(5)).
-		Return(ptr.String(""), nil).
-		Once()
-	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version1", "somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61", uint64(5)).
-		Return(ptr.String(""), nil).
-		Once()
-
-	fn := s.svc.CreateObject(defaultNamespace, "container1", "version1", "testdata/repo")
-	s.Require().NoError(fn(s.ctx))
-}
-
-func (s *serviceTestSuite) TestCreateObjectWithEndingSlashInThePath() {
-	s.cacheMock.On("Get", "testdata/repo/somefile1").Return("", nil).Once()
-	s.cacheMock.On("Get", "testdata/repo/somefile2").Return("", nil).Once()
-	s.cacheMock.On("Put", "testdata/repo/somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4").Return(nil).Once()
-	s.cacheMock.On("Put", "testdata/repo/somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61").Return(nil).Once()
-
-	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version1", "somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", uint64(5)).
-		Return(ptr.String(""), nil).
-		Once()
-	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version1", "somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61", uint64(5)).
-		Return(ptr.String(""), nil).
-		Once()
-
-	fn := s.svc.CreateObject(defaultNamespace, "container1", "version1", "testdata/repo/")
-	s.Require().NoError(fn(s.ctx))
-}
-
-func (s *serviceTestSuite) TestCreateObjectWithCache() {
-	s.cacheMock.On("Get", "testdata/repo/somefile1").Return("a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", nil).Once()
-	s.cacheMock.On("Get", "testdata/repo/somefile2").Return("ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61", nil).Once()
-
-	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version1", "somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", uint64(5)).
-		Return(ptr.String(""), nil).
-		Once()
-	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version1", "somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61", uint64(5)).
-		Return(ptr.String(""), nil).
-		Once()
-
-	fn := s.svc.CreateObject(defaultNamespace, "container1", "version1", "testdata/repo/")
-	s.Require().NoError(fn(s.ctx))
-}
-
-func (s *serviceTestSuite) TestCreateObjectWithUploadURL() {
-	s.cacheMock.On("Get", "testdata/repo/somefile1").Return("a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", nil).Once()
-	s.cacheMock.On("Get", "testdata/repo/somefile2").Return("ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61", nil).Once()
-
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		data, err := io.ReadAll(r.Body)
-		s.NoError(err)
-		defer r.Body.Close()
-
-		s.Equal("1234\n", string(data))
-
-		s.Equal("/test-url", r.RequestURI)
-		s.Equal(mimeTypeMultipartFormData, r.Header.Get("Content-Type"))
-	}))
-	defer srv.Close()
-
-	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version1", "somefile1", "a883dafc480d466ee04e0d6da986bd78eb1fdd2178d04693723da3a8f95d42f4", uint64(5)).
-		Return(ptr.String(srv.URL+"/test-url"), nil).
-		Once()
-	s.cliMock.
-		On("CreateObject", defaultNamespace, "container1", "version1", "somefile2", "ff5a972ba33179c7ec67c73e00a362b629c489f9d7c86489644db2bcd8c62c61", uint64(5)).
-		Return(ptr.String(""), nil).
-		Once()
-
-	fn := s.svc.CreateObject(defaultNamespace, "container1", "version1", "testdata/repo/")
 	s.Require().NoError(fn(s.ctx))
 }
 

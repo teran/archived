@@ -2,15 +2,9 @@ package service
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"io"
-	"io/fs"
 	"net/http"
-	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -37,13 +31,10 @@ type Service interface {
 	ListVersions(namespaceName, containerName string) func(ctx context.Context) error
 	PublishVersion(namespaceName, containerName, versionID string) func(ctx context.Context) error
 
-	CreateObject(namespaceName, containerName, versionID, directoryPath string) func(ctx context.Context) error
 	ListObjects(namespaceName, containerName, versionID string) func(ctx context.Context) error
 	GetObjectURL(namespaceName, containerName, versionID, objectKey string) func(ctx context.Context) error
 	DeleteObject(namespaceName, containerName, versionID, objectKey string) func(ctx context.Context) error
 }
-
-const processStatusInterval int = 100
 
 type service struct {
 	cache cache.CacheRepository
@@ -278,134 +269,6 @@ func (s *service) PublishVersion(namespaceName, containerName, versionID string)
 	}
 }
 
-func (s *service) createObject(ctx context.Context, namespaceName, containerName, versionID string, object source.Object) error {
-	log.WithFields(log.Fields{
-		"path":   object.Path,
-		"sha256": object.SHA256,
-		"length": object.Size,
-	}).Info("creating object ...")
-
-	resp, err := s.cli.CreateObject(ctx, &v1proto.CreateObjectRequest{
-		Namespace: namespaceName,
-		Container: containerName,
-		Version:   versionID,
-		Key:       object.Path,
-		Checksum:  object.SHA256,
-		Size:      object.Size,
-	})
-	if err != nil {
-		return errors.Wrap(err, "error creating object")
-	}
-
-	if url := resp.GetUploadUrl(); url != "" {
-		log.WithFields(log.Fields{
-			"path":   object.Path,
-			"sha256": object.SHA256,
-			"length": object.Size,
-			"url":    url,
-		}).Info("uploading BLOB ...")
-
-		if err := uploadBlob(ctx, url, object.Contents, object.Size); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (s *service) CreateObject(namespaceName, containerName, versionID, directoryPath string) func(ctx context.Context) error {
-	return func(ctx context.Context) error {
-		log.WithFields(log.Fields{
-			"directory": directoryPath,
-		}).Info("scanning directory ...")
-		var cnt int
-		return filepath.Walk(directoryPath, func(path string, info fs.FileInfo, err error) error {
-			defer func() { cnt++ }()
-
-			if err != nil {
-				return errors.Wrap(err, "walk: internal error")
-			}
-
-			if info.IsDir() {
-				return nil
-			}
-
-			shortPath := strings.TrimPrefix(path, directoryPath)
-			shortPath = strings.TrimPrefix(shortPath, "/")
-			size := info.Size()
-
-			log.WithFields(log.Fields{
-				"filename": shortPath,
-				"size":     size,
-			}).Debug("file found")
-
-			log.WithFields(log.Fields{
-				"filename": shortPath,
-				"size":     size,
-			}).Tracef("attempting to retrieve checksum from cache")
-			checksum, err := s.cache.Get(ctx, path, info)
-			if err != nil {
-				return errors.Wrap(err, "error retrieving checksum from cache")
-			}
-
-			if checksum == "" {
-				log.WithFields(log.Fields{
-					"filename": shortPath,
-					"size":     size,
-				}).Debug("generating checksum")
-				checksum, err = checksumFile(path)
-				if err != nil {
-					return errors.Wrap(err, "error calculating file checksum")
-				}
-
-				err := s.cache.Put(ctx, path, info, checksum)
-				if err != nil {
-					log.Warnf("error putting checksum calculation result into cache: %s", err)
-				}
-			}
-			log.WithFields(log.Fields{
-				"filename": shortPath,
-				"size":     size,
-				"checksum": checksum,
-			}).Debug("checksum")
-
-			log.Tracef("rpc CreateObject(%s,%s, %s, %s, %s, %d)", namespaceName, containerName, versionID, shortPath, checksum, size)
-			resp, err := s.cli.CreateObject(ctx, &v1proto.CreateObjectRequest{
-				Namespace: namespaceName,
-				Container: containerName,
-				Version:   versionID,
-				Key:       shortPath,
-				Checksum:  checksum,
-				Size:      uint64(size),
-			})
-			if err != nil {
-				return errors.Wrap(err, "error creating object")
-			}
-
-			if url := resp.GetUploadUrl(); url != "" {
-				log.Tracef("Upload URL: `%s`", url)
-
-				fp, err := os.Open(path)
-				if err != nil {
-					return errors.Wrap(err, "error opening file")
-				}
-				defer fp.Close()
-
-				if err := uploadBlob(ctx, url, fp, uint64(size)); err != nil {
-					return err
-				}
-			}
-
-			if cnt%processStatusInterval == 0 {
-				log.WithFields(log.Fields{
-					"directory": directoryPath,
-				}).Infof("%d files processed ...", cnt+1)
-			}
-
-			return nil
-		})
-	}
-}
-
 func (s *service) ListObjects(namespaceName, containerName, versionID string) func(ctx context.Context) error {
 	return func(ctx context.Context) error {
 		resp, err := s.cli.ListObjects(ctx, &v1proto.ListObjectsRequest{
@@ -459,28 +322,38 @@ func (s *service) DeleteObject(namespaceName, containerName, versionID, objectKe
 	}
 }
 
-func checksumFile(filename string) (string, error) {
-	info, err := os.Stat(filename)
-	if err != nil {
-		return "", errors.Wrap(err, "error performing stat on file")
-	}
-	fp, err := os.Open(filename)
-	if err != nil {
-		return "", errors.Wrap(err, "error opening file")
-	}
-	defer fp.Close()
+func (s *service) createObject(ctx context.Context, namespaceName, containerName, versionID string, object source.Object) error {
+	log.WithFields(log.Fields{
+		"path":   object.Path,
+		"sha256": object.SHA256,
+		"length": object.Size,
+	}).Info("creating object ...")
 
-	h := sha256.New()
-	n, err := io.Copy(h, fp)
+	resp, err := s.cli.CreateObject(ctx, &v1proto.CreateObjectRequest{
+		Namespace: namespaceName,
+		Container: containerName,
+		Version:   versionID,
+		Key:       object.Path,
+		Checksum:  object.SHA256,
+		Size:      object.Size,
+	})
 	if err != nil {
-		return "", errors.Wrap(err, "error reading file")
-	}
-
-	if n != info.Size() {
-		return "", errors.Errorf("file size is %d bytes while only %d was copied: early EOF", info.Size(), n)
+		return errors.Wrap(err, "error creating object")
 	}
 
-	return hex.EncodeToString(h.Sum(nil)), nil
+	if url := resp.GetUploadUrl(); url != "" {
+		log.WithFields(log.Fields{
+			"path":   object.Path,
+			"sha256": object.SHA256,
+			"length": object.Size,
+			"url":    url,
+		}).Info("uploading BLOB ...")
+
+		if err := uploadBlob(ctx, url, object.Contents, object.Size); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func uploadBlob(ctx context.Context, url string, rd io.Reader, size uint64) error {
@@ -494,7 +367,7 @@ func uploadBlob(ctx context.Context, url string, rd io.Reader, size uint64) erro
 		log.WithFields(log.Fields{
 			"url":    url,
 			"length": size,
-		}).Tracef("size is set")
+		}).Tracef("Setting Content-Length ...")
 
 		req.ContentLength = int64(size)
 	}

@@ -130,11 +130,6 @@ var (
 	objectListContainer = objectList.Arg("container", "name of the container to list objects from").Required().String()
 	objectListVersion   = objectList.Arg("version", "version to list objects from").Required().String()
 
-	objectCreate          = object.Command("create", "create object(s) from location")
-	objectCreateContainer = objectCreate.Arg("container", "name of the container to publish object from").Required().String()
-	objectCreateVersion   = objectCreate.Arg("version", "version to publish object from").Required().String()
-	objectCreatePath      = objectCreate.Arg("path", "local path of the object to create").Required().String()
-
 	objectURL          = object.Command("url", "get URL for the object")
 	objectURLContainer = objectURL.Arg("container", "name of the container to publish object from").Required().String()
 	objectURLVersion   = objectURL.Arg("version", "version to publish object from").Required().String()
@@ -251,7 +246,6 @@ func main() {
 	r.Register(versionDelete.FullCommand(), cliSvc.DeleteVersion(*namespaceName, *versionDeleteContainer, *versionDeleteVersion))
 	r.Register(versionPublish.FullCommand(), cliSvc.PublishVersion(*namespaceName, *versionPublishContainer, *versionPublishVersion))
 
-	r.Register(objectCreate.FullCommand(), cliSvc.CreateObject(*namespaceName, *objectCreateContainer, *objectCreateVersion, *objectCreatePath))
 	r.Register(objectList.FullCommand(), cliSvc.ListObjects(*namespaceName, *objectListContainer, *objectListVersion))
 	r.Register(objectURL.FullCommand(), cliSvc.GetObjectURL(*namespaceName, *objectURLContainer, *objectURLVersion, *objectURLKey))
 	r.Register(deleteObject.FullCommand(), cliSvc.DeleteObject(*namespaceName, *deleteObjectContainer, *deleteObjectVersion, *deleteObjectKey))
