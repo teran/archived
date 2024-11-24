@@ -17,8 +17,11 @@ import (
 
 	"github.com/teran/archived/cli/router"
 	"github.com/teran/archived/cli/service"
+	"github.com/teran/archived/cli/service/source"
+	localSource "github.com/teran/archived/cli/service/source/local"
+	yumSource "github.com/teran/archived/cli/service/source/yum"
+	"github.com/teran/archived/cli/service/source/yum/yum_repo/mirrorlist"
 	"github.com/teran/archived/cli/service/stat_cache/local"
-	"github.com/teran/archived/cli/yum/mirrorlist"
 	v1proto "github.com/teran/archived/manager/presenter/grpc/proto/v1"
 )
 
@@ -127,11 +130,6 @@ var (
 	objectListContainer = objectList.Arg("container", "name of the container to list objects from").Required().String()
 	objectListVersion   = objectList.Arg("version", "version to list objects from").Required().String()
 
-	objectCreate          = object.Command("create", "create object(s) from location")
-	objectCreateContainer = objectCreate.Arg("container", "name of the container to publish object from").Required().String()
-	objectCreateVersion   = objectCreate.Arg("version", "version to publish object from").Required().String()
-	objectCreatePath      = objectCreate.Arg("path", "local path of the object to create").Required().String()
-
 	objectURL          = object.Command("url", "get URL for the object")
 	objectURLContainer = objectURL.Arg("container", "name of the container to publish object from").Required().String()
 	objectURLVersion   = objectURL.Arg("version", "version to publish object from").Required().String()
@@ -210,19 +208,25 @@ func main() {
 		panic(err)
 	}
 
-	yumRepository := *versionCreateFromYumRepo
-	if versionCreateFromYumMirrorlist != nil && *versionCreateFromYumMirrorlist != "" {
+	cliSvc := service.New(cli, cacheRepo)
+
+	r := router.New(ctx)
+
+	var src source.Source
+	switch {
+	case *versionCreateFromDir != "":
+		src = localSource.New(*versionCreateFromDir, cacheRepo)
+	case *versionCreateFromYumRepo != "":
+		src = yumSource.New(*versionCreateFromYumRepo, versionCreateFromYumRepoGPGKey, versionCreateFromYumRepoGPGKeyChecksum)
+	case *versionCreateFromYumMirrorlist != "":
 		ml, err := mirrorlist.New(ctx, *versionCreateFromYumMirrorlist)
 		if err != nil {
 			panic(err)
 		}
 
-		yumRepository = ml.URL(mirrorlist.SelectModeRandom)
+		yumRepository := ml.URL(mirrorlist.SelectModeRandom)
+		src = yumSource.New(yumRepository, versionCreateFromYumRepoGPGKey, versionCreateFromYumRepoGPGKeyChecksum)
 	}
-
-	cliSvc := service.New(cli, cacheRepo)
-
-	r := router.New(ctx)
 
 	r.Register(namespaceCreate.FullCommand(), cliSvc.CreateNamespace(*namespaceCreateName))
 	r.Register(namespaceRename.FullCommand(), cliSvc.RenameNamespace(*namespaceRenameOldName, *namespaceRenameNewName))
@@ -237,13 +241,11 @@ func main() {
 
 	r.Register(versionList.FullCommand(), cliSvc.ListVersions(*namespaceName, *versionListContainer))
 	r.Register(versionCreate.FullCommand(), cliSvc.CreateVersion(
-		*namespaceName, *versionCreateContainer, *versionCreatePublish, versionCreateFromDir,
-		&yumRepository, versionCreateFromYumRepoGPGKey, versionCreateFromYumRepoGPGKeyChecksum,
+		*namespaceName, *versionCreateContainer, *versionCreatePublish, src,
 	))
 	r.Register(versionDelete.FullCommand(), cliSvc.DeleteVersion(*namespaceName, *versionDeleteContainer, *versionDeleteVersion))
 	r.Register(versionPublish.FullCommand(), cliSvc.PublishVersion(*namespaceName, *versionPublishContainer, *versionPublishVersion))
 
-	r.Register(objectCreate.FullCommand(), cliSvc.CreateObject(*namespaceName, *objectCreateContainer, *objectCreateVersion, *objectCreatePath))
 	r.Register(objectList.FullCommand(), cliSvc.ListObjects(*namespaceName, *objectListContainer, *objectListVersion))
 	r.Register(objectURL.FullCommand(), cliSvc.GetObjectURL(*namespaceName, *objectURLContainer, *objectURLVersion, *objectURLKey))
 	r.Register(deleteObject.FullCommand(), cliSvc.DeleteObject(*namespaceName, *deleteObjectContainer, *deleteObjectVersion, *deleteObjectKey))
@@ -267,8 +269,9 @@ func normalizeHomeDir(in string) (out string) {
 	}
 
 	log.WithFields(log.Fields{
-		"function": "normalizeHomeDir",
-	}).Tracef("`%s` resolved to `%s`", in, out)
+		"from": in,
+		"to":   out,
+	}).Tracef("directory path normalized")
 
 	return out
 }

@@ -19,7 +19,7 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/teran/archived/cli/yum/models"
+	"github.com/teran/archived/cli/service/source/yum/yum_repo/models"
 )
 
 var (
@@ -48,7 +48,7 @@ type yumRepo struct {
 	metadata map[string][]byte
 }
 
-func New(url string) *yumRepo {
+func New(url string) YumRepo {
 	return &yumRepo{
 		url:      strings.TrimSuffix(url, "/"),
 		metadata: make(map[string][]byte),

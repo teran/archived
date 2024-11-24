@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/labstack/gommon/log"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 type Mirrorlist interface {

@@ -12,7 +12,8 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
-	"github.com/teran/archived/cli/yum/models"
+
+	"github.com/teran/archived/cli/service/source/yum/yum_repo/models"
 )
 
 func init() {
