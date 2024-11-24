@@ -16,7 +16,7 @@ import (
 
 	"github.com/teran/archived/cli/lazyblob"
 	"github.com/teran/archived/cli/service/source"
-	"github.com/teran/archived/cli/yum"
+	yum "github.com/teran/archived/cli/service/source/yum/yum_repo"
 )
 
 const processStatusInterval = 100

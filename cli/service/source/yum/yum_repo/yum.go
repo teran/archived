@@ -19,7 +19,7 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/teran/archived/cli/yum/models"
+	"github.com/teran/archived/cli/service/source/yum/yum_repo/models"
 )
 
 var (

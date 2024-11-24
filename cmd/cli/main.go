@@ -20,8 +20,8 @@ import (
 	"github.com/teran/archived/cli/service/source"
 	localSource "github.com/teran/archived/cli/service/source/local"
 	yumSource "github.com/teran/archived/cli/service/source/yum"
+	"github.com/teran/archived/cli/service/source/yum/yum_repo/mirrorlist"
 	"github.com/teran/archived/cli/service/stat_cache/local"
-	"github.com/teran/archived/cli/yum/mirrorlist"
 	v1proto "github.com/teran/archived/manager/presenter/grpc/proto/v1"
 )
 
