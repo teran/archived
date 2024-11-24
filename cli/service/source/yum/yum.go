@@ -6,10 +6,12 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"io"
+	"net/http"
 	"os"
 	"strings"
 
 	"github.com/ProtonMail/go-crypto/openpgp"
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/pkg/errors"
 	"github.com/sassoftware/go-rpmutils"
 	log "github.com/sirupsen/logrus"
@@ -86,6 +88,7 @@ func (r *repository) Process(ctx context.Context, handler func(ctx context.Conte
 		}
 
 		checksum := hex.EncodeToString(hasher.Sum(nil))
+		mimeType := http.DetectContentType(v)
 
 		log.Tracef("handler(%s, %s, %d)", k, checksum, size)
 		if err := handler(ctx, source.Object{
@@ -93,6 +96,7 @@ func (r *repository) Process(ctx context.Context, handler func(ctx context.Conte
 			Contents: bytes.NewReader(v),
 			SHA256:   checksum,
 			Size:     uint64(size),
+			MimeType: mimeType,
 		}); err != nil {
 			return errors.Wrap(err, "error calling object handler")
 		}
@@ -150,11 +154,23 @@ func (r *repository) Process(ctx context.Context, handler func(ctx context.Conte
 				return errors.Wrap(err, "error getting object reader")
 			}
 
+			data := make([]byte, 512)
+			if _, err := fp.Read(data); err != nil {
+				return errors.Wrap(err, "error reading data for MIME type detection")
+			}
+			mimeType := mimetype.Detect(data)
+
+			fp, err = lb.Reader(ctx)
+			if err != nil {
+				return errors.Wrap(err, "error getting object reader")
+			}
+
 			if err := handler(ctx, source.Object{
 				Path:     name,
 				Contents: fp,
 				SHA256:   checksum,
 				Size:     size,
+				MimeType: mimeType.String(),
 			}); err != nil {
 				return errors.Wrap(err, "error calling object handler")
 			}

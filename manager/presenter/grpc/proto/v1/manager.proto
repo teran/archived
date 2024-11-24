@@ -101,6 +101,7 @@ message CreateObjectRequest {
   string key = 4;
   string checksum = 5;
   uint64 size = 6;
+  string mime_type = 7;
 }
 message CreateObjectResponse {
   optional string upload_url = 1;

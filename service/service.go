@@ -34,7 +34,7 @@ type Manager interface {
 	ListObjects(ctx context.Context, namespace, container, versionID string) ([]string, error)
 	DeleteObject(ctx context.Context, namespace, container, versionID, key string) error
 
-	EnsureBLOBPresenceOrGetUploadURL(ctx context.Context, checksum string, size uint64) (string, error)
+	EnsureBLOBPresenceOrGetUploadURL(ctx context.Context, checksum string, size uint64, mimeType string) (string, error)
 }
 
 type Publisher interface {
@@ -256,7 +256,7 @@ func (s *service) GetObjectURL(ctx context.Context, namespace, container, versio
 	return s.blobRepo.GetBlobURL(ctx, objectKey)
 }
 
-func (s *service) EnsureBLOBPresenceOrGetUploadURL(ctx context.Context, checksum string, size uint64) (string, error) {
+func (s *service) EnsureBLOBPresenceOrGetUploadURL(ctx context.Context, checksum string, size uint64, mimeType string) (string, error) {
 	err := s.mdRepo.EnsureBlobKey(ctx, checksum, size)
 	if err == nil {
 		return "", nil
@@ -267,7 +267,7 @@ func (s *service) EnsureBLOBPresenceOrGetUploadURL(ctx context.Context, checksum
 		if err != nil {
 			return "", err
 		}
-		return url, s.mdRepo.CreateBLOB(ctx, checksum, size, "application/octet-stream")
+		return url, s.mdRepo.CreateBLOB(ctx, checksum, size, mimeType)
 	}
 
 	return "", err

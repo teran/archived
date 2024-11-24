@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
@@ -101,6 +102,11 @@ func (l *local) Process(ctx context.Context, handler func(ctx context.Context, o
 			"checksum": checksum,
 		}).Debug("checksum")
 
+		mimeType, err := detectMimeType(path)
+		if err != nil {
+			return errors.Wrap(err, "error detecting MIME type")
+		}
+
 		fp, err := os.Open(path)
 		if err != nil {
 			return errors.Wrap(err, "error opening file")
@@ -112,6 +118,7 @@ func (l *local) Process(ctx context.Context, handler func(ctx context.Context, o
 			Contents: fp,
 			SHA256:   checksum,
 			Size:     uint64(size),
+			MimeType: mimeType,
 		}); err != nil {
 			return err
 		}
@@ -148,4 +155,16 @@ func checksumFile(filename string) (string, error) {
 	}
 
 	return hex.EncodeToString(h.Sum(nil)), nil
+}
+
+func detectMimeType(filename string) (string, error) {
+	fp, err := os.Open(filename)
+	if err != nil {
+		return "", errors.Wrap(err, "error opening file")
+	}
+	defer fp.Close()
+
+	buf := make([]byte, 512)
+
+	return mimetype.Detect(buf).String(), nil
 }

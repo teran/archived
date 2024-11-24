@@ -10,6 +10,7 @@ type Object struct {
 	Contents io.Reader
 	SHA256   string
 	Size     uint64
+	MimeType string
 }
 
 type Source interface {
