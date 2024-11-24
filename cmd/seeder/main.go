@@ -137,7 +137,7 @@ func main() {
 					}
 					casKey := hex.EncodeToString(h.Sum(nil))
 
-					url, err := managerSvc.EnsureBLOBPresenceOrGetUploadURL(ctx, casKey, uint64(len(data)))
+					url, err := managerSvc.EnsureBLOBPresenceOrGetUploadURL(ctx, casKey, uint64(len(data)), "application/octet-stream")
 					if err != nil {
 						panic(err)
 					}

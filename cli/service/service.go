@@ -324,9 +324,10 @@ func (s *service) DeleteObject(namespaceName, containerName, versionID, objectKe
 
 func (s *service) createObject(ctx context.Context, namespaceName, containerName, versionID string, object source.Object) error {
 	log.WithFields(log.Fields{
-		"path":   object.Path,
-		"sha256": object.SHA256,
-		"length": object.Size,
+		"path":      object.Path,
+		"sha256":    object.SHA256,
+		"length":    object.Size,
+		"mime_type": object.MimeType,
 	}).Info("creating object ...")
 
 	resp, err := s.cli.CreateObject(ctx, &v1proto.CreateObjectRequest{
@@ -336,6 +337,7 @@ func (s *service) createObject(ctx context.Context, namespaceName, containerName
 		Key:       object.Path,
 		Checksum:  object.SHA256,
 		Size:      object.Size,
+		MimeType:  object.MimeType,
 	})
 	if err != nil {
 		return errors.Wrap(err, "error creating object")

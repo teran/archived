@@ -43,9 +43,9 @@ func TestSource(t *testing.T) {
 	handle := new(handlerMock)
 	defer handle.AssertExpectations(t)
 
-	handle.On("Handle", "some_file1.txt", uint64(18), "cb330beb8590577eb619d75183b14ac85d6b30a6777e8041d6c2d8a44888e7f1").Return(nil).Once()
-	handle.On("Handle", "some_file2.txt", uint64(18), "e45fbded5effe3178f7ca393f0228fb6799ead901c8a5b1354d6f1c44c2a8fa7").Return(nil).Once()
-	handle.On("Handle", "some_dir/some_file3.txt", uint64(18), "94630c0572bba1a7dcc8e69a70ffbaaf132fc7f67f0c40416b73d53c10d9aa7a").Return(nil).Once()
+	handle.On("Handle", "some_file1.txt", uint64(18), "cb330beb8590577eb619d75183b14ac85d6b30a6777e8041d6c2d8a44888e7f1", "application/octet-stream").Return(nil).Once()
+	handle.On("Handle", "some_file2.txt", uint64(18), "e45fbded5effe3178f7ca393f0228fb6799ead901c8a5b1354d6f1c44c2a8fa7", "application/octet-stream").Return(nil).Once()
+	handle.On("Handle", "some_dir/some_file3.txt", uint64(18), "94630c0572bba1a7dcc8e69a70ffbaaf132fc7f67f0c40416b73d53c10d9aa7a", "application/octet-stream").Return(nil).Once()
 
 	s := New("testdata/dir", statCache)
 
@@ -60,6 +60,6 @@ type handlerMock struct {
 }
 
 func (m *handlerMock) Handle(obj source.Object) error {
-	args := m.Called(obj.Path, obj.Size, obj.SHA256)
+	args := m.Called(obj.Path, obj.Size, obj.SHA256, obj.MimeType)
 	return args.Error(0)
 }

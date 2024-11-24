@@ -169,7 +169,7 @@ func (h *handlers) PublishVersion(ctx context.Context, in *v1.PublishVersionRequ
 }
 
 func (h *handlers) CreateObject(ctx context.Context, in *v1.CreateObjectRequest) (*v1.CreateObjectResponse, error) {
-	url, err := h.svc.EnsureBLOBPresenceOrGetUploadURL(ctx, in.GetChecksum(), in.GetSize())
+	url, err := h.svc.EnsureBLOBPresenceOrGetUploadURL(ctx, in.GetChecksum(), in.GetSize(), in.GetMimeType())
 	if err != nil && url == "" {
 		return nil, mapServiceError(err)
 	}

@@ -105,8 +105,8 @@ func (m *Mock) AddObject(_ context.Context, namespace, container, versionID, key
 	return args.Error(0)
 }
 
-func (m *Mock) EnsureBLOBPresenceOrGetUploadURL(ctx context.Context, checksum string, size uint64) (string, error) {
-	args := m.Called(checksum, size)
+func (m *Mock) EnsureBLOBPresenceOrGetUploadURL(ctx context.Context, checksum string, size uint64, mimeType string) (string, error) {
+	args := m.Called(checksum, size, mimeType)
 	return args.String(0), args.Error(1)
 }
 

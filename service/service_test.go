@@ -269,16 +269,16 @@ func (s *serviceTestSuite) TestEnsureBLOBPresenceOrGetUploadURL() {
 	// Blob exists
 	s.mdRepoMock.On("EnsureBlobKey", "checksum", uint64(1234)).Return(nil).Once()
 
-	url, err := s.svc.EnsureBLOBPresenceOrGetUploadURL(s.ctx, "checksum", 1234)
+	url, err := s.svc.EnsureBLOBPresenceOrGetUploadURL(s.ctx, "checksum", 1234, "application/x-rpm")
 	s.Require().NoError(err)
 	s.Require().Equal("", url)
 
 	// Blob doesn't exist
 	s.mdRepoMock.On("EnsureBlobKey", "checksum", uint64(1234)).Return(metadata.ErrNotFound).Once()
 	s.blobRepoMock.On("PutBlobURL", "checksum").Return("https://example.com", nil).Once()
-	s.mdRepoMock.On("CreateBLOB", "checksum", uint64(1234), "application/octet-stream").Return(nil).Once()
+	s.mdRepoMock.On("CreateBLOB", "checksum", uint64(1234), "application/x-rpm").Return(nil).Once()
 
-	url, err = s.svc.EnsureBLOBPresenceOrGetUploadURL(s.ctx, "checksum", 1234)
+	url, err = s.svc.EnsureBLOBPresenceOrGetUploadURL(s.ctx, "checksum", 1234, "application/x-rpm")
 	s.Require().NoError(err)
 	s.Require().Equal("https://example.com", url)
 }
