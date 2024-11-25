@@ -492,6 +492,50 @@ func (m *memcache) GetBlobKeyByObject(ctx context.Context, namespace, container,
 	return retrievedValue, nil
 }
 
+func (m *memcache) GetBlobByObject(ctx context.Context, namespace, container, version, key string) (models.Blob, error) {
+	cacheKey := strings.Join([]string{
+		m.keyPrefix,
+		"GetBlobByObject",
+		namespace,
+		container,
+		version,
+		key,
+	}, ":")
+
+	item, err := m.cli.Get(cacheKey)
+	if err != nil {
+		if errors.Is(err, memcacheCli.ErrCacheMiss) {
+			log.WithFields(log.Fields{
+				"key": cacheKey,
+			}).Tracef("cache miss")
+
+			blob, err := m.repo.GetBlobByObject(ctx, namespace, container, version, key)
+			if err != nil {
+				return models.Blob{}, err
+			}
+
+			if err = store(m, cacheKey, blob); err != nil {
+				return models.Blob{}, err
+			}
+
+			return blob, err
+		}
+
+		return models.Blob{}, err
+	}
+	log.WithFields(log.Fields{
+		"key": cacheKey,
+	}).Tracef("cache hit")
+
+	var retrievedValue models.Blob
+	err = json.Unmarshal(item.Value, &retrievedValue)
+	if err != nil {
+		return models.Blob{}, err
+	}
+
+	return retrievedValue, nil
+}
+
 func (m *memcache) EnsureBlobKey(ctx context.Context, key string, size uint64) error {
 	return m.repo.EnsureBlobKey(ctx, key, size)
 }

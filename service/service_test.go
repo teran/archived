@@ -257,8 +257,12 @@ func (s *serviceTestSuite) TestListObjects() {
 
 func (s *serviceTestSuite) TestGetObjectURL() {
 	// Happy path
-	s.mdRepoMock.On("GetBlobKeyByObject", defaultNamespace, "container", "versionID", "key").Return("deadbeef", nil).Once()
-	s.blobRepoMock.On("GetBlobURL", "deadbeef").Return("url", nil).Once()
+	s.mdRepoMock.On("GetBlobByObject", defaultNamespace, "container", "versionID", "key").Return(models.Blob{
+		Checksum: "deadbeef",
+		Size:     1234,
+		MimeType: "application/json",
+	}, nil).Once()
+	s.blobRepoMock.On("GetBlobURL", "deadbeef", "application/json", "key").Return("url", nil).Once()
 
 	url, err := s.svc.GetObjectURL(s.ctx, defaultNamespace, "container", "versionID", "key")
 	s.Require().NoError(err)
@@ -302,8 +306,12 @@ func (s *serviceTestSuite) TestListObjectsErrNotFound() {
 
 func (s *serviceTestSuite) TestGetObjectURLWithLatestVersion() {
 	s.mdRepoMock.On("GetLatestPublishedVersionByContainer", defaultNamespace, "container12").Return("versionID", nil).Once()
-	s.mdRepoMock.On("GetBlobKeyByObject", defaultNamespace, "container12", "versionID", "key").Return("deadbeef", nil).Once()
-	s.blobRepoMock.On("GetBlobURL", "deadbeef").Return("url", nil).Once()
+	s.mdRepoMock.On("GetBlobByObject", defaultNamespace, "container12", "versionID", "key").Return(models.Blob{
+		Checksum: "deadbeef",
+		Size:     1234,
+		MimeType: "application/json",
+	}, nil).Once()
+	s.blobRepoMock.On("GetBlobURL", "deadbeef", "application/json", "key").Return("url", nil).Once()
 
 	url, err := s.svc.GetObjectURL(s.ctx, defaultNamespace, "container12", "latest", "key")
 	s.Require().NoError(err)

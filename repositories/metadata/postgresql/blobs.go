@@ -4,6 +4,7 @@ import (
 	"context"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/teran/archived/models"
 )
 
 func (r *repository) CreateBLOB(ctx context.Context, checksum string, size uint64, mimeType string) error {
@@ -50,6 +51,38 @@ func (r *repository) GetBlobKeyByObject(ctx context.Context, namespace, containe
 	}
 
 	return checksum, nil
+}
+
+func (r *repository) GetBlobByObject(ctx context.Context, namespace, container, version, key string) (models.Blob, error) {
+	row, err := selectQueryRow(ctx, r.db, psql.
+		Select(
+			"b.checksum AS checksum",
+			"b.size AS size",
+			"b.mime_type AS mime_type",
+		).
+		From("blobs b").
+		Join("objects o ON o.blob_id = b.id").
+		Join("object_keys ok ON ok.id = o.key_id").
+		Join("versions v ON o.version_id = v.id").
+		Join("containers c ON v.container_id = c.id").
+		Join("namespaces ns ON c.namespace_id = ns.id").
+		Where(sq.Eq{
+			"ns.name":        namespace,
+			"c.name":         container,
+			"v.name":         version,
+			"ok.key":         key,
+			"v.is_published": true,
+		}))
+	if err != nil {
+		return models.Blob{}, mapSQLErrors(err)
+	}
+
+	var b models.Blob
+	if err := row.Scan(&b.Checksum, &b.Size, &b.MimeType); err != nil {
+		return models.Blob{}, mapSQLErrors(err)
+	}
+
+	return b, nil
 }
 
 func (r *repository) EnsureBlobKey(ctx context.Context, key string, size uint64) error {

@@ -1,6 +1,9 @@
 package postgresql
 
-import "github.com/teran/archived/repositories/metadata"
+import (
+	"github.com/teran/archived/models"
+	"github.com/teran/archived/repositories/metadata"
+)
 
 func (s *postgreSQLRepositoryTestSuite) TestBlobs() {
 	const (
@@ -32,6 +35,14 @@ func (s *postgreSQLRepositoryTestSuite) TestBlobs() {
 	casKey, err := s.repo.GetBlobKeyByObject(s.ctx, defaultNamespace, containerName, versionID, "test-object.txt")
 	s.Require().NoError(err)
 	s.Require().Equal(checksum, casKey)
+
+	blob, err := s.repo.GetBlobByObject(s.ctx, defaultNamespace, containerName, versionID, "test-object.txt")
+	s.Require().NoError(err)
+	s.Require().Equal(models.Blob{
+		Checksum: checksum,
+		Size:     15,
+		MimeType: "text/plain",
+	}, blob)
 }
 
 func (s *postgreSQLRepositoryTestSuite) TestGetBlobKeyByObjectErrors() {
@@ -65,6 +76,41 @@ func (s *postgreSQLRepositoryTestSuite) TestGetBlobKeyByObjectErrors() {
 	s.Require().NoError(err)
 
 	_, err = s.repo.GetBlobKeyByObject(s.ctx, defaultNamespace, "container", version, "key")
+	s.Require().Error(err)
+	s.Require().Equal(metadata.ErrNotFound, err)
+}
+
+func (s *postgreSQLRepositoryTestSuite) TestGetBlobByObjectErrors() {
+	s.tp.On("Now").Return("2024-01-02T01:02:03Z").Twice()
+
+	// Nothing exists: container, version, key
+	_, err := s.repo.GetBlobByObject(s.ctx, defaultNamespace, "container", "version", "key")
+	s.Require().Error(err)
+	s.Require().Equal(metadata.ErrNotFound, err)
+
+	// version & key doesn't exist
+	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "container")
+	s.Require().NoError(err)
+
+	_, err = s.repo.GetBlobByObject(s.ctx, defaultNamespace, "container", "version", "key")
+	s.Require().Error(err)
+	s.Require().Equal(metadata.ErrNotFound, err)
+
+	// version is unpublished & key doesn't exist
+	s.tp.On("Now").Return("2024-01-02T01:02:03Z").Once()
+
+	version, err := s.repo.CreateVersion(s.ctx, defaultNamespace, "container")
+	s.Require().NoError(err)
+
+	_, err = s.repo.GetBlobByObject(s.ctx, defaultNamespace, "container", version, "key")
+	s.Require().Error(err)
+	s.Require().Equal(metadata.ErrNotFound, err)
+
+	// version is published but key doesn't exist
+	err = s.repo.MarkVersionPublished(s.ctx, defaultNamespace, "container", version)
+	s.Require().NoError(err)
+
+	_, err = s.repo.GetBlobByObject(s.ctx, defaultNamespace, "container", version, "key")
 	s.Require().Error(err)
 	s.Require().Equal(metadata.ErrNotFound, err)
 }

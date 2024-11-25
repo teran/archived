@@ -134,6 +134,11 @@ func (m *Mock) GetBlobKeyByObject(_ context.Context, namespace, container, versi
 	return args.String(0), args.Error(1)
 }
 
+func (m *Mock) GetBlobByObject(_ context.Context, namespace, container, version, key string) (models.Blob, error) {
+	args := m.Called(namespace, container, version, key)
+	return args.Get(0).(models.Blob), args.Error(1)
+}
+
 func (m *Mock) EnsureBlobKey(_ context.Context, key string, size uint64) error {
 	args := m.Called(key, size)
 	return args.Error(0)
