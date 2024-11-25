@@ -186,6 +186,30 @@ func (s *memcacheTestSuite) TestGetBlobKeyByObject() {
 	s.Require().Equal("deadbeef", casKey)
 }
 
+func (s *memcacheTestSuite) TestGetBlobByObject() {
+	s.repoMock.On("GetBlobByObject", defaultNamespace, "container", "version", "key").Return(models.Blob{
+		Checksum: "deadbeef",
+		Size:     1234,
+		MimeType: "application/x-gzip",
+	}, nil).Once()
+
+	blob, err := s.cache.GetBlobByObject(s.ctx, defaultNamespace, "container", "version", "key")
+	s.Require().NoError(err)
+	s.Require().Equal(models.Blob{
+		Checksum: "deadbeef",
+		Size:     1234,
+		MimeType: "application/x-gzip",
+	}, blob)
+
+	blob, err = s.cache.GetBlobByObject(s.ctx, defaultNamespace, "container", "version", "key")
+	s.Require().NoError(err)
+	s.Require().Equal(models.Blob{
+		Checksum: "deadbeef",
+		Size:     1234,
+		MimeType: "application/x-gzip",
+	}, blob)
+}
+
 func (s *memcacheTestSuite) TestGetBlobKeyByObjectError() {
 	s.repoMock.On("GetBlobKeyByObject", defaultNamespace, "container", "version", "key").Return("", errors.New("some error")).Once()
 

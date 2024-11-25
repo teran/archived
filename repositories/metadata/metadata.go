@@ -41,7 +41,8 @@ type Repository interface {
 	RemapObject(ctx context.Context, namespace, container, version, key, newCASKey string) error
 
 	CreateBLOB(ctx context.Context, checksum string, size uint64, mimeType string) error
-	GetBlobKeyByObject(ctx context.Context, namespace, scontainer, version, key string) (string, error)
+	GetBlobKeyByObject(ctx context.Context, namespace, container, version, key string) (string, error)
+	GetBlobByObject(ctx context.Context, namespace, container, version, key string) (models.Blob, error)
 	EnsureBlobKey(ctx context.Context, key string, size uint64) error
 
 	CountStats(ctx context.Context) (*emodels.Stats, error)

@@ -2,6 +2,8 @@ package aws
 
 import (
 	"context"
+	"net/url"
+	"path"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -40,10 +42,12 @@ func (s *s3driver) PutBlobURL(ctx context.Context, key string) (string, error) {
 	return url, nil
 }
 
-func (s *s3driver) GetBlobURL(ctx context.Context, key string) (string, error) {
+func (s *s3driver) GetBlobURL(ctx context.Context, key, mimeType, filename string) (string, error) {
 	req, _ := s.cli.GetObjectRequest(&s3.GetObjectInput{
-		Bucket: aws.String(s.bucket),
-		Key:    aws.String(key),
+		Bucket:                     aws.String(s.bucket),
+		Key:                        aws.String(key),
+		ResponseContentType:        aws.String(mimeType),
+		ResponseContentDisposition: aws.String("attachment; filename=" + url.QueryEscape(path.Base(filename))),
 	})
 
 	url, err := req.Presign(s.ttl)

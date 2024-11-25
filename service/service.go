@@ -248,12 +248,12 @@ func (s *service) GetObjectURL(ctx context.Context, namespace, container, versio
 		}
 	}
 
-	objectKey, err := s.mdRepo.GetBlobKeyByObject(ctx, namespace, container, versionID, key)
+	blob, err := s.mdRepo.GetBlobByObject(ctx, namespace, container, versionID, key)
 	if err != nil {
 		return "", mapMetadataErrors(err)
 	}
 
-	return s.blobRepo.GetBlobURL(ctx, objectKey)
+	return s.blobRepo.GetBlobURL(ctx, blob.Checksum, blob.MimeType, key)
 }
 
 func (s *service) EnsureBLOBPresenceOrGetUploadURL(ctx context.Context, checksum string, size uint64, mimeType string) (string, error) {

@@ -23,7 +23,7 @@ func (m *Mock) PutBlobURL(_ context.Context, key string) (string, error) {
 	return args.String(0), args.Error(1)
 }
 
-func (m *Mock) GetBlobURL(_ context.Context, key string) (string, error) {
-	args := m.Called(key)
+func (m *Mock) GetBlobURL(_ context.Context, key, mimeType, filename string) (string, error) {
+	args := m.Called(key, mimeType, filename)
 	return args.String(0), args.Error(1)
 }

@@ -25,11 +25,13 @@ func (s *repoTestSuite) TestAll() {
 	err = uploadToURL(s.ctx, url, []byte("test data"))
 	s.Require().NoError(err)
 
-	url, err = s.driver.GetBlobURL(s.ctx, "blah/test/key.txt")
+	url, err = s.driver.GetBlobURL(s.ctx, "blah/test/key.txt", "application/json", "test-file.txt")
 	s.Require().NoError(err)
 
-	data, err := fetchURL(s.ctx, url)
+	data, mimeType, disposition, err := fetchURL(s.ctx, url)
 	s.Require().NoError(err)
+	s.Require().Equal("application/json", mimeType)
+	s.Require().Equal("attachment; filename=test-file.txt", disposition)
 	s.Require().Equal("test data", string(data))
 }
 
@@ -106,19 +108,20 @@ func TestRepoTestSuite(t *testing.T) {
 	suite.Run(t, &repoTestSuite{})
 }
 
-func fetchURL(ctx context.Context, url string) ([]byte, error) {
+func fetchURL(ctx context.Context, url string) ([]byte, string, string, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return nil, err
+		return nil, "", "", err
 	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, "", "", err
 	}
 	defer resp.Body.Close()
 
-	return io.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
+	return data, resp.Header.Get("Content-Type"), resp.Header.Get("Content-Disposition"), err
 }
 
 func uploadToURL(ctx context.Context, url string, payload []byte) error {
