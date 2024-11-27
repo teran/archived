@@ -34,12 +34,19 @@ func New(cfg *Config) (Service, error) {
 func (s *service) Run(ctx context.Context) error {
 	log.Info("running garbage collection ...")
 
+	log.Trace("listing namespaces ...")
 	namespaces, err := s.cfg.MdRepo.ListNamespaces(ctx)
 	if err != nil {
 		return errors.Wrap(err, "error listing namespaces")
 	}
 
+	log.Infof("found %d namespaces", len(namespaces))
+
 	for _, namespace := range namespaces {
+		log.WithFields(log.Fields{
+			"namespace": namespace,
+		}).Debug("processing namespace ...")
+
 		containers, err := s.cfg.MdRepo.ListContainers(ctx, namespace)
 		if err != nil {
 			return errors.Wrap(err, "error listing containers")
@@ -50,12 +57,22 @@ func (s *service) Run(ctx context.Context) error {
 		now := s.cfg.TimeNowFunc().UTC()
 
 		for _, container := range containers {
+			log.WithFields(log.Fields{
+				"namespace":   namespace,
+				"container":   container.Name,
+				"ttl_seconds": int64(container.VersionsTTL.Seconds()),
+			}).Debug("processing container ...")
+
 			if container.VersionsTTL < 0 {
+				log.Debug("container TTL is set to infinite (< 0): handling unpublished versions ...")
+
 				err = s.deleteExpiredUnpublishedVersions(ctx, now, namespace, container)
 				if err != nil {
 					return errors.Wrapf(err, "error deleting expired unpublished versions for container `%s/%s`", namespace, container.Name)
 				}
 			} else {
+				log.Debug("container TTL is set to positive value: handling all versions ...")
+
 				err = s.deleteExpiredVersions(ctx, now, namespace, container)
 				if err != nil {
 					return errors.Wrapf(err, "error deleting expired versions for container `%s/%s`", namespace, container.Name)
@@ -70,7 +87,7 @@ func (s *service) deleteExpiredVersions(ctx context.Context, now time.Time, name
 	log.WithFields(log.Fields{
 		"namespace": namespace,
 		"container": container,
-	}).Debugf("listing expired versions ...")
+	}).Debug("listing expired versions ...")
 
 	versions, err := s.cfg.MdRepo.ListAllVersionsByContainer(ctx, namespace, container.Name)
 	if err != nil {
@@ -79,19 +96,32 @@ func (s *service) deleteExpiredVersions(ctx context.Context, now time.Time, name
 
 	for _, version := range versions {
 		log.WithFields(log.Fields{
-			"namespace": namespace,
-			"container": container,
-			"version":   version.Name,
-		}).Debugf("listing expired versions ...")
+			"namespace":    namespace,
+			"container":    container,
+			"version":      version.Name,
+			"is_published": version.IsPublished,
+			"created_at":   version.CreatedAt.Format(time.RFC3339),
+		}).Trace("handling version ...")
 
 		if version.CreatedAt.After(now.Add(-1 * container.VersionsTTL)) {
 			log.WithFields(log.Fields{
-				"namespace": namespace,
-				"container": container,
-				"version":   version.Name,
-			}).Debug("version is newer ttl. Skipping ...")
+				"namespace":    namespace,
+				"container":    container,
+				"version":      version.Name,
+				"is_published": version.IsPublished,
+				"created_at":   version.CreatedAt.Format(time.RFC3339),
+			}).Trace("version is within TTL. Skipping ...")
 			continue
 		}
+
+		log.WithFields(log.Fields{
+			"namespace":    namespace,
+			"container":    container,
+			"version":      version.Name,
+			"is_published": version.IsPublished,
+			"created_at":   version.CreatedAt.Format(time.RFC3339),
+		}).Debug("version is older then TTL. Deleting ...")
+
 		err = s.deleteVersion(ctx, namespace, container, version)
 		if err != nil {
 			return errors.Wrapf(err, "error deleting version `%s` for container `%s/%s`", version.Name, namespace, container.Name)
@@ -105,7 +135,7 @@ func (s *service) deleteExpiredUnpublishedVersions(ctx context.Context, now time
 	log.WithFields(log.Fields{
 		"namespace": namespace,
 		"container": container,
-	}).Debugf("listing unpublished versions ...")
+	}).Debug("listing expired unpublished versions ...")
 
 	versions, err := s.cfg.MdRepo.ListUnpublishedVersionsByContainer(ctx, namespace, container.Name)
 	if err != nil {
@@ -114,19 +144,31 @@ func (s *service) deleteExpiredUnpublishedVersions(ctx context.Context, now time
 
 	for _, version := range versions {
 		log.WithFields(log.Fields{
-			"namespace": namespace,
-			"container": container,
-			"version":   version.Name,
-		}).Debugf("listing unpublished expired versions ...")
+			"namespace":    namespace,
+			"container":    container,
+			"version":      version.Name,
+			"is_published": version.IsPublished,
+			"created_at":   version.CreatedAt.Format(time.RFC3339),
+		}).Trace("handling version ...")
 
 		if version.CreatedAt.After(now.Add(-1 * s.cfg.UnpublishedVersionMaxAge)) {
 			log.WithFields(log.Fields{
-				"namespace": namespace,
-				"container": container,
-				"version":   version.Name,
-			}).Debug("version is newer max version age. Skipping ...")
+				"namespace":    namespace,
+				"container":    container,
+				"version":      version.Name,
+				"is_published": version.IsPublished,
+				"created_at":   version.CreatedAt.Format(time.RFC3339),
+			}).Trace("unpublished version is within TTL. Skipping ...")
 			continue
 		}
+
+		log.WithFields(log.Fields{
+			"namespace":    namespace,
+			"container":    container,
+			"version":      version.Name,
+			"is_published": version.IsPublished,
+			"created_at":   version.CreatedAt.Format(time.RFC3339),
+		}).Debug("unpublished version is older then TTL. Deleting ...")
 
 		err = s.deleteVersion(ctx, namespace, container, version)
 		if err != nil {

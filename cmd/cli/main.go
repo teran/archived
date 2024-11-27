@@ -83,7 +83,7 @@ var (
 	container           = app.Command("container", "container operations")
 	containerCreate     = container.Command("create", "create new container")
 	containerCreateName = containerCreate.Arg("name", "name of the container to create").Required().String()
-	containerCreateTTL  = containerCreate.Flag("ttl", "Default container TTL in seconds").Default("-1").Duration()
+	containerCreateTTL  = containerCreate.Flag("ttl", "Default container TTL").Default("-1").Duration()
 
 	containerMove          = container.Command("move", "move container to another namespace")
 	containerMoveName      = containerMove.Arg("name", "container namespace to move").Required().String()
@@ -98,7 +98,7 @@ var (
 
 	containerSet          = container.Command("set", "set parameters for container")
 	containerSetContainer = containerSet.Arg("name", "name of the container").Required().String()
-	containerSetTTL       = containerSet.Flag("ttl", "Container TTL in seconds").Default("-1").Duration()
+	containerSetTTL       = containerSet.Flag("ttl", "Container TTL").Default("-1").Duration()
 
 	containerList = container.Command("list", "list containers")
 
