@@ -55,11 +55,12 @@ func (s *manageHandlersTestSuite) TestDeleteNamespace() {
 }
 
 func (s *manageHandlersTestSuite) TestCreateContainer() {
-	s.svcMock.On("CreateContainer", defaultNamespace, "test-container").Return(nil).Once()
+	s.svcMock.On("CreateContainer", defaultNamespace, "test-container", 364*time.Second).Return(nil).Once()
 
 	_, err := s.client.CreateContainer(s.ctx, &v1pb.CreateContainerRequest{
-		Namespace: defaultNamespace,
-		Name:      "test-container",
+		Namespace:  defaultNamespace,
+		Name:       "test-container",
+		TtlSeconds: ptr.Int64(364),
 	})
 	s.Require().NoError(err)
 }
@@ -76,11 +77,12 @@ func (s *manageHandlersTestSuite) TestMoveContainer() {
 }
 
 func (s *manageHandlersTestSuite) TestCreateContainerNotFound() {
-	s.svcMock.On("CreateContainer", defaultNamespace, "test-container").Return(service.ErrNotFound).Once()
+	s.svcMock.On("CreateContainer", defaultNamespace, "test-container", 3*time.Second).Return(service.ErrNotFound).Once()
 
 	_, err := s.client.CreateContainer(s.ctx, &v1pb.CreateContainerRequest{
-		Namespace: defaultNamespace,
-		Name:      "test-container",
+		Namespace:  defaultNamespace,
+		Name:       "test-container",
+		TtlSeconds: ptr.Int64(3),
 	})
 	s.Require().Error(err)
 	s.Require().Equal("rpc error: code = NotFound desc = entity not found", err.Error())

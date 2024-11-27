@@ -250,12 +250,12 @@ func (s *memcacheTestSuite) TestDeleteNamespace() {
 }
 
 func (s *memcacheTestSuite) TestCreateContainer() {
-	s.repoMock.On("CreateContainer", defaultNamespace, "container1").Return(nil).Twice()
+	s.repoMock.On("CreateContainer", defaultNamespace, "container1", time.Duration(-1)).Return(nil).Twice()
 
-	err := s.cache.CreateContainer(s.ctx, defaultNamespace, "container1")
+	err := s.cache.CreateContainer(s.ctx, defaultNamespace, "container1", -1)
 	s.Require().NoError(err)
 
-	err = s.cache.CreateContainer(s.ctx, defaultNamespace, "container1")
+	err = s.cache.CreateContainer(s.ctx, defaultNamespace, "container1", -1)
 	s.Require().NoError(err)
 }
 

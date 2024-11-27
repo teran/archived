@@ -41,8 +41,8 @@ func (m *Mock) DeleteNamespace(ctx context.Context, name string) error {
 	return args.Error(0)
 }
 
-func (m *Mock) CreateContainer(_ context.Context, namespace, name string) error {
-	args := m.Called(namespace, name)
+func (m *Mock) CreateContainer(_ context.Context, namespace, name string, ttl time.Duration) error {
+	args := m.Called(namespace, name, ttl)
 	return args.Error(0)
 }
 

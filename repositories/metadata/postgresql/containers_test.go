@@ -17,13 +17,13 @@ func (s *postgreSQLRepositoryTestSuite) TestContainerOperations() {
 	s.Require().NoError(err)
 	s.Require().Equal([]models.Container{}, list)
 
-	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "test-container9")
+	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "test-container9", 86400*time.Second)
 	s.Require().NoError(err)
 
-	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "test-container5")
+	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "test-container5", -1)
 	s.Require().NoError(err)
 
-	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "test-container9")
+	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "test-container9", 3*time.Hour)
 	s.Require().Error(err)
 	s.Require().Equal(metadata.ErrConflict, err)
 
@@ -81,20 +81,20 @@ func (s *postgreSQLRepositoryTestSuite) TestContainersPagination() {
 	s.Require().Equal(uint64(0), total)
 	s.Require().Equal([]models.Container{}, list)
 
-	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "test-container1")
+	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "test-container1", 1*time.Hour)
 	s.Require().NoError(err)
 
-	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "test-container2")
+	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "test-container2", 2*time.Hour)
 	s.Require().NoError(err)
 
-	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "test-container3")
+	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "test-container3", 3*time.Hour)
 	s.Require().NoError(err)
 
 	total, list, err = s.repo.ListContainersByPage(s.ctx, defaultNamespace, 0, 2)
 	s.Require().NoError(err)
 	s.Require().Equal(uint64(3), total)
 	s.Require().Equal([]models.Container{
-		{Name: "test-container1", CreatedAt: time.Date(2024, 1, 2, 1, 2, 3, 0, time.UTC), VersionsTTL: -1},
-		{Name: "test-container2", CreatedAt: time.Date(2024, 1, 2, 1, 2, 3, 0, time.UTC), VersionsTTL: -1},
+		{Name: "test-container1", CreatedAt: time.Date(2024, 1, 2, 1, 2, 3, 0, time.UTC), VersionsTTL: 1 * time.Hour},
+		{Name: "test-container2", CreatedAt: time.Date(2024, 1, 2, 1, 2, 3, 0, time.UTC), VersionsTTL: 2 * time.Hour},
 	}, list)
 }

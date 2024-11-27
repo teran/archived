@@ -13,7 +13,7 @@ func (s *postgreSQLRepositoryTestSuite) TestBlobs() {
 
 	s.tp.On("Now").Return("2024-01-02T01:02:03Z").Times(6)
 
-	err := s.repo.CreateContainer(s.ctx, defaultNamespace, containerName)
+	err := s.repo.CreateContainer(s.ctx, defaultNamespace, containerName, -1)
 	s.Require().NoError(err)
 
 	_, err = s.repo.CreateVersion(s.ctx, defaultNamespace, "not-existent")
@@ -54,7 +54,7 @@ func (s *postgreSQLRepositoryTestSuite) TestGetBlobKeyByObjectErrors() {
 	s.Require().Equal(metadata.ErrNotFound, err)
 
 	// version & key doesn't exist
-	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "container")
+	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "container", -1)
 	s.Require().NoError(err)
 
 	_, err = s.repo.GetBlobKeyByObject(s.ctx, defaultNamespace, "container", "version", "key")
@@ -89,7 +89,7 @@ func (s *postgreSQLRepositoryTestSuite) TestGetBlobByObjectErrors() {
 	s.Require().Equal(metadata.ErrNotFound, err)
 
 	// version & key doesn't exist
-	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "container")
+	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "container", -1)
 	s.Require().NoError(err)
 
 	_, err = s.repo.GetBlobByObject(s.ctx, defaultNamespace, "container", "version", "key")

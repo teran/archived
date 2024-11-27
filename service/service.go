@@ -21,7 +21,7 @@ type Manager interface {
 	RenameNamespace(ctx context.Context, oldName, newName string) error
 	DeleteNamespace(ctx context.Context, name string) error
 
-	CreateContainer(ctx context.Context, namespace, name string) error
+	CreateContainer(ctx context.Context, namespace, name string, ttl time.Duration) error
 	MoveContainer(ctx context.Context, namespace, container, destNamespace string) error
 	RenameContainer(ctx context.Context, namespace, oldName, newName string) error
 	DeleteContainer(ctx context.Context, namespace, name string) error
@@ -104,8 +104,8 @@ func (s *service) DeleteNamespace(ctx context.Context, name string) error {
 	return mapMetadataErrors(err)
 }
 
-func (s *service) CreateContainer(ctx context.Context, namespace, name string) error {
-	err := s.mdRepo.CreateContainer(ctx, namespace, name)
+func (s *service) CreateContainer(ctx context.Context, namespace, name string, ttl time.Duration) error {
+	err := s.mdRepo.CreateContainer(ctx, namespace, name, ttl)
 	if err != nil {
 		return mapMetadataErrors(err)
 	}

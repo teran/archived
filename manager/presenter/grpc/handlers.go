@@ -74,7 +74,7 @@ func (h *handlers) ListNamespaces(ctx context.Context, in *v1.ListNamespacesRequ
 }
 
 func (h *handlers) CreateContainer(ctx context.Context, in *v1.CreateContainerRequest) (*v1.CreateContainerResponse, error) {
-	err := h.svc.CreateContainer(ctx, in.GetNamespace(), in.GetName())
+	err := h.svc.CreateContainer(ctx, in.GetNamespace(), in.GetName(), time.Duration(in.GetTtlSeconds())*time.Second)
 	if err != nil {
 		return nil, mapServiceError(err)
 	}
