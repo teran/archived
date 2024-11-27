@@ -22,7 +22,7 @@ type Service interface {
 	ListNamespaces() func(ctx context.Context) error
 	DeleteNamespace(namespaceName string) func(ctx context.Context) error
 
-	CreateContainer(namespaceName, containerName string, ttl int64) func(ctx context.Context) error
+	CreateContainer(namespaceName, containerName string, ttl time.Duration) func(ctx context.Context) error
 	MoveContainer(namespaceName, containerName, destinationNamespace string) func(ctx context.Context) error
 	RenameContainer(namespaceName, oldName, newName string) func(ctx context.Context) error
 	ListContainers(namespaceName string) func(ctx context.Context) error
@@ -106,12 +106,12 @@ func (s *service) DeleteNamespace(namespaceName string) func(ctx context.Context
 	}
 }
 
-func (s *service) CreateContainer(namespaceName, containerName string, ttl int64) func(ctx context.Context) error {
+func (s *service) CreateContainer(namespaceName, containerName string, ttl time.Duration) func(ctx context.Context) error {
 	return func(ctx context.Context) error {
 		_, err := s.cli.CreateContainer(ctx, &v1proto.CreateContainerRequest{
 			Namespace:  namespaceName,
 			Name:       containerName,
-			TtlSeconds: ptr.Int64(ttl),
+			TtlSeconds: ptr.Int64(int64(ttl.Seconds())),
 		})
 		if err != nil {
 			return errors.Wrap(err, "error creating container")

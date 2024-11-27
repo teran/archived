@@ -8,7 +8,6 @@ import (
 	"os/user"
 	"path/filepath"
 	"strings"
-	"time"
 
 	kingpin "github.com/alecthomas/kingpin/v2"
 	log "github.com/sirupsen/logrus"
@@ -84,7 +83,7 @@ var (
 	container           = app.Command("container", "container operations")
 	containerCreate     = container.Command("create", "create new container")
 	containerCreateName = containerCreate.Arg("name", "name of the container to create").Required().String()
-	containerCreateTTL  = containerCreate.Flag("ttl", "Default container TTL in seconds").Default("-1").Int64()
+	containerCreateTTL  = containerCreate.Flag("ttl", "Default container TTL in seconds").Default("-1").Duration()
 
 	containerMove          = container.Command("move", "move container to another namespace")
 	containerMoveName      = containerMove.Arg("name", "container namespace to move").Required().String()
@@ -99,7 +98,7 @@ var (
 
 	containerSet          = container.Command("set", "set parameters for container")
 	containerSetContainer = containerSet.Arg("name", "name of the container").Required().String()
-	containerSetTTL       = containerSet.Flag("ttl", "Container TTL in seconds").Default("-1").Int64()
+	containerSetTTL       = containerSet.Flag("ttl", "Container TTL in seconds").Default("-1").Duration()
 
 	containerList = container.Command("list", "list containers")
 
@@ -244,7 +243,7 @@ func main() {
 	r.Register(containerRename.FullCommand(), cliSvc.RenameContainer(*namespaceName, *containerRenameOldName, *containerRenameNewName))
 	r.Register(containerList.FullCommand(), cliSvc.ListContainers(*namespaceName))
 	r.Register(containerDelete.FullCommand(), cliSvc.DeleteContainer(*namespaceName, *containerDeleteName))
-	r.Register(containerSet.FullCommand(), cliSvc.SetContainerParameters(*namespaceName, *containerSetContainer, time.Duration(*containerSetTTL)*time.Second))
+	r.Register(containerSet.FullCommand(), cliSvc.SetContainerParameters(*namespaceName, *containerSetContainer, *containerSetTTL))
 
 	r.Register(versionList.FullCommand(), cliSvc.ListVersions(*namespaceName, *versionListContainer))
 	r.Register(versionCreate.FullCommand(), cliSvc.CreateVersion(
