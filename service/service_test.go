@@ -125,10 +125,10 @@ func (s *serviceTestSuite) TestDeleteContainer() {
 	s.Require().NoError(err)
 }
 
-func (s *serviceTestSuite) TestSetContainerVersionsTTL() {
-	s.mdRepoMock.On("SetContainerVersionsTTL", defaultNamespace, "container", 1*time.Hour).Return(nil).Once()
+func (s *serviceTestSuite) TestSetContainerParameters() {
+	s.mdRepoMock.On("SetContainerParameters", defaultNamespace, "container", 1*time.Hour).Return(nil).Once()
 
-	err := s.svc.SetContainerVersionsTTL(s.ctx, defaultNamespace, "container", 1*time.Hour)
+	err := s.svc.SetContainerParameters(s.ctx, defaultNamespace, "container", 1*time.Hour)
 	s.Require().NoError(err)
 }
 

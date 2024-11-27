@@ -51,7 +51,7 @@ func (s *serviceTestSuite) TestDeleteNamespace() {
 func (s *serviceTestSuite) TestCreateContainer() {
 	s.cliMock.On("CreateContainer", defaultNamespace, "test-container").Return(nil).Once()
 
-	fn := s.svc.CreateContainer(defaultNamespace, "test-container")
+	fn := s.svc.CreateContainer(defaultNamespace, "test-container", -1)
 	s.Require().NoError(fn(s.ctx))
 }
 
@@ -83,10 +83,10 @@ func (s *serviceTestSuite) TestDeleteContainer() {
 	s.Require().NoError(fn(s.ctx))
 }
 
-func (s *serviceTestSuite) TestSetContainerVersionsTTL() {
-	s.cliMock.On("SetContainerVersionsTTL", defaultNamespace, "test-container1", 3600*time.Second).Return(nil).Once()
+func (s *serviceTestSuite) TestSetContainerParameters() {
+	s.cliMock.On("SetContainerParameters", defaultNamespace, "test-container1", 3600*time.Second).Return(nil).Once()
 
-	fn := s.svc.SetContainerVersionsTTL(defaultNamespace, "test-container1", 3600*time.Second)
+	fn := s.svc.SetContainerParameters(defaultNamespace, "test-container1", 3600*time.Second)
 	s.Require().NoError(fn(s.ctx))
 }
 

@@ -61,9 +61,9 @@ func (m *protoClientMock) DeleteContainer(ctx context.Context, in *v1proto.Delet
 	return &v1proto.DeleteContainerResponse{}, args.Error(0)
 }
 
-func (m *protoClientMock) SetContainerVersionsTTL(ctx context.Context, in *v1proto.SetContainerVersionsTTLRequest, opts ...grpc.CallOption) (*v1proto.SetContainerVersionsTTLResponse, error) {
-	args := m.Called(in.GetNamespace(), in.GetName(), time.Duration(in.GetTtlHours())*time.Hour)
-	return &v1proto.SetContainerVersionsTTLResponse{}, args.Error(0)
+func (m *protoClientMock) SetContainerParameters(ctx context.Context, in *v1proto.SetContainerParametersRequest, opts ...grpc.CallOption) (*v1proto.SetContainerParametersResponse, error) {
+	args := m.Called(in.GetNamespace(), in.GetName(), time.Duration(in.GetTtlSeconds())*time.Second)
+	return &v1proto.SetContainerParametersResponse{}, args.Error(0)
 }
 
 func (m *protoClientMock) ListContainers(ctx context.Context, in *v1proto.ListContainersRequest, opts ...grpc.CallOption) (*v1proto.ListContainersResponse, error) {

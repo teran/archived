@@ -25,7 +25,7 @@ type Manager interface {
 	MoveContainer(ctx context.Context, namespace, container, destNamespace string) error
 	RenameContainer(ctx context.Context, namespace, oldName, newName string) error
 	DeleteContainer(ctx context.Context, namespace, name string) error
-	SetContainerVersionsTTL(ctx context.Context, namespace, name string, ttl time.Duration) error
+	SetContainerParameters(ctx context.Context, namespace, name string, ttl time.Duration) error
 
 	CreateVersion(ctx context.Context, namespace, container string) (id string, err error)
 	ListAllVersions(ctx context.Context, namespace, container string) ([]models.Version, error)
@@ -128,8 +128,8 @@ func (s *service) RenameContainer(ctx context.Context, namespace, oldName, newNa
 	return nil
 }
 
-func (s *service) SetContainerVersionsTTL(ctx context.Context, namespace, name string, ttl time.Duration) error {
-	err := s.mdRepo.SetContainerVersionsTTL(ctx, namespace, name, ttl)
+func (s *service) SetContainerParameters(ctx context.Context, namespace, name string, ttl time.Duration) error {
+	err := s.mdRepo.SetContainerParameters(ctx, namespace, name, ttl)
 	if err != nil {
 		return mapMetadataErrors(err)
 	}

@@ -279,13 +279,13 @@ func (s *memcacheTestSuite) TestDeleteContainer() {
 	s.Require().NoError(err)
 }
 
-func (s *memcacheTestSuite) TestSetContainerVersionsTTL() {
-	s.repoMock.On("SetContainerVersionsTTL", defaultNamespace, "container1", 1*time.Hour).Return(nil).Twice()
+func (s *memcacheTestSuite) TestSetContainerVersionsParameters() {
+	s.repoMock.On("SetContainerParameters", defaultNamespace, "container1", 1*time.Hour).Return(nil).Twice()
 
-	err := s.cache.SetContainerVersionsTTL(s.ctx, defaultNamespace, "container1", 1*time.Hour)
+	err := s.cache.SetContainerParameters(s.ctx, defaultNamespace, "container1", 1*time.Hour)
 	s.Require().NoError(err)
 
-	err = s.cache.SetContainerVersionsTTL(s.ctx, defaultNamespace, "container1", 1*time.Hour)
+	err = s.cache.SetContainerParameters(s.ctx, defaultNamespace, "container1", 1*time.Hour)
 	s.Require().NoError(err)
 }
 

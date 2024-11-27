@@ -27,17 +27,17 @@ func (s *postgreSQLRepositoryTestSuite) TestContainerOperations() {
 	s.Require().Error(err)
 	s.Require().Equal(metadata.ErrConflict, err)
 
-	err = s.repo.SetContainerVersionsTTL(s.ctx, defaultNamespace, "test-container5", 1*time.Hour)
+	err = s.repo.SetContainerParameters(s.ctx, defaultNamespace, "test-container5", 1*time.Hour)
 	s.Require().NoError(err)
 
-	err = s.repo.SetContainerVersionsTTL(s.ctx, defaultNamespace, "test-container9", 2*time.Hour)
+	err = s.repo.SetContainerParameters(s.ctx, defaultNamespace, "test-container9", 2*time.Hour)
 	s.Require().NoError(err)
 
 	list, err = s.repo.ListContainers(s.ctx, defaultNamespace)
 	s.Require().NoError(err)
 	s.Require().Equal([]models.Container{
-		{Name: "test-container5", CreatedAt: time.Date(2024, 1, 2, 1, 2, 3, 0, time.UTC), VersionsTTL: 3600},
-		{Name: "test-container9", CreatedAt: time.Date(2024, 1, 2, 1, 2, 3, 0, time.UTC), VersionsTTL: 7200},
+		{Name: "test-container5", CreatedAt: time.Date(2024, 1, 2, 1, 2, 3, 0, time.UTC), VersionsTTL: 3600 * time.Second},
+		{Name: "test-container9", CreatedAt: time.Date(2024, 1, 2, 1, 2, 3, 0, time.UTC), VersionsTTL: 7200 * time.Second},
 	}, list)
 
 	err = s.repo.DeleteContainer(s.ctx, defaultNamespace, "test-container9")
@@ -49,7 +49,7 @@ func (s *postgreSQLRepositoryTestSuite) TestContainerOperations() {
 	list, err = s.repo.ListContainers(s.ctx, defaultNamespace)
 	s.Require().NoError(err)
 	s.Require().Equal([]models.Container{
-		{Name: "test-container5", CreatedAt: time.Date(2024, 1, 2, 1, 2, 3, 0, time.UTC), VersionsTTL: 3600},
+		{Name: "test-container5", CreatedAt: time.Date(2024, 1, 2, 1, 2, 3, 0, time.UTC), VersionsTTL: 3600 * time.Second},
 	}, list)
 
 	err = s.repo.RenameContainer(s.ctx, defaultNamespace, "test-container5", "new-namespace", "and-then-there-was-the-one")
@@ -66,7 +66,7 @@ func (s *postgreSQLRepositoryTestSuite) TestContainerOperations() {
 	list, err = s.repo.ListContainers(s.ctx, "new-namespace")
 	s.Require().NoError(err)
 	s.Require().Equal([]models.Container{
-		{Name: "and-then-there-was-the-one", CreatedAt: time.Date(2024, 1, 2, 1, 2, 3, 0, time.UTC), VersionsTTL: 3600},
+		{Name: "and-then-there-was-the-one", CreatedAt: time.Date(2024, 1, 2, 1, 2, 3, 0, time.UTC), VersionsTTL: 3600 * time.Second},
 	}, list)
 }
 

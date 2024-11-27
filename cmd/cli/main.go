@@ -84,6 +84,7 @@ var (
 	container           = app.Command("container", "container operations")
 	containerCreate     = container.Command("create", "create new container")
 	containerCreateName = containerCreate.Arg("name", "name of the container to create").Required().String()
+	containerCreateTTL  = containerCreate.Flag("ttl", "Default container TTL in seconds").Default("-1").Int64()
 
 	containerMove          = container.Command("move", "move container to another namespace")
 	containerMoveName      = containerMove.Arg("name", "container namespace to move").Required().String()
@@ -96,9 +97,9 @@ var (
 	containerDelete     = container.Command("delete", "delete the given container")
 	containerDeleteName = containerDelete.Arg("name", "name of the container to delete").Required().String()
 
-	containerTTL          = container.Command("ttl", "set TTL for container versions")
-	containerTTLContainer = containerTTL.Arg("name", "name of the container to set TTL for").Required().String()
-	containerTTLTTL       = containerTTL.Arg("ttl", "TTL for container versions in hours").Required().Int()
+	containerSet          = container.Command("set", "set parameters for container")
+	containerSetContainer = containerSet.Arg("name", "name of the container").Required().String()
+	containerSetTTL       = containerSet.Flag("ttl", "Container TTL in seconds").Default("-1").Int64()
 
 	containerList = container.Command("list", "list containers")
 
@@ -238,12 +239,12 @@ func main() {
 	r.Register(namespaceList.FullCommand(), cliSvc.ListNamespaces())
 	r.Register(namespaceDelete.FullCommand(), cliSvc.DeleteNamespace(*namespaceDeleteName))
 
-	r.Register(containerCreate.FullCommand(), cliSvc.CreateContainer(*namespaceName, *containerCreateName))
+	r.Register(containerCreate.FullCommand(), cliSvc.CreateContainer(*namespaceName, *containerCreateName, *containerCreateTTL))
 	r.Register(containerMove.FullCommand(), cliSvc.MoveContainer(*namespaceName, *containerMoveName, *containerMoveNamespace))
 	r.Register(containerRename.FullCommand(), cliSvc.RenameContainer(*namespaceName, *containerRenameOldName, *containerRenameNewName))
 	r.Register(containerList.FullCommand(), cliSvc.ListContainers(*namespaceName))
 	r.Register(containerDelete.FullCommand(), cliSvc.DeleteContainer(*namespaceName, *containerDeleteName))
-	r.Register(containerTTL.FullCommand(), cliSvc.SetContainerVersionsTTL(*namespaceName, *containerTTLContainer, time.Duration(*containerTTLTTL)*time.Hour))
+	r.Register(containerSet.FullCommand(), cliSvc.SetContainerParameters(*namespaceName, *containerSetContainer, time.Duration(*containerSetTTL)*time.Second))
 
 	r.Register(versionList.FullCommand(), cliSvc.ListVersions(*namespaceName, *versionListContainer))
 	r.Register(versionCreate.FullCommand(), cliSvc.CreateVersion(

@@ -57,7 +57,7 @@ func (m *Mock) RenameContainer(_ context.Context, namespace, oldName, newName st
 	return args.Error(0)
 }
 
-func (m *Mock) SetContainerVersionsTTL(_ context.Context, namespace, name string, ttl time.Duration) error {
+func (m *Mock) SetContainerParameters(_ context.Context, namespace, name string, ttl time.Duration) error {
 	args := m.Called(namespace, name, ttl)
 	return args.Error(0)
 }

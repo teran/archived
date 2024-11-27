@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 	grpctest "github.com/teran/go-grpctest"
+	ptr "github.com/teran/go-ptr"
 
 	v1pb "github.com/teran/archived/manager/presenter/grpc/proto/v1"
 	"github.com/teran/archived/models"
@@ -108,13 +109,13 @@ func (s *manageHandlersTestSuite) TestRenameContainerNotFound() {
 	s.Require().Equal("rpc error: code = NotFound desc = entity not found", err.Error())
 }
 
-func (s *manageHandlersTestSuite) TestSetContainerVersionsTTL() {
-	s.svcMock.On("SetContainerVersionsTTL", defaultNamespace, "test-container", 1*time.Hour).Return(nil).Once()
+func (s *manageHandlersTestSuite) TestSetContainerParameters() {
+	s.svcMock.On("SetContainerParameters", defaultNamespace, "test-container", 1*time.Hour).Return(nil).Once()
 
-	_, err := s.client.SetContainerVersionsTTL(s.ctx, &v1pb.SetContainerVersionsTTLRequest{
-		Namespace: defaultNamespace,
-		Name:      "test-container",
-		TtlHours:  1,
+	_, err := s.client.SetContainerParameters(s.ctx, &v1pb.SetContainerParametersRequest{
+		Namespace:  defaultNamespace,
+		Name:       "test-container",
+		TtlSeconds: ptr.Int64(3600),
 	})
 	s.Require().NoError(err)
 }

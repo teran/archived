@@ -133,7 +133,7 @@ func (r *repository) RenameContainer(ctx context.Context, namespace, oldName, ne
 	return nil
 }
 
-func (r *repository) SetContainerVersionsTTL(ctx context.Context, namespace, name string, ttl time.Duration) error {
+func (r *repository) SetContainerParameters(ctx context.Context, namespace, name string, ttl time.Duration) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return mapSQLErrors(err)
@@ -224,10 +224,19 @@ func (r *repository) ListContainers(ctx context.Context, namespace string) ([]mo
 		var (
 			r         models.Container
 			createdAt time.Time
+			ttl       int64
 		)
-		if err := rows.Scan(&r.Name, &createdAt, &r.VersionsTTL); err != nil {
+
+		if err := rows.Scan(&r.Name, &createdAt, &ttl); err != nil {
 			return nil, mapSQLErrors(err)
 		}
+
+		if ttl >= 0 {
+			r.VersionsTTL = time.Duration(ttl * int64(time.Second))
+		} else {
+			r.VersionsTTL = -1
+		}
+
 		r.CreatedAt = time.Date(
 			createdAt.Year(), createdAt.Month(), createdAt.Day(),
 			createdAt.Hour(), createdAt.Minute(), createdAt.Second(), createdAt.Nanosecond(),
