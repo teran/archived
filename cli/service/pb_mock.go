@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"time"
 
 	v1proto "github.com/teran/archived/manager/presenter/grpc/proto/v1"
 	"github.com/teran/archived/repositories/blob/mock"
@@ -58,6 +59,11 @@ func (m *protoClientMock) RenameContainer(ctx context.Context, in *v1proto.Renam
 func (m *protoClientMock) DeleteContainer(ctx context.Context, in *v1proto.DeleteContainerRequest, opts ...grpc.CallOption) (*v1proto.DeleteContainerResponse, error) {
 	args := m.Called(in.GetNamespace(), in.GetName())
 	return &v1proto.DeleteContainerResponse{}, args.Error(0)
+}
+
+func (m *protoClientMock) SetContainerParameters(ctx context.Context, in *v1proto.SetContainerParametersRequest, opts ...grpc.CallOption) (*v1proto.SetContainerParametersResponse, error) {
+	args := m.Called(in.GetNamespace(), in.GetName(), time.Duration(in.GetTtlSeconds())*time.Second)
+	return &v1proto.SetContainerParametersResponse{}, args.Error(0)
 }
 
 func (m *protoClientMock) ListContainers(ctx context.Context, in *v1proto.ListContainersRequest, opts ...grpc.CallOption) (*v1proto.ListContainersResponse, error) {

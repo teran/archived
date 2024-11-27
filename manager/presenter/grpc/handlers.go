@@ -2,15 +2,17 @@ package grpc
 
 import (
 	"context"
+	"time"
 
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	ptr "github.com/teran/go-ptr"
+
 	v1 "github.com/teran/archived/manager/presenter/grpc/proto/v1"
 	"github.com/teran/archived/service"
-	ptr "github.com/teran/go-ptr"
 )
 
 var _ v1.ManageServiceServer = (*handlers)(nil)
@@ -72,7 +74,7 @@ func (h *handlers) ListNamespaces(ctx context.Context, in *v1.ListNamespacesRequ
 }
 
 func (h *handlers) CreateContainer(ctx context.Context, in *v1.CreateContainerRequest) (*v1.CreateContainerResponse, error) {
-	err := h.svc.CreateContainer(ctx, in.GetNamespace(), in.GetName())
+	err := h.svc.CreateContainer(ctx, in.GetNamespace(), in.GetName(), time.Duration(in.GetTtlSeconds())*time.Second)
 	if err != nil {
 		return nil, mapServiceError(err)
 	}
@@ -105,6 +107,15 @@ func (h *handlers) DeleteContainer(ctx context.Context, in *v1.DeleteContainerRe
 	}
 
 	return &v1.DeleteContainerResponse{}, nil
+}
+
+func (h *handlers) SetContainerParameters(ctx context.Context, in *v1.SetContainerParametersRequest) (*v1.SetContainerParametersResponse, error) {
+	err := h.svc.SetContainerParameters(ctx, in.GetNamespace(), in.GetName(), time.Duration(in.GetTtlSeconds())*time.Second)
+	if err != nil {
+		return nil, mapServiceError(err)
+	}
+
+	return &v1.SetContainerParametersResponse{}, nil
 }
 
 func (h *handlers) ListContainers(ctx context.Context, in *v1.ListContainersRequest) (*v1.ListContainersResponse, error) {

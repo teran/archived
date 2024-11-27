@@ -10,7 +10,7 @@ func (s *postgreSQLRepositoryTestSuite) TestCountStats() {
 	s.tp.On("Now").Return("2024-07-07T10:11:14Z").Twice()
 
 	// Create container
-	err := s.repo.CreateContainer(s.ctx, defaultNamespace, containerName)
+	err := s.repo.CreateContainer(s.ctx, defaultNamespace, containerName, -1)
 	s.Require().NoError(err)
 
 	// Create first version

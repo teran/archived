@@ -90,12 +90,16 @@ func (m *memcache) DeleteNamespace(ctx context.Context, name string) error {
 	return m.repo.DeleteNamespace(ctx, name)
 }
 
-func (m *memcache) CreateContainer(ctx context.Context, namespace, name string) error {
-	return m.repo.CreateContainer(ctx, namespace, name)
+func (m *memcache) CreateContainer(ctx context.Context, namespace, name string, ttl time.Duration) error {
+	return m.repo.CreateContainer(ctx, namespace, name, ttl)
 }
 
 func (m *memcache) RenameContainer(ctx context.Context, namespace, oldName, newNamespace, newName string) error {
 	return m.repo.RenameContainer(ctx, namespace, oldName, newNamespace, newName)
+}
+
+func (m *memcache) SetContainerParameters(ctx context.Context, namespace, name string, ttl time.Duration) error {
+	return m.repo.SetContainerParameters(ctx, namespace, name, ttl)
 }
 
 func (m *memcache) ListContainers(ctx context.Context, namespace string) ([]models.Container, error) {

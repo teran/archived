@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -12,6 +13,7 @@ import (
 	"github.com/teran/archived/cli/service/source"
 	cache "github.com/teran/archived/cli/service/stat_cache"
 	v1proto "github.com/teran/archived/manager/presenter/grpc/proto/v1"
+	ptr "github.com/teran/go-ptr"
 )
 
 type Service interface {
@@ -20,11 +22,12 @@ type Service interface {
 	ListNamespaces() func(ctx context.Context) error
 	DeleteNamespace(namespaceName string) func(ctx context.Context) error
 
-	CreateContainer(namespaceName, containerName string) func(ctx context.Context) error
+	CreateContainer(namespaceName, containerName string, ttl time.Duration) func(ctx context.Context) error
 	MoveContainer(namespaceName, containerName, destinationNamespace string) func(ctx context.Context) error
 	RenameContainer(namespaceName, oldName, newName string) func(ctx context.Context) error
 	ListContainers(namespaceName string) func(ctx context.Context) error
 	DeleteContainer(namespaceName, containerName string) func(ctx context.Context) error
+	SetContainerParameters(namespaceName, containerName string, ttl time.Duration) func(ctx context.Context) error
 
 	CreateVersion(namespaceName, containerName string, shouldPublish bool, src source.Source) func(ctx context.Context) error
 	DeleteVersion(namespaceName, containerName, versionID string) func(ctx context.Context) error
@@ -103,11 +106,12 @@ func (s *service) DeleteNamespace(namespaceName string) func(ctx context.Context
 	}
 }
 
-func (s *service) CreateContainer(namespaceName, containerName string) func(ctx context.Context) error {
+func (s *service) CreateContainer(namespaceName, containerName string, ttl time.Duration) func(ctx context.Context) error {
 	return func(ctx context.Context) error {
 		_, err := s.cli.CreateContainer(ctx, &v1proto.CreateContainerRequest{
-			Namespace: namespaceName,
-			Name:      containerName,
+			Namespace:  namespaceName,
+			Name:       containerName,
+			TtlSeconds: ptr.Int64(int64(ttl.Seconds())),
 		})
 		if err != nil {
 			return errors.Wrap(err, "error creating container")
@@ -174,6 +178,22 @@ func (s *service) DeleteContainer(namespaceName, containerName string) func(ctx 
 		}
 
 		fmt.Printf("container `%s` has been deleted\n", containerName)
+		return nil
+	}
+}
+
+func (s *service) SetContainerParameters(namespaceName, containerName string, ttl time.Duration) func(ctx context.Context) error {
+	return func(ctx context.Context) error {
+		_, err := s.cli.SetContainerParameters(ctx, &v1proto.SetContainerParametersRequest{
+			Namespace:  namespaceName,
+			Name:       containerName,
+			TtlSeconds: ptr.Int64(int64(ttl.Seconds())),
+		})
+		if err != nil {
+			return errors.Wrap(err, "error setting container versions TTL")
+		}
+
+		fmt.Printf("container `%s` versions TTL set to %s\n", containerName, ttl)
 		return nil
 	}
 }

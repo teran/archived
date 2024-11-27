@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -20,10 +21,11 @@ type Manager interface {
 	RenameNamespace(ctx context.Context, oldName, newName string) error
 	DeleteNamespace(ctx context.Context, name string) error
 
-	CreateContainer(ctx context.Context, namespace, name string) error
+	CreateContainer(ctx context.Context, namespace, name string, ttl time.Duration) error
 	MoveContainer(ctx context.Context, namespace, container, destNamespace string) error
 	RenameContainer(ctx context.Context, namespace, oldName, newName string) error
 	DeleteContainer(ctx context.Context, namespace, name string) error
+	SetContainerParameters(ctx context.Context, namespace, name string, ttl time.Duration) error
 
 	CreateVersion(ctx context.Context, namespace, container string) (id string, err error)
 	ListAllVersions(ctx context.Context, namespace, container string) ([]models.Version, error)
@@ -102,8 +104,8 @@ func (s *service) DeleteNamespace(ctx context.Context, name string) error {
 	return mapMetadataErrors(err)
 }
 
-func (s *service) CreateContainer(ctx context.Context, namespace, name string) error {
-	err := s.mdRepo.CreateContainer(ctx, namespace, name)
+func (s *service) CreateContainer(ctx context.Context, namespace, name string, ttl time.Duration) error {
+	err := s.mdRepo.CreateContainer(ctx, namespace, name, ttl)
 	if err != nil {
 		return mapMetadataErrors(err)
 	}
@@ -120,6 +122,14 @@ func (s *service) MoveContainer(ctx context.Context, namespace, container, destN
 
 func (s *service) RenameContainer(ctx context.Context, namespace, oldName, newName string) error {
 	err := s.mdRepo.RenameContainer(ctx, namespace, oldName, namespace, newName)
+	if err != nil {
+		return mapMetadataErrors(err)
+	}
+	return nil
+}
+
+func (s *service) SetContainerParameters(ctx context.Context, namespace, name string, ttl time.Duration) error {
+	err := s.mdRepo.SetContainerParameters(ctx, namespace, name, ttl)
 	if err != nil {
 		return mapMetadataErrors(err)
 	}

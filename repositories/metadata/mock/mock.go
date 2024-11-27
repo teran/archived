@@ -2,8 +2,10 @@ package mock
 
 import (
 	"context"
+	"time"
 
 	"github.com/stretchr/testify/mock"
+
 	emodels "github.com/teran/archived/exporter/models"
 	"github.com/teran/archived/models"
 	"github.com/teran/archived/repositories/metadata"
@@ -39,13 +41,18 @@ func (m *Mock) DeleteNamespace(ctx context.Context, name string) error {
 	return args.Error(0)
 }
 
-func (m *Mock) CreateContainer(_ context.Context, namespace, name string) error {
-	args := m.Called(namespace, name)
+func (m *Mock) CreateContainer(_ context.Context, namespace, name string, ttl time.Duration) error {
+	args := m.Called(namespace, name, ttl)
 	return args.Error(0)
 }
 
 func (m *Mock) RenameContainer(_ context.Context, namespace, oldName, newNamespace, newName string) error {
 	args := m.Called(namespace, oldName, newNamespace, newName)
+	return args.Error(0)
+}
+
+func (m *Mock) SetContainerParameters(_ context.Context, namespace, name string, ttl time.Duration) error {
+	args := m.Called(namespace, name, ttl)
 	return args.Error(0)
 }
 

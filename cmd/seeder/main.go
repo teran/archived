@@ -110,7 +110,7 @@ func main() {
 		}
 		for j := 0; j <= cfg.CreateContainersPerNamespace; j++ {
 			container := fmt.Sprintf("container-%06d", j)
-			if err := managerSvc.CreateContainer(ctx, namespace, container); err != nil {
+			if err := managerSvc.CreateContainer(ctx, namespace, container, -1); err != nil {
 				panic(err)
 			}
 			for k := 0; k <= cfg.CreateVersionsPerContainer; k++ {

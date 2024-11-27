@@ -29,6 +29,7 @@ message ListNamespacesResponse {
 message CreateContainerRequest {
   string namespace = 1;
   string name = 2;
+  optional int64 ttl_seconds = 3;
 }
 message CreateContainerResponse {}
 
@@ -52,6 +53,13 @@ message DeleteContainerRequest {
   string name = 2;
 }
 message DeleteContainerResponse {}
+
+message SetContainerParametersRequest {
+  string namespace = 1;
+  string name = 2;
+  optional int64 ttl_seconds = 3;
+}
+message SetContainerParametersResponse {}
 
 message ListContainersRequest {
   string namespace = 1;
@@ -148,6 +156,7 @@ service ManageService {
   rpc RenameContainer(RenameContainerRequest) returns (RenameContainerResponse);
   rpc DeleteContainer(DeleteContainerRequest) returns (DeleteContainerResponse);
   rpc ListContainers(ListContainersRequest) returns (ListContainersResponse);
+  rpc SetContainerParameters(SetContainerParametersRequest) returns (SetContainerParametersResponse);
 
   rpc CreateVersion(CreateVersionRequest) returns (CreateVersionResponse);
   rpc ListVersions(ListVersionsRequest) returns (ListVersionsResponse);

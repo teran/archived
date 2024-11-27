@@ -11,10 +11,10 @@ func (s *postgreSQLRepositoryTestSuite) TestVersionsOperations() {
 	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Times(4)
 	s.tp.On("Now").Return("2024-07-07T11:12:13Z").Times(2)
 
-	err := s.repo.CreateContainer(s.ctx, defaultNamespace, "container1")
+	err := s.repo.CreateContainer(s.ctx, defaultNamespace, "container1", -1)
 	s.Require().NoError(err)
 
-	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "container2")
+	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "container2", -1)
 	s.Require().NoError(err)
 
 	vName, err := s.repo.CreateVersion(s.ctx, defaultNamespace, "container1")
@@ -47,7 +47,7 @@ func (s *postgreSQLRepositoryTestSuite) TestVersionsOperations() {
 func (s *postgreSQLRepositoryTestSuite) TestPublishVersion() {
 	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Times(3)
 
-	err := s.repo.CreateContainer(s.ctx, defaultNamespace, "container1")
+	err := s.repo.CreateContainer(s.ctx, defaultNamespace, "container1", -1)
 	s.Require().NoError(err)
 
 	version, err := s.repo.CreateVersion(s.ctx, defaultNamespace, "container1")
@@ -99,7 +99,7 @@ func (s *postgreSQLRepositoryTestSuite) TestPublishVersionErrors() {
 	// Not existent version
 	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Once()
 
-	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "container1")
+	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "container1", -1)
 	s.Require().NoError(err)
 
 	err = s.repo.MarkVersionPublished(s.ctx, defaultNamespace, "not-existent", "version")
@@ -122,7 +122,7 @@ func (s *postgreSQLRepositoryTestSuite) TestListObjectsErrorsNotExistentContaine
 func (s *postgreSQLRepositoryTestSuite) TestListObjectsErrorsNotExistentVersion() {
 	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Once()
 
-	err := s.repo.CreateContainer(s.ctx, defaultNamespace, "test-container")
+	err := s.repo.CreateContainer(s.ctx, defaultNamespace, "test-container", -1)
 	s.Require().NoError(err)
 
 	_, _, err = s.repo.ListObjects(s.ctx, defaultNamespace, "test-container", "2024-01-02T03:04:05Z", 0, 100)
@@ -135,7 +135,7 @@ func (s *postgreSQLRepositoryTestSuite) TestVersionsPagination() {
 	s.tp.On("Now").Return("2024-07-07T10:11:13Z").Times(2)
 	s.tp.On("Now").Return("2024-07-07T10:11:14Z").Times(2)
 
-	err := s.repo.CreateContainer(s.ctx, defaultNamespace, "container1")
+	err := s.repo.CreateContainer(s.ctx, defaultNamespace, "container1", -1)
 	s.Require().NoError(err)
 
 	version1, err := s.repo.CreateVersion(s.ctx, defaultNamespace, "container1")
@@ -188,10 +188,10 @@ func (s *postgreSQLRepositoryTestSuite) TestDeleteVersion() {
 	s.tp.On("Now").Return("2024-07-07T10:11:15Z").Times(2)
 	s.tp.On("Now").Return("2024-07-07T10:11:16Z").Times(3)
 
-	err := s.repo.CreateContainer(s.ctx, defaultNamespace, "container1")
+	err := s.repo.CreateContainer(s.ctx, defaultNamespace, "container1", -1)
 	s.Require().NoError(err)
 
-	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "container2")
+	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "container2", -1)
 	s.Require().NoError(err)
 
 	version1, err := s.repo.CreateVersion(s.ctx, defaultNamespace, "container1")
@@ -271,10 +271,10 @@ func (s *postgreSQLRepositoryTestSuite) TestGetLatestPublishedVersionByContainer
 	s.tp.On("Now").Return("2024-07-07T10:11:15Z").Times(2)
 	s.tp.On("Now").Return("2024-07-07T10:11:16Z").Times(2)
 
-	err := s.repo.CreateContainer(s.ctx, defaultNamespace, "container1")
+	err := s.repo.CreateContainer(s.ctx, defaultNamespace, "container1", -1)
 	s.Require().NoError(err)
 
-	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "container2")
+	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "container2", -1)
 	s.Require().NoError(err)
 
 	_, err = s.repo.CreateVersion(s.ctx, defaultNamespace, "container1")

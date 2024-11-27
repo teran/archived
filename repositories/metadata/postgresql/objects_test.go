@@ -9,7 +9,7 @@ func (s *postgreSQLRepositoryTestSuite) TestObjects() {
 	s.tp.On("Now").Return("2024-07-07T10:11:13Z").Times(5)
 	s.tp.On("Now").Return("2024-07-07T10:11:14Z").Times(5)
 
-	err := s.repo.CreateContainer(s.ctx, defaultNamespace, containerName)
+	err := s.repo.CreateContainer(s.ctx, defaultNamespace, containerName, -1)
 	s.Require().NoError(err)
 
 	versionID, err := s.repo.CreateVersion(s.ctx, defaultNamespace, containerName)
@@ -64,7 +64,7 @@ func (s *postgreSQLRepositoryTestSuite) TestListObjectsErrors() {
 	s.Require().Equal(metadata.ErrNotFound, err)
 
 	// version doesn't exist
-	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "container")
+	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "container", -1)
 	s.Require().NoError(err)
 
 	_, _, err = s.repo.ListObjects(s.ctx, defaultNamespace, "container", "version", 0, 1000)
@@ -81,7 +81,7 @@ func (s *postgreSQLRepositoryTestSuite) TestRemapObjectErrors() {
 	// Remap with not existent version
 	s.tp.On("Now").Return("2024-01-02T01:02:03Z").Once()
 
-	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "container1")
+	err = s.repo.CreateContainer(s.ctx, defaultNamespace, "container1", -1)
 	s.Require().NoError(err)
 
 	err = s.repo.RemapObject(s.ctx, defaultNamespace, "not-existent", "version", "data/some-key.txt", "deadbeef")

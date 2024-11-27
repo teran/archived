@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/suite"
@@ -74,15 +75,15 @@ func (s *serviceTestSuite) TestDeleteNamespace() {
 
 func (s *serviceTestSuite) TestCreateContainer() {
 	// Happy path
-	s.mdRepoMock.On("CreateContainer", defaultNamespace, "container").Return(nil).Once()
+	s.mdRepoMock.On("CreateContainer", defaultNamespace, "container", time.Duration(-1)).Return(nil).Once()
 
-	err := s.svc.CreateContainer(s.ctx, defaultNamespace, "container")
+	err := s.svc.CreateContainer(s.ctx, defaultNamespace, "container", -1)
 	s.Require().NoError(err)
 
 	// return error
-	s.mdRepoMock.On("CreateContainer", defaultNamespace, "container").Return(errors.New("test error")).Once()
+	s.mdRepoMock.On("CreateContainer", defaultNamespace, "container", 3*time.Hour).Return(errors.New("test error")).Once()
 
-	err = s.svc.CreateContainer(s.ctx, defaultNamespace, "container")
+	err = s.svc.CreateContainer(s.ctx, defaultNamespace, "container", 3*time.Hour)
 	s.Require().Error(err)
 	s.Require().Equal("test error", err.Error())
 }
@@ -121,6 +122,13 @@ func (s *serviceTestSuite) TestDeleteContainer() {
 	s.mdRepoMock.On("DeleteContainer", defaultNamespace, "container").Return(nil).Once()
 
 	err := s.svc.DeleteContainer(s.ctx, defaultNamespace, "container")
+	s.Require().NoError(err)
+}
+
+func (s *serviceTestSuite) TestSetContainerParameters() {
+	s.mdRepoMock.On("SetContainerParameters", defaultNamespace, "container", 1*time.Hour).Return(nil).Once()
+
+	err := s.svc.SetContainerParameters(s.ctx, defaultNamespace, "container", 1*time.Hour)
 	s.Require().NoError(err)
 }
 
