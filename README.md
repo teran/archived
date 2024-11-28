@@ -99,20 +99,15 @@ CLI interface for archived
 
 
 Flags:
-      --[no-]help            Show context-sensitive help (also try --help-long
-                             and --help-man).
+      --[no-]help            Show context-sensitive help (also try --help-long and --help-man).
   -d, --[no-]debug           Enable debug mode ($ARCHIVED_CLI_DEBUG)
-  -t, --[no-]trace           Enable trace mode (debug mode on steroids)
-                             ($ARCHIVED_CLI_TRACE)
-  -s, --endpoint=ENDPOINT    Manager API endpoint address
-                             ($ARCHIVED_CLI_ENDPOINT)
+  -t, --[no-]trace           Enable trace mode (debug mode on steroids) ($ARCHIVED_CLI_TRACE)
+  -s, --endpoint=ENDPOINT    Manager API endpoint address ($ARCHIVED_CLI_ENDPOINT)
       --[no-]insecure        Do not use TLS for gRPC connection
       --[no-]insecure-skip-verify
-                             Do not perform TLS certificate verification for
-                             gRPC connection
+                             Do not perform TLS certificate verification for gRPC connection
       --cache-dir="~/.cache/archived/cli/objects"
-                             Stat-cache directory for objects
-                             ($ARCHIVED_CLI_STAT_CACHE_DIR)
+                             Stat-cache directory for objects ($ARCHIVED_CLI_STAT_CACHE_DIR)
   -n, --namespace="default"  namespace for containers to operate on
 
 Commands:
@@ -131,7 +126,7 @@ namespace delete <name>
 namespace list
     list namespaces
 
-container create <name>
+container create [<flags>] <name>
     create new container
 
 container move <name> <namespace>
@@ -143,8 +138,8 @@ container rename <old-name> <new-name>
 container delete <name>
     delete the given container
 
-container ttl <name> <ttl>
-    set TTL (in hours) for container versions
+container set [<flags>] <name>
+    set parameters for container
 
 container list
     list containers
