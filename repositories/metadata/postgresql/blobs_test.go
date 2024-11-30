@@ -11,7 +11,7 @@ func (s *postgreSQLRepositoryTestSuite) TestBlobs() {
 		checksum      = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
 	)
 
-	s.tp.On("Now").Return("2024-01-02T01:02:03Z").Times(6)
+	s.tp.On("Now").Return("2024-01-02T01:02:03Z").Times(4)
 
 	err := s.repo.CreateContainer(s.ctx, defaultNamespace, containerName, -1)
 	s.Require().NoError(err)
@@ -46,7 +46,7 @@ func (s *postgreSQLRepositoryTestSuite) TestBlobs() {
 }
 
 func (s *postgreSQLRepositoryTestSuite) TestGetBlobKeyByObjectErrors() {
-	s.tp.On("Now").Return("2024-01-02T01:02:03Z").Twice()
+	s.tp.On("Now").Return("2024-01-02T01:02:01Z").Once()
 
 	// Nothing exists: container, version, key
 	_, err := s.repo.GetBlobKeyByObject(s.ctx, defaultNamespace, "container", "version", "key")
@@ -81,7 +81,7 @@ func (s *postgreSQLRepositoryTestSuite) TestGetBlobKeyByObjectErrors() {
 }
 
 func (s *postgreSQLRepositoryTestSuite) TestGetBlobByObjectErrors() {
-	s.tp.On("Now").Return("2024-01-02T01:02:03Z").Twice()
+	s.tp.On("Now").Return("2024-01-02T01:02:03Z").Once()
 
 	// Nothing exists: container, version, key
 	_, err := s.repo.GetBlobByObject(s.ctx, defaultNamespace, "container", "version", "key")

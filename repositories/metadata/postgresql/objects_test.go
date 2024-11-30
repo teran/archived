@@ -5,9 +5,9 @@ import "github.com/teran/archived/repositories/metadata"
 func (s *postgreSQLRepositoryTestSuite) TestObjects() {
 	const containerName = "test-container-1"
 
-	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Times(3)
-	s.tp.On("Now").Return("2024-07-07T10:11:13Z").Times(5)
-	s.tp.On("Now").Return("2024-07-07T10:11:14Z").Times(5)
+	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Times(4)
+	s.tp.On("Now").Return("2024-07-07T10:11:13Z").Times(4)
+	// s.tp.On("Now").Return("2024-07-07T10:11:14Z").Times(4)
 
 	err := s.repo.CreateContainer(s.ctx, defaultNamespace, containerName, -1)
 	s.Require().NoError(err)
@@ -89,7 +89,7 @@ func (s *postgreSQLRepositoryTestSuite) TestRemapObjectErrors() {
 	s.Require().Equal(metadata.ErrNotFound, err)
 
 	// Remap with not existent key
-	s.tp.On("Now").Return("2024-01-02T01:02:03Z").Twice()
+	s.tp.On("Now").Return("2024-01-02T01:02:03Z").Once()
 
 	versionID, err := s.repo.CreateVersion(s.ctx, defaultNamespace, "container1")
 	s.Require().NoError(err)

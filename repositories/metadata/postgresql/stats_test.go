@@ -5,9 +5,20 @@ import "github.com/teran/archived/exporter/models"
 func (s *postgreSQLRepositoryTestSuite) TestCountStats() {
 	const containerName = "test-container-1"
 
-	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Times(3)
-	s.tp.On("Now").Return("2024-07-07T10:11:13Z").Times(7)
-	s.tp.On("Now").Return("2024-07-07T10:11:14Z").Twice()
+	// CreateContainer (created_at)
+	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Once()
+
+	// CreateVersion (created_at)
+	s.tp.On("Now").Return("2024-07-07T10:11:13Z").Once()
+
+	// CreateBLOB, 2xCreateObject (created_at)
+	s.tp.On("Now").Return("2024-07-07T10:11:14Z").Times(3)
+
+	// CreateVersion (created_at)
+	s.tp.On("Now").Return("2024-07-07T10:11:15Z").Once()
+
+	// CreateObject (created_at)
+	s.tp.On("Now").Return("2024-07-07T10:11:16Z").Once()
 
 	// Create container
 	err := s.repo.CreateContainer(s.ctx, defaultNamespace, containerName, -1)
@@ -60,14 +71,14 @@ func (s *postgreSQLRepositoryTestSuite) TestCountStats() {
 			{
 				Namespace:     defaultNamespace,
 				ContainerName: "test-container-1",
-				VersionName:   "20240707101112",
+				VersionName:   "20240707101113",
 				IsPublished:   false,
 				ObjectsCount:  2,
 			},
 			{
 				Namespace:     defaultNamespace,
 				ContainerName: "test-container-1",
-				VersionName:   "20240707101113",
+				VersionName:   "20240707101115",
 				IsPublished:   true,
 				ObjectsCount:  1,
 			},
@@ -77,14 +88,14 @@ func (s *postgreSQLRepositoryTestSuite) TestCountStats() {
 			{
 				Namespace:     defaultNamespace,
 				ContainerName: "test-container-1",
-				VersionName:   "20240707101112",
+				VersionName:   "20240707101113",
 				IsPublished:   false,
 				SizeBytes:     20,
 			},
 			{
 				Namespace:     defaultNamespace,
 				ContainerName: "test-container-1",
-				VersionName:   "20240707101113",
+				VersionName:   "20240707101115",
 				IsPublished:   true,
 				SizeBytes:     10,
 			},

@@ -57,7 +57,8 @@ func (r *repository) CreateVersion(ctx context.Context, namespace, container str
 		return "", metadata.ErrNotFound
 	}
 
-	versionID := r.tp().UTC().Format("20060102150405")
+	versionTimestamp := r.tp().UTC()
+	versionID := versionTimestamp.Format("20060102150405")
 
 	_, err = insertQuery(ctx, tx, psql.
 		Insert("versions").
@@ -71,7 +72,7 @@ func (r *repository) CreateVersion(ctx context.Context, namespace, container str
 			containerID,
 			versionID,
 			false,
-			r.tp().UTC(),
+			versionTimestamp,
 		))
 	if err != nil {
 		return "", mapSQLErrors(err)

@@ -66,6 +66,8 @@ func (r *repository) CreateObject(ctx context.Context, namespace, container, ver
 		return mapSQLErrors(err)
 	}
 
+	objectTimestamp := r.tp().UTC()
+
 	row, err = insertQueryRow(ctx, tx, psql.
 		Insert("object_keys").
 		Columns(
@@ -74,7 +76,7 @@ func (r *repository) CreateObject(ctx context.Context, namespace, container, ver
 		).
 		Values(
 			key,
-			r.tp().UTC(),
+			objectTimestamp,
 		).
 		Suffix("ON CONFLICT (key) DO UPDATE SET key=excluded.key RETURNING id"),
 	)
@@ -99,7 +101,7 @@ func (r *repository) CreateObject(ctx context.Context, namespace, container, ver
 			versionID,
 			okID,
 			blobID,
-			r.tp().UTC(),
+			objectTimestamp,
 		))
 	if err != nil {
 		return mapSQLErrors(err)
