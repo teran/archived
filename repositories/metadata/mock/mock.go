@@ -111,6 +111,11 @@ func (m *Mock) DeleteVersion(ctx context.Context, namespace, container, version 
 	return args.Error(0)
 }
 
+func (m *Mock) DeleteExpiredVersionsWithObjects(ctx context.Context, isPublished *bool) error {
+	args := m.Called(isPublished)
+	return args.Error(0)
+}
+
 func (m *Mock) CreateObject(_ context.Context, namespace, container, version, key, casKey string) error {
 	args := m.Called(namespace, container, version, key, casKey)
 	return args.Error(0)

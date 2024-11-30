@@ -15,6 +15,7 @@ import (
 	"github.com/teran/archived/repositories/metadata"
 	repoM "github.com/teran/archived/repositories/metadata/mock"
 	memcacheApp "github.com/teran/go-docker-testsuite/applications/memcache"
+	"github.com/teran/go-ptr"
 )
 
 const defaultNamespace = "default"
@@ -330,6 +331,21 @@ func (s *memcacheTestSuite) TestDeleteVersion() {
 	s.Require().NoError(err)
 
 	err = s.cache.DeleteVersion(s.ctx, defaultNamespace, "test-container", "test-version")
+	s.Require().NoError(err)
+}
+
+func (s *memcacheTestSuite) DeleteExpiredVersionsWithObjects() {
+	s.repoMock.On("DeleteExpiredVersionsWithObjects", nil).Return(nil).Once()
+	s.repoMock.On("DeleteExpiredVersionsWithObjects", ptr.Bool(true)).Return(nil).Once()
+	s.repoMock.On("DeleteExpiredVersionsWithObjects", ptr.Bool(false)).Return(nil).Once()
+
+	err := s.cache.DeleteExpiredVersionsWithObjects(s.ctx, nil)
+	s.Require().NoError(err)
+
+	err = s.cache.DeleteExpiredVersionsWithObjects(s.ctx, ptr.Bool(true))
+	s.Require().NoError(err)
+
+	err = s.cache.DeleteExpiredVersionsWithObjects(s.ctx, ptr.Bool(false))
 	s.Require().NoError(err)
 }
 

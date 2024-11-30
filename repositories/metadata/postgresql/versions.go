@@ -361,3 +361,77 @@ func (r *repository) DeleteVersion(ctx context.Context, namespace, container, ve
 	}
 	return nil
 }
+
+func (r *repository) DeleteExpiredVersionsWithObjects(ctx context.Context, isPublished *bool) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+	defer func() {
+		err := tx.Rollback()
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Error("error rolling back")
+		}
+	}()
+
+	q := psql.
+		Select(
+			"v.id AS version_id",
+		).
+		From("containers c").
+		Join("versions v ON v.container_id = c.id").
+		Join("namespaces n ON n.id = c.namespace_id").
+		Where(
+			sq.Gt{
+				"c.version_ttl_seconds": 0,
+			},
+		).
+		Where(
+			"v.created_at <= ($2::timestamp - c.version_ttl_seconds * interval '1 second')",
+			r.tp().UTC().Format(time.RFC3339),
+		)
+
+	if isPublished != nil {
+		q.Where(sq.Eq{
+			"v.is_published": *isPublished,
+		})
+	}
+
+	rows, err := selectQuery(ctx, tx, q)
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var versionID uint64
+		if err := rows.Scan(&versionID); err != nil {
+			return mapSQLErrors(err)
+		}
+
+		if _, err := deleteQuery(ctx, tx, psql.
+			Delete("objects").
+			Where(sq.Eq{
+				"version_id": versionID,
+			}),
+		); err != nil {
+			return mapSQLErrors(err)
+		}
+
+		if _, err := deleteQuery(ctx, tx, psql.
+			Delete("versions").
+			Where(sq.Eq{
+				"id": versionID,
+			}),
+		); err != nil {
+			return mapSQLErrors(err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return mapSQLErrors(err)
+	}
+	return mapSQLErrors(rows.Err())
+}

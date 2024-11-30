@@ -83,6 +83,14 @@ func (s *service) Run(ctx context.Context) error {
 	return nil
 }
 
+func (s *service) _deleteExpiredVersions(ctx context.Context, isPublished *bool) error {
+	if err := s.cfg.MdRepo.DeleteExpiredVersionsWithObjects(ctx, isPublished); err != nil {
+		return errors.Wrap(err, "error calling repository")
+	}
+
+	return nil
+}
+
 func (s *service) deleteExpiredVersions(ctx context.Context, now time.Time, namespace string, container models.Container) error {
 	log.WithFields(log.Fields{
 		"namespace": namespace,

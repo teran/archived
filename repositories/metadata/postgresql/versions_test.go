@@ -324,3 +324,24 @@ func (s *postgreSQLRepositoryTestSuite) TestGetLatestPublishedVersionByContainer
 	s.Require().Error(err)
 	s.Require().Equal("not found", err.Error())
 }
+
+func (s *postgreSQLRepositoryTestSuite) TestDeleteExpiredVersionsWithObjects() {
+	// CreateContainer (created_at)
+	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Once()
+	// CreateVersion (created_at)
+	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Once()
+	// DeleteExpiredVersionsWithObjects (now())
+	s.tp.On("Now").Return("2024-10-07T10:11:12Z").Once()
+
+	err := s.repo.CreateContainer(s.ctx, defaultNamespace, "test-container", -1)
+	s.Require().NoError(err)
+
+	version, err := s.repo.CreateVersion(s.ctx, defaultNamespace, "test-container")
+	s.Require().NoError(err)
+
+	err = s.repo.MarkVersionPublished(s.ctx, defaultNamespace, "test-container", version)
+	s.Require().NoError(err)
+
+	err = s.repo.DeleteExpiredVersionsWithObjects(s.ctx, nil)
+	s.Require().NoError(err)
+}
