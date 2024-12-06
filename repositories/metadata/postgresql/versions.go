@@ -405,12 +405,21 @@ func (r *repository) DeleteExpiredVersionsWithObjects(ctx context.Context, isPub
 	}
 	defer rows.Close()
 
+	deleteCandidates := []uint64{}
 	for rows.Next() {
 		var versionID uint64
 		if err := rows.Scan(&versionID); err != nil {
 			return mapSQLErrors(err)
 		}
 
+		deleteCandidates = append(deleteCandidates, versionID)
+	}
+
+	if err := rows.Err(); err != nil {
+		return mapSQLErrors(err)
+	}
+
+	for _, versionID := range deleteCandidates {
 		if _, err := deleteQuery(ctx, tx, psql.
 			Delete("objects").
 			Where(sq.Eq{
@@ -430,8 +439,46 @@ func (r *repository) DeleteExpiredVersionsWithObjects(ctx context.Context, isPub
 		}
 	}
 
+	orphanedObjectKeyIDs := []uint64{}
+	rows, err = selectQuery(ctx, tx, psql.
+		Select(
+			"ok.id AS id",
+		).
+		From("object_keys ok").
+		LeftJoin("objects o ON o.key_id = ok.id").
+		Where(sq.Eq{
+			"o.key_id": nil,
+		}),
+	)
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var keyID uint64
+		if err := rows.Scan(&keyID); err != nil {
+			return mapSQLErrors(err)
+		}
+
+		orphanedObjectKeyIDs = append(orphanedObjectKeyIDs, keyID)
+	}
+
+	if _, err := deleteQuery(ctx, tx, psql.
+		Delete("object_keys").
+		Where(sq.Eq{
+			"id": orphanedObjectKeyIDs,
+		}),
+	); err != nil {
+		return mapSQLErrors(err)
+	}
+
+	if err := rows.Err(); err != nil {
+		return mapSQLErrors(err)
+	}
+
 	if err := tx.Commit(); err != nil {
 		return mapSQLErrors(err)
 	}
-	return mapSQLErrors(rows.Err())
+	return nil
 }
