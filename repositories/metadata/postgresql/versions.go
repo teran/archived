@@ -499,7 +499,7 @@ func (r *repository) DeleteExpiredVersionsWithObjects(ctx context.Context, isPub
 
 func indexChunks(length, chuckLen int, fn func(start, end int) error) error {
 	if chuckLen <= 0 {
-		return errors.New("error invalid chunk length")
+		return errors.ErrUnsupported
 	}
 
 	for i := 0; i < length; i += chuckLen {
