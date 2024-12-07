@@ -9,6 +9,7 @@ metadata:
     app.kubernetes.io/app: archived-gc
 spec:
   schedule: "48 * * * *"
+  concurrencyPolicy: Forbid
   jobTemplate:
     spec:
       template:
