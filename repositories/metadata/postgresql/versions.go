@@ -2,6 +2,7 @@ package postgresql
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
@@ -419,24 +420,32 @@ func (r *repository) DeleteExpiredVersionsWithObjects(ctx context.Context, isPub
 		return mapSQLErrors(err)
 	}
 
-	for _, versionID := range deleteCandidates {
+	if err := indexChunks(len(deleteCandidates), 1000, func(start, end int) error {
 		if _, err := deleteQuery(ctx, tx, psql.
 			Delete("objects").
 			Where(sq.Eq{
-				"version_id": versionID,
+				"version_id": deleteCandidates[start:end],
 			}),
 		); err != nil {
-			return mapSQLErrors(err)
+			return err
 		}
+		return nil
+	}); err != nil {
+		return mapSQLErrors(err)
+	}
 
+	if err := indexChunks(len(deleteCandidates), 1000, func(start, end int) error {
 		if _, err := deleteQuery(ctx, tx, psql.
 			Delete("versions").
 			Where(sq.Eq{
-				"id": versionID,
+				"id": deleteCandidates[start:end],
 			}),
 		); err != nil {
-			return mapSQLErrors(err)
+			return err
 		}
+		return nil
+	}); err != nil {
+		return mapSQLErrors(err)
 	}
 
 	orphanedObjectKeyIDs := []uint64{}
@@ -464,12 +473,17 @@ func (r *repository) DeleteExpiredVersionsWithObjects(ctx context.Context, isPub
 		orphanedObjectKeyIDs = append(orphanedObjectKeyIDs, keyID)
 	}
 
-	if _, err := deleteQuery(ctx, tx, psql.
-		Delete("object_keys").
-		Where(sq.Eq{
-			"id": orphanedObjectKeyIDs,
-		}),
-	); err != nil {
+	if err := indexChunks(len(orphanedObjectKeyIDs), 1000, func(start, end int) error {
+		if _, err := deleteQuery(ctx, tx, psql.
+			Delete("object_keys").
+			Where(sq.Eq{
+				"id": orphanedObjectKeyIDs[start:end],
+			}),
+		); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
 		return mapSQLErrors(err)
 	}
 
@@ -481,4 +495,26 @@ func (r *repository) DeleteExpiredVersionsWithObjects(ctx context.Context, isPub
 		return mapSQLErrors(err)
 	}
 	return nil
+}
+
+func indexChunks(length, chuckLen int, fn func(start, end int) error) error {
+	if chuckLen <= 0 {
+		return errors.New("error invalid chunk length")
+	}
+
+	for i := 0; i < length; i += chuckLen {
+		l := minInt(i+chuckLen, length)
+		err := fn(i, l)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func minInt(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
