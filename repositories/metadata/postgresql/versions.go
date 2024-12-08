@@ -13,7 +13,10 @@ import (
 	"github.com/teran/archived/repositories/metadata"
 )
 
-const defaultLimit uint64 = 1000
+const (
+	defaultLimit             uint64 = 1000
+	expiredVersionsBatchSize int    = 1000
+)
 
 func (r *repository) CreateVersion(ctx context.Context, namespace, container string) (string, error) {
 	tx, err := r.db.BeginTx(ctx, nil)
@@ -420,7 +423,10 @@ func (r *repository) DeleteExpiredVersionsWithObjects(ctx context.Context, isPub
 		return mapSQLErrors(err)
 	}
 
-	if err := indexChunks(len(deleteCandidates), 1000, func(start, end int) error {
+	//
+	// lib/pq (and probably PostgreSQL itself) has a limit of 65k arguments so let's batch 'em
+	//
+	if err := indexChunks(len(deleteCandidates), expiredVersionsBatchSize, func(start, end int) error {
 		if _, err := deleteQuery(ctx, tx, psql.
 			Delete("objects").
 			Where(sq.Eq{
@@ -434,7 +440,7 @@ func (r *repository) DeleteExpiredVersionsWithObjects(ctx context.Context, isPub
 		return mapSQLErrors(err)
 	}
 
-	if err := indexChunks(len(deleteCandidates), 1000, func(start, end int) error {
+	if err := indexChunks(len(deleteCandidates), expiredVersionsBatchSize, func(start, end int) error {
 		if _, err := deleteQuery(ctx, tx, psql.
 			Delete("versions").
 			Where(sq.Eq{
@@ -473,7 +479,7 @@ func (r *repository) DeleteExpiredVersionsWithObjects(ctx context.Context, isPub
 		orphanedObjectKeyIDs = append(orphanedObjectKeyIDs, keyID)
 	}
 
-	if err := indexChunks(len(orphanedObjectKeyIDs), 1000, func(start, end int) error {
+	if err := indexChunks(len(orphanedObjectKeyIDs), expiredVersionsBatchSize, func(start, end int) error {
 		if _, err := deleteQuery(ctx, tx, psql.
 			Delete("object_keys").
 			Where(sq.Eq{
