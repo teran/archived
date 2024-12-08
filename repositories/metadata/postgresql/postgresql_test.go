@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	_ "github.com/lib/pq"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/suite"
 	postgresApp "github.com/teran/go-docker-testsuite/applications/postgres"
 	gtm "github.com/teran/go-time"
@@ -13,6 +14,10 @@ import (
 	"github.com/teran/archived/repositories/metadata"
 	"github.com/teran/archived/repositories/metadata/postgresql/migrations"
 )
+
+func init() {
+	log.SetLevel(log.TraceLevel)
+}
 
 // Definitions ...
 type postgreSQLRepositoryTestSuite struct {

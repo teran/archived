@@ -324,3 +324,101 @@ func (s *postgreSQLRepositoryTestSuite) TestGetLatestPublishedVersionByContainer
 	s.Require().Error(err)
 	s.Require().Equal("not found", err.Error())
 }
+
+func (s *postgreSQLRepositoryTestSuite) TestDeleteExpiredVersionsWithObjects() {
+	// CreateContainer (created_at)
+	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Once()
+
+	// CreateVersion (created_at)
+	s.tp.On("Now").Return("2024-07-07T10:11:13Z").Once()
+
+	// CreateVersion (created_at)
+	s.tp.On("Now").Return("2024-07-07T10:11:14Z").Once()
+
+	// CreateVersion (created_at)
+	s.tp.On("Now").Return("2024-10-07T10:11:15Z").Once()
+
+	// CreateVersion (created_at)
+	s.tp.On("Now").Return("2024-10-07T10:11:16Z").Once()
+
+	// CreateBLOB (created_at)
+	s.tp.On("Now").Return("2024-07-07T10:11:13Z").Once()
+
+	// CreateObject twice (created_at)
+	s.tp.On("Now").Return("2024-07-07T10:11:13Z").Times(4)
+
+	// DeleteExpiredVersionsWithObjects (now())
+	s.tp.On("Now").Return("2024-10-08T11:11:11Z").Once()
+
+	err := s.repo.CreateContainer(s.ctx, defaultNamespace, "test-container", 48*time.Hour)
+	s.Require().NoError(err)
+
+	// Create some versions
+	version1, err := s.repo.CreateVersion(s.ctx, defaultNamespace, "test-container")
+	s.Require().NoError(err)
+
+	version2, err := s.repo.CreateVersion(s.ctx, defaultNamespace, "test-container")
+	s.Require().NoError(err)
+
+	version3, err := s.repo.CreateVersion(s.ctx, defaultNamespace, "test-container")
+	s.Require().NoError(err)
+
+	version4, err := s.repo.CreateVersion(s.ctx, defaultNamespace, "test-container")
+	s.Require().NoError(err)
+
+	err = s.repo.CreateBLOB(s.ctx, "deadbeef", 10, "text/plain")
+	s.Require().NoError(err)
+	for _, v := range []string{version1, version2, version3, version4} {
+		err = s.repo.CreateObject(s.ctx, defaultNamespace, "test-container", v, "some-key1.txt", "deadbeef")
+		s.Require().NoError(err)
+	}
+
+	err = s.repo.MarkVersionPublished(s.ctx, defaultNamespace, "test-container", version1)
+	s.Require().NoError(err)
+
+	err = s.repo.MarkVersionPublished(s.ctx, defaultNamespace, "test-container", version3)
+	s.Require().NoError(err)
+
+	versions, err := s.repo.ListAllVersionsByContainer(s.ctx, defaultNamespace, "test-container")
+	s.Require().NoError(err)
+	s.Require().Equal([]models.Version{
+		{
+			Name:        "20241007101116",
+			IsPublished: false,
+			CreatedAt:   time.Date(2024, 10, 7, 10, 11, 16, 0, time.UTC),
+		},
+		{
+			Name:        "20241007101115",
+			IsPublished: true,
+			CreatedAt:   time.Date(2024, 10, 7, 10, 11, 15, 0, time.UTC),
+		},
+		{
+			Name:        "20240707101114",
+			IsPublished: false,
+			CreatedAt:   time.Date(2024, 7, 7, 10, 11, 14, 0, time.UTC),
+		},
+		{
+			Name:        "20240707101113",
+			IsPublished: true,
+			CreatedAt:   time.Date(2024, 7, 7, 10, 11, 13, 0, time.UTC),
+		},
+	}, versions)
+
+	err = s.repo.DeleteExpiredVersionsWithObjects(s.ctx, 24*7*time.Hour)
+	s.Require().NoError(err)
+
+	versions, err = s.repo.ListAllVersionsByContainer(s.ctx, defaultNamespace, "test-container")
+	s.Require().NoError(err)
+	s.Require().Equal([]models.Version{
+		{
+			Name:        "20241007101116",
+			IsPublished: false,
+			CreatedAt:   time.Date(2024, 10, 7, 10, 11, 16, 0, time.UTC),
+		},
+		{
+			Name:        "20241007101115",
+			IsPublished: true,
+			CreatedAt:   time.Date(2024, 10, 7, 10, 11, 15, 0, time.UTC),
+		},
+	}, versions)
+}

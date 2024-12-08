@@ -333,6 +333,21 @@ func (s *memcacheTestSuite) TestDeleteVersion() {
 	s.Require().NoError(err)
 }
 
+func (s *memcacheTestSuite) DeleteExpiredVersionsWithObjects() {
+	s.repoMock.On("DeleteExpiredVersionsWithObjects", 30*time.Second).Return(nil).Once()
+	s.repoMock.On("DeleteExpiredVersionsWithObjects", 40*time.Second).Return(nil).Once()
+	s.repoMock.On("DeleteExpiredVersionsWithObjects", 60*time.Second).Return(nil).Once()
+
+	err := s.cache.DeleteExpiredVersionsWithObjects(s.ctx, 30*time.Second)
+	s.Require().NoError(err)
+
+	err = s.cache.DeleteExpiredVersionsWithObjects(s.ctx, 40*time.Second)
+	s.Require().NoError(err)
+
+	err = s.cache.DeleteExpiredVersionsWithObjects(s.ctx, 60*time.Second)
+	s.Require().NoError(err)
+}
+
 func (s *memcacheTestSuite) TestCreateObject() {
 	s.repoMock.On("CreateObject", defaultNamespace, "test-container", "test-version", "test-key", "deadbeef").Return(nil).Twice()
 

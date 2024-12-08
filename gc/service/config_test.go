@@ -6,7 +6,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
-	gtm "github.com/teran/go-time"
 
 	mockRepo "github.com/teran/archived/repositories/metadata/mock"
 )
@@ -23,16 +22,14 @@ func TestConfigValidate(t *testing.T) {
 			name: "valid config",
 			in: &Config{
 				MdRepo:                   mockRepo.New(),
-				DryRun:                   false,
 				UnpublishedVersionMaxAge: 10 * time.Hour,
-				TimeNowFunc:              gtm.NewTimeNowMock().Now,
 			},
 		},
 		{
 			name: "empty config",
 			in:   &Config{},
 			expOut: errors.New(
-				"MdRepo: cannot be blank; TimeNowFunc: cannot be blank; UnpublishedVersionMaxAge: cannot be blank.",
+				"MdRepo: cannot be blank; UnpublishedVersionMaxAge: cannot be blank.",
 			),
 		},
 	}

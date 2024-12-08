@@ -2,6 +2,7 @@ package postgresql
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
@@ -12,7 +13,10 @@ import (
 	"github.com/teran/archived/repositories/metadata"
 )
 
-const defaultLimit uint64 = 1000
+const (
+	defaultLimit             uint64 = 1000
+	expiredVersionsBatchSize int    = 1000
+)
 
 func (r *repository) CreateVersion(ctx context.Context, namespace, container string) (string, error) {
 	tx, err := r.db.BeginTx(ctx, nil)
@@ -360,4 +364,166 @@ func (r *repository) DeleteVersion(ctx context.Context, namespace, container, ve
 		return mapSQLErrors(err)
 	}
 	return nil
+}
+
+func (r *repository) DeleteExpiredVersionsWithObjects(ctx context.Context, unpublishedVersionsMaxAge time.Duration) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+	defer func() {
+		err := tx.Rollback()
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Error("error rolling back")
+		}
+	}()
+
+	now := r.tp().UTC()
+
+	q := psql.
+		Select(
+			"v.id AS version_id",
+		).
+		From("containers c").
+		Join("versions v ON v.container_id = c.id").
+		Join("namespaces n ON n.id = c.namespace_id").
+		Where(
+			sq.Or{
+				sq.And{
+					sq.Gt{
+						"c.version_ttl_seconds": 0,
+					},
+					sq.Expr("v.created_at <= (?::timestamp - c.version_ttl_seconds * interval '1 second')", now.Format(time.RFC3339)),
+				},
+				sq.And{
+					sq.Eq{
+						"v.is_published": false,
+					},
+					sq.Expr("v.created_at <= ?::timestamp", now.Add(-1*unpublishedVersionsMaxAge).Format(time.RFC3339)),
+				},
+			},
+		)
+
+	rows, err := selectQuery(ctx, tx, q)
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+	defer rows.Close()
+
+	deleteCandidates := []uint64{}
+	for rows.Next() {
+		var versionID uint64
+		if err := rows.Scan(&versionID); err != nil {
+			return mapSQLErrors(err)
+		}
+
+		deleteCandidates = append(deleteCandidates, versionID)
+	}
+
+	if err := rows.Err(); err != nil {
+		return mapSQLErrors(err)
+	}
+
+	//
+	// lib/pq (and probably PostgreSQL itself) has a limit of 65k arguments so let's batch 'em
+	//
+	if err := indexChunks(len(deleteCandidates), expiredVersionsBatchSize, func(start, end int) error {
+		if _, err := deleteQuery(ctx, tx, psql.
+			Delete("objects").
+			Where(sq.Eq{
+				"version_id": deleteCandidates[start:end],
+			}),
+		); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return mapSQLErrors(err)
+	}
+
+	if err := indexChunks(len(deleteCandidates), expiredVersionsBatchSize, func(start, end int) error {
+		if _, err := deleteQuery(ctx, tx, psql.
+			Delete("versions").
+			Where(sq.Eq{
+				"id": deleteCandidates[start:end],
+			}),
+		); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return mapSQLErrors(err)
+	}
+
+	orphanedObjectKeyIDs := []uint64{}
+	rows, err = selectQuery(ctx, tx, psql.
+		Select(
+			"ok.id AS id",
+		).
+		From("object_keys ok").
+		LeftJoin("objects o ON o.key_id = ok.id").
+		Where(sq.Eq{
+			"o.key_id": nil,
+		}),
+	)
+	if err != nil {
+		return mapSQLErrors(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var keyID uint64
+		if err := rows.Scan(&keyID); err != nil {
+			return mapSQLErrors(err)
+		}
+
+		orphanedObjectKeyIDs = append(orphanedObjectKeyIDs, keyID)
+	}
+
+	if err := indexChunks(len(orphanedObjectKeyIDs), expiredVersionsBatchSize, func(start, end int) error {
+		if _, err := deleteQuery(ctx, tx, psql.
+			Delete("object_keys").
+			Where(sq.Eq{
+				"id": orphanedObjectKeyIDs[start:end],
+			}),
+		); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return mapSQLErrors(err)
+	}
+
+	if err := rows.Err(); err != nil {
+		return mapSQLErrors(err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return mapSQLErrors(err)
+	}
+	return nil
+}
+
+func indexChunks(length, chuckLen int, fn func(start, end int) error) error {
+	if chuckLen <= 0 {
+		return errors.ErrUnsupported
+	}
+
+	for i := 0; i < length; i += chuckLen {
+		l := minInt(i+chuckLen, length)
+		err := fn(i, l)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func minInt(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
