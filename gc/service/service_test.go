@@ -45,7 +45,6 @@ func (s *serviceTestSuite) SetupTest() {
 		MdRepo:                   s.repoMock,
 		DryRun:                   false,
 		UnpublishedVersionMaxAge: 10 * time.Hour,
-		TimeNowFunc:              s.tp.Now,
 	})
 	s.Require().NoError(err)
 }
