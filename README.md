@@ -75,6 +75,7 @@ The main things are required to know before deployment:
     other components
 * archived-cli could run anywhere and will require network access to
     archived-manager
+* archived-gc requires RW PostgreSQL and runs periodically as a job
 * there's no authentication on any stage at the moment (yes, even for
     cli/manager)
 
