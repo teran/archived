@@ -36,7 +36,7 @@ type Repository interface {
 	ListUnpublishedVersionsByContainer(ctx context.Context, namespace, container string) ([]models.Version, error)
 	MarkVersionPublished(ctx context.Context, namespace, container, version string) error
 	DeleteVersion(ctx context.Context, namespace, container, version string) error
-	DeleteExpiredVersionsWithObjects(ctx context.Context, isPublished *bool) error
+	DeleteExpiredVersionsWithObjects(ctx context.Context, unpublishedVersionsMaxAge time.Duration) error
 
 	CreateObject(ctx context.Context, namespace, container, version, key, casKey string) error
 	ListObjects(ctx context.Context, namespace, container, version string, offset, limit uint64) (uint64, []string, error)

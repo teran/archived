@@ -366,7 +366,7 @@ func (r *repository) DeleteVersion(ctx context.Context, namespace, container, ve
 	return nil
 }
 
-func (r *repository) DeleteExpiredVersionsWithObjects(ctx context.Context, isPublished *bool) error {
+func (r *repository) DeleteExpiredVersionsWithObjects(ctx context.Context, unpublishedVersionsMaxAge time.Duration) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return mapSQLErrors(err)
@@ -380,6 +380,8 @@ func (r *repository) DeleteExpiredVersionsWithObjects(ctx context.Context, isPub
 		}
 	}()
 
+	now := r.tp().UTC()
+
 	q := psql.
 		Select(
 			"v.id AS version_id",
@@ -388,20 +390,21 @@ func (r *repository) DeleteExpiredVersionsWithObjects(ctx context.Context, isPub
 		Join("versions v ON v.container_id = c.id").
 		Join("namespaces n ON n.id = c.namespace_id").
 		Where(
-			sq.Gt{
-				"c.version_ttl_seconds": 0,
+			sq.Or{
+				sq.And{
+					sq.Gt{
+						"c.version_ttl_seconds": 0,
+					},
+					sq.Expr("v.created_at <= (?::timestamp - c.version_ttl_seconds * interval '1 second')", now.Format(time.RFC3339)),
+				},
+				sq.And{
+					sq.Eq{
+						"v.is_published": false,
+					},
+					sq.Expr("v.created_at <= ?::timestamp", now.Add(-1*unpublishedVersionsMaxAge).Format(time.RFC3339)),
+				},
 			},
-		).
-		Where(
-			"v.created_at <= ($2::timestamp - c.version_ttl_seconds * interval '1 second')",
-			r.tp().UTC().Format(time.RFC3339),
 		)
-
-	if isPublished != nil {
-		q.Where(sq.Eq{
-			"v.is_published": *isPublished,
-		})
-	}
 
 	rows, err := selectQuery(ctx, tx, q)
 	if err != nil {

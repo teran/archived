@@ -31,15 +31,15 @@ func (s *service) Run(ctx context.Context) error {
 	log.Info("running garbage collection ...")
 
 	log.Debug("Running expired versions collection ...")
-	if err := s.deleteExpiredVersions(ctx, nil); err != nil {
+	if err := s.deleteExpiredVersions(ctx); err != nil {
 		return errors.Wrap(err, "error deleting expired versions")
 	}
 
 	return nil
 }
 
-func (s *service) deleteExpiredVersions(ctx context.Context, isPublished *bool) error {
-	if err := s.cfg.MdRepo.DeleteExpiredVersionsWithObjects(ctx, isPublished); err != nil {
+func (s *service) deleteExpiredVersions(ctx context.Context) error {
+	if err := s.cfg.MdRepo.DeleteExpiredVersionsWithObjects(ctx, s.cfg.UnpublishedVersionMaxAge); err != nil {
 		return errors.Wrap(err, "error calling repository")
 	}
 

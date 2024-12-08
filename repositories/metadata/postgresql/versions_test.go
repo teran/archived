@@ -404,7 +404,7 @@ func (s *postgreSQLRepositoryTestSuite) TestDeleteExpiredVersionsWithObjects() {
 		},
 	}, versions)
 
-	err = s.repo.DeleteExpiredVersionsWithObjects(s.ctx, nil)
+	err = s.repo.DeleteExpiredVersionsWithObjects(s.ctx, 24*7*time.Hour)
 	s.Require().NoError(err)
 
 	versions, err = s.repo.ListAllVersionsByContainer(s.ctx, defaultNamespace, "test-container")

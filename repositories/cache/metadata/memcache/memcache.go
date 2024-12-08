@@ -386,8 +386,8 @@ func (m *memcache) DeleteVersion(ctx context.Context, namespace, container, vers
 	return m.repo.DeleteVersion(ctx, namespace, container, version)
 }
 
-func (m *memcache) DeleteExpiredVersionsWithObjects(ctx context.Context, isPublished *bool) error {
-	return m.repo.DeleteExpiredVersionsWithObjects(ctx, isPublished)
+func (m *memcache) DeleteExpiredVersionsWithObjects(ctx context.Context, unpublishedVersionsMaxAge time.Duration) error {
+	return m.repo.DeleteExpiredVersionsWithObjects(ctx, unpublishedVersionsMaxAge)
 }
 
 func (m *memcache) CreateObject(ctx context.Context, namespace, container, version, key, casKey string) error {

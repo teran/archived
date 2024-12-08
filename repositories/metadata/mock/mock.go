@@ -111,8 +111,8 @@ func (m *Mock) DeleteVersion(ctx context.Context, namespace, container, version 
 	return args.Error(0)
 }
 
-func (m *Mock) DeleteExpiredVersionsWithObjects(ctx context.Context, isPublished *bool) error {
-	args := m.Called(isPublished)
+func (m *Mock) DeleteExpiredVersionsWithObjects(ctx context.Context, unpublishedVersionsMaxAge time.Duration) error {
+	args := m.Called(unpublishedVersionsMaxAge)
 	return args.Error(0)
 }
 

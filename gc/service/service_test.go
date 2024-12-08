@@ -17,7 +17,7 @@ func init() {
 }
 
 func (s *serviceTestSuite) TestDeleteUnpublishedExpiredVersions() {
-	s.repoMock.On("DeleteExpiredVersionsWithObjects", func() *bool { var v *bool; return v }()).Return(nil).Once()
+	s.repoMock.On("DeleteExpiredVersionsWithObjects", 10*time.Hour).Return(nil).Once()
 
 	err := s.svc.Run(s.ctx)
 	s.Require().NoError(err)
