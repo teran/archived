@@ -43,7 +43,6 @@ func (s *serviceTestSuite) SetupTest() {
 	var err error
 	s.svc, err = New(&Config{
 		MdRepo:                   s.repoMock,
-		DryRun:                   false,
 		UnpublishedVersionMaxAge: 10 * time.Hour,
 	})
 	s.Require().NoError(err)

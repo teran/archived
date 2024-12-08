@@ -22,7 +22,6 @@ func TestConfigValidate(t *testing.T) {
 			name: "valid config",
 			in: &Config{
 				MdRepo:                   mockRepo.New(),
-				DryRun:                   false,
 				UnpublishedVersionMaxAge: 10 * time.Hour,
 			},
 		},

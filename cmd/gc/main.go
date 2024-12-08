@@ -24,7 +24,6 @@ type config struct {
 
 	MetadataDSN string `envconfig:"METADATA_DSN" required:"true"`
 
-	DryRun                   bool          `envconfig:"DRY_RUN" default:"true"`
 	UnpublishedVersionMaxAge time.Duration `envconfig:"UNPUBLISHED_VERSION_MAX_AGE" default:"168h"`
 }
 
@@ -53,7 +52,6 @@ func main() {
 
 	svc, err := service.New(&service.Config{
 		MdRepo:                   postgresqlRepo,
-		DryRun:                   cfg.DryRun,
 		UnpublishedVersionMaxAge: cfg.UnpublishedVersionMaxAge,
 	})
 	if err != nil {
