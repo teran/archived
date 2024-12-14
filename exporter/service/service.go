@@ -14,6 +14,7 @@ type Service interface {
 }
 
 type service struct {
+	namespacesTotal   *prometheus.GaugeVec
 	containersTotal   *prometheus.GaugeVec
 	versionsTotal     *prometheus.GaugeVec
 	objectsTotal      *prometheus.GaugeVec
@@ -43,7 +44,7 @@ func New(repo metadata.Repository) (Service, error) {
 				Name:      "versions_amount",
 				Help:      "Total amount of versions",
 			},
-			[]string{"container_name", "is_published"},
+			[]string{"container_namespace", "container_name", "is_published"},
 		),
 
 		objectsTotal: prometheus.NewGaugeVec(
@@ -52,7 +53,7 @@ func New(repo metadata.Repository) (Service, error) {
 				Name:      "objects_amount",
 				Help:      "Total amount of objects",
 			},
-			[]string{"container_name", "version_id", "is_published"},
+			[]string{"container_namespace", "container_name", "version_id", "is_published"},
 		),
 
 		blobsTotal: prometheus.NewGaugeVec(
@@ -69,7 +70,7 @@ func New(repo metadata.Repository) (Service, error) {
 				Namespace: "archived",
 				Name:      "blobs_raw_size_bytes",
 				Help:      "Total raw size of blobs (i.e. before deduplication)",
-			}, []string{"container_name", "version_id", "is_published"},
+			}, []string{"container_namespace", "container_name", "version_id", "is_published"},
 		),
 
 		blobsTotalRawSize: prometheus.NewGaugeVec(
@@ -103,16 +104,18 @@ func (s *service) observe(ctx context.Context) error {
 		return err
 	}
 
+	s.namespacesTotal.WithLabelValues().Set(float64(stats.NamespacesCount))
 	s.containersTotal.WithLabelValues().Set(float64(stats.ContainersCount))
+
 	for _, vt := range stats.VersionsCount {
 		s.versionsTotal.WithLabelValues(
-			vt.ContainerName, strconv.FormatBool(vt.IsPublished),
+			vt.Namespace, vt.ContainerName, strconv.FormatBool(vt.IsPublished),
 		).Set(float64(vt.VersionsCount))
 	}
 
 	for _, ot := range stats.ObjectsCount {
 		s.objectsTotal.WithLabelValues(
-			ot.ContainerName, ot.VersionName, strconv.FormatBool(ot.IsPublished),
+			ot.Namespace, ot.ContainerName, ot.VersionName, strconv.FormatBool(ot.IsPublished),
 		).Set(float64(ot.ObjectsCount))
 	}
 
@@ -120,7 +123,7 @@ func (s *service) observe(ctx context.Context) error {
 
 	for _, bs := range stats.BlobsRawSizeBytes {
 		s.blobsSize.WithLabelValues(
-			bs.ContainerName, bs.VersionName, strconv.FormatBool(bs.IsPublished),
+			bs.Namespace, bs.ContainerName, bs.VersionName, strconv.FormatBool(bs.IsPublished),
 		).Set(float64(bs.SizeBytes))
 	}
 

@@ -1,12 +1,19 @@
 package postgresql
 
-import "github.com/teran/archived/exporter/models"
+import (
+	"fmt"
+
+	"github.com/teran/archived/exporter/models"
+)
 
 func (s *postgreSQLRepositoryTestSuite) TestCountStats() {
 	const containerName = "test-container-1"
 
+	// CreateNamespace (created_at)
+	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Times(5)
+
 	// CreateContainer (created_at)
-	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Once()
+	s.tp.On("Now").Return("2024-07-07T10:11:12Z").Times(10)
 
 	// CreateVersion (created_at)
 	s.tp.On("Now").Return("2024-07-07T10:11:13Z").Once()
@@ -20,9 +27,17 @@ func (s *postgreSQLRepositoryTestSuite) TestCountStats() {
 	// CreateObject (created_at)
 	s.tp.On("Now").Return("2024-07-07T10:11:16Z").Once()
 
-	// Create container
-	err := s.repo.CreateContainer(s.ctx, defaultNamespace, containerName, -1)
-	s.Require().NoError(err)
+	// Create namespaces
+	for i := 1; i <= 5; i++ {
+		err := s.repo.CreateNamespace(s.ctx, fmt.Sprintf("test-namespace-%d", i))
+		s.Require().NoError(err)
+	}
+
+	// Create containers
+	for i := 1; i <= 10; i++ {
+		err := s.repo.CreateContainer(s.ctx, defaultNamespace, fmt.Sprintf("test-container-%d", i), -1)
+		s.Require().NoError(err)
+	}
 
 	// Create first version
 	versionID, err := s.repo.CreateVersion(s.ctx, defaultNamespace, containerName)
@@ -51,8 +66,8 @@ func (s *postgreSQLRepositoryTestSuite) TestCountStats() {
 	stats, err := s.repo.CountStats(s.ctx)
 	s.Require().NoError(err)
 	s.Require().Equal(&models.Stats{
-		NamespacesCount: 1,
-		ContainersCount: 1,
+		NamespacesCount: 6,
+		ContainersCount: 10,
 		VersionsCount: []models.VersionsCount{
 			{
 				Namespace:     defaultNamespace,
