@@ -11,7 +11,7 @@ func (r *repository) CountStats(ctx context.Context) (*models.Stats, error) {
 
 	row, err := selectQueryRow(ctx, r.db, psql.
 		Select("COUNT(*)").
-		From("containers"),
+		From("namespaces"),
 	)
 	if err != nil {
 		return nil, err
