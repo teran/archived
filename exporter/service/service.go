@@ -3,9 +3,12 @@ package service
 import (
 	"context"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/teran/archived/repositories/metadata"
 )
 
@@ -22,12 +25,22 @@ type service struct {
 	blobsSize         *prometheus.GaugeVec
 	blobsTotalRawSize *prometheus.GaugeVec
 
-	repo metadata.Repository
+	repo  metadata.Repository
+	mutex *sync.Mutex
 }
 
 func New(repo metadata.Repository) (Service, error) {
 	svc := &service{
 		repo: repo,
+
+		namespacesTotal: prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Namespace: "archived",
+				Name:      "namespaces_amount",
+				Help:      "Total amount of namespaces",
+			},
+			[]string{},
+		),
 
 		containersTotal: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
@@ -80,9 +93,12 @@ func New(repo metadata.Repository) (Service, error) {
 				Help:      "Total effective size of blobs (i.e. after deduplication)",
 			}, []string{},
 		),
+
+		mutex: &sync.Mutex{},
 	}
 
 	for _, m := range []*prometheus.GaugeVec{
+		svc.namespacesTotal,
 		svc.containersTotal,
 		svc.versionsTotal,
 		svc.objectsTotal,
@@ -99,10 +115,17 @@ func New(repo metadata.Repository) (Service, error) {
 }
 
 func (s *service) observe(ctx context.Context) error {
+	log.Trace("running observe() to gather metrics ...")
+
 	stats, err := s.repo.CountStats(ctx)
 	if err != nil {
 		return err
 	}
+
+	log.WithFields(log.Fields{
+		"namespaces": stats.NamespacesCount,
+		"containers": stats.ContainersCount,
+	}).Trace("publishing metrics ...")
 
 	s.namespacesTotal.WithLabelValues().Set(float64(stats.NamespacesCount))
 	s.containersTotal.WithLabelValues().Set(float64(stats.ContainersCount))
@@ -133,14 +156,24 @@ func (s *service) observe(ctx context.Context) error {
 }
 
 func (s *service) Run(ctx context.Context) error {
+	ticker := time.NewTicker(60 * time.Second)
 	for {
 		select {
 		case <-ctx.Done():
+			ticker.Stop()
 			return ctx.Err()
-		case <-time.After(30 * time.Second):
-			if err := s.observe(ctx); err != nil {
-				return err
-			}
+		case <-ticker.C:
+			go func() {
+				if !s.mutex.TryLock() {
+					log.Warn("lock is already taken. Skipping the run ...")
+					return
+				}
+				defer s.mutex.Unlock()
+
+				if err := s.observe(ctx); err != nil {
+					log.Warnf("error running observe(): %s", err)
+				}
+			}()
 		}
 	}
 }
