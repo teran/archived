@@ -8,6 +8,7 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/teran/archived/repositories/metadata"
@@ -15,11 +16,32 @@ import (
 
 const defaultNamespace = "default"
 
-var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
+var (
+	psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
+
+	queryCountTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "archived",
+		Subsystem: "repository",
+		Name:      "query_count_total",
+		Help:      "Total time of SQL queries by kind",
+	}, []string{"kind"})
+
+	queryTimeTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "archived",
+		Subsystem: "repository",
+		Name:      "query_time_seconds_total",
+		Help:      "Total time of SQL queries by kind",
+	}, []string{"kind"})
+)
 
 type repository struct {
 	db *sql.DB
 	tp func() time.Time
+}
+
+func init() {
+	prometheus.MustRegister(queryCountTotal)
+	prometheus.MustRegister(queryTimeTotal)
 }
 
 func New(db *sql.DB) metadata.Repository {
@@ -64,10 +86,15 @@ func selectQueryRow(ctx context.Context, db queryRunner, q sq.SelectBuilder) (sq
 
 	start := time.Now()
 	defer func() {
+		since := time.Now().Sub(start)
+
+		queryCountTotal.WithLabelValues("select").Inc()
+		queryTimeTotal.WithLabelValues("select").Add(since.Seconds())
+
 		log.WithFields(log.Fields{
 			"query":    sql,
 			"args":     args,
-			"duration": time.Now().Sub(start),
+			"duration": since,
 		}).Debug("SQL query executed")
 	}()
 
@@ -82,10 +109,15 @@ func selectQuery(ctx context.Context, db queryRunner, q sq.SelectBuilder) (*sql.
 
 	start := time.Now()
 	defer func() {
+		since := time.Now().Sub(start)
+
+		queryCountTotal.WithLabelValues("select").Inc()
+		queryTimeTotal.WithLabelValues("select").Add(since.Seconds())
+
 		log.WithFields(log.Fields{
 			"query":    sql,
 			"args":     args,
-			"duration": time.Now().Sub(start),
+			"duration": since,
 		}).Debug("SQL query executed")
 	}()
 
@@ -100,10 +132,15 @@ func insertQuery(ctx context.Context, db execRunner, q sq.InsertBuilder) (sql.Re
 
 	start := time.Now()
 	defer func() {
+		since := time.Now().Sub(start)
+
+		queryCountTotal.WithLabelValues("insert").Inc()
+		queryTimeTotal.WithLabelValues("insert").Add(since.Seconds())
+
 		log.WithFields(log.Fields{
 			"query":    sql,
 			"args":     args,
-			"duration": time.Now().Sub(start),
+			"duration": since,
 		}).Debug("SQL query executed")
 	}()
 
@@ -118,10 +155,15 @@ func insertQueryRow(ctx context.Context, db queryRunner, q sq.InsertBuilder) (sq
 
 	start := time.Now()
 	defer func() {
+		since := time.Now().Sub(start)
+
+		queryCountTotal.WithLabelValues("insert").Inc()
+		queryTimeTotal.WithLabelValues("insert").Add(since.Seconds())
+
 		log.WithFields(log.Fields{
 			"query":    sql,
 			"args":     args,
-			"duration": time.Now().Sub(start),
+			"duration": since,
 		}).Debug("SQL query executed")
 	}()
 
@@ -136,10 +178,15 @@ func updateQuery(ctx context.Context, db execRunner, q sq.UpdateBuilder) (sql.Re
 
 	start := time.Now()
 	defer func() {
+		since := time.Now().Sub(start)
+
+		queryCountTotal.WithLabelValues("update").Inc()
+		queryTimeTotal.WithLabelValues("update").Add(since.Seconds())
+
 		log.WithFields(log.Fields{
 			"query":    sql,
 			"args":     args,
-			"duration": time.Now().Sub(start),
+			"duration": since,
 		}).Debug("SQL query executed")
 	}()
 
@@ -154,10 +201,15 @@ func deleteQuery(ctx context.Context, db execRunner, q sq.DeleteBuilder) (sql.Re
 
 	start := time.Now()
 	defer func() {
+		since := time.Now().Sub(start)
+
+		queryCountTotal.WithLabelValues("delete").Inc()
+		queryTimeTotal.WithLabelValues("delete").Add(since.Seconds())
+
 		log.WithFields(log.Fields{
 			"query":    sql,
 			"args":     args,
-			"duration": time.Now().Sub(start),
+			"duration": since,
 		}).Debug("SQL query executed")
 	}()
 
