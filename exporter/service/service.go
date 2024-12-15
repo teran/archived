@@ -25,13 +25,15 @@ type service struct {
 	blobsSize         *prometheus.GaugeVec
 	blobsTotalRawSize *prometheus.GaugeVec
 
-	repo  metadata.Repository
-	mutex *sync.Mutex
+	repo            metadata.Repository
+	observeInterval time.Duration
+	mutex           *sync.Mutex
 }
 
-func New(repo metadata.Repository) (Service, error) {
+func New(repo metadata.Repository, observeInterval time.Duration) (Service, error) {
 	svc := &service{
-		repo: repo,
+		repo:            repo,
+		observeInterval: observeInterval,
 
 		namespacesTotal: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
@@ -156,7 +158,7 @@ func (s *service) observe(ctx context.Context) error {
 }
 
 func (s *service) Run(ctx context.Context) error {
-	ticker := time.NewTicker(60 * time.Second)
+	ticker := time.NewTicker(s.observeInterval)
 	for {
 		select {
 		case <-ctx.Done():

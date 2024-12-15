@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"net/http"
+	"time"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/labstack/echo-contrib/echoprometheus"
@@ -29,6 +30,8 @@ type config struct {
 	LogLevel log.Level `envconfig:"LOG_LEVEL" default:"info"`
 
 	MetadataDSN string `envconfig:"METADATA_DSN" required:"true"`
+
+	ObserveInterval time.Duration `envconfig:"OBSERVE_INTERVAL" default:"60s"`
 }
 
 func main() {
@@ -54,7 +57,7 @@ func main() {
 
 	postgresqlRepo := postgresql.New(db)
 
-	svc, err := service.New(postgresqlRepo)
+	svc, err := service.New(postgresqlRepo, cfg.ObserveInterval)
 	if err != nil {
 		panic(err)
 	}
