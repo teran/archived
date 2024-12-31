@@ -18,15 +18,15 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
+	"github.com/teran/appmetrics"
+	random "github.com/teran/go-random"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/teran/appmetrics"
 	htmlPresenter "github.com/teran/archived/publisher/presenter/html"
 	awsBlobRepo "github.com/teran/archived/repositories/blob/aws"
 	"github.com/teran/archived/repositories/cache/metadata/memcache"
 	"github.com/teran/archived/repositories/metadata/postgresql"
 	"github.com/teran/archived/service"
-	"github.com/teran/go-random"
 )
 
 var (
@@ -143,26 +143,24 @@ func main() {
 	me.Use(echoprometheus.NewMiddleware("publisher_metrics"))
 	me.Use(middleware.Recover())
 
-	instanceID := random.String(random.AlphaNumeric, 32)
-
 	checkFn := func() error {
 		if len(cfg.MemcacheServers) > 0 {
 			if err := cli.Ping(); err != nil {
 				return err
 			}
 
-			key := "_ping:" + instanceID
+			checkID := random.String(random.AlphaNumeric, 32)
+			key := "_ping:" + checkID
 			ts := time.Now().Format(time.RFC3339Nano)
 
-			defer func() {
-				if err := cli.Delete(key); err != nil {
-					log.Warnf("ping key delete failed: %s", err)
-				}
-			}()
-
+			log.WithFields(log.Fields{
+				"key": key,
+				"ts":  ts,
+			}).Trace("memcache probe: storing ping item")
 			if err := cli.Set(&memcacheCli.Item{
-				Key:   key,
-				Value: []byte(ts),
+				Key:        key,
+				Value:      []byte(ts),
+				Expiration: 5,
 			}); err != nil {
 				return err
 			}
