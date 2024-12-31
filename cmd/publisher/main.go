@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"net/http"
 	"time"
 
@@ -25,6 +26,7 @@ import (
 	"github.com/teran/archived/repositories/cache/metadata/memcache"
 	"github.com/teran/archived/repositories/metadata/postgresql"
 	"github.com/teran/archived/service"
+	"github.com/teran/go-random"
 )
 
 var (
@@ -141,10 +143,36 @@ func main() {
 	me.Use(echoprometheus.NewMiddleware("publisher_metrics"))
 	me.Use(middleware.Recover())
 
+	instanceID := random.String(random.AlphaNumeric, 32)
+
 	checkFn := func() error {
 		if len(cfg.MemcacheServers) > 0 {
 			if err := cli.Ping(); err != nil {
 				return err
+			}
+
+			key := "_ping:" + instanceID
+			ts := time.Now().Format(time.RFC3339Nano)
+
+			defer func() {
+				if err := cli.Delete(key); err != nil {
+					log.Warnf("ping key delete failed: %s", err)
+				}
+			}()
+
+			if err := cli.Set(&memcacheCli.Item{
+				Key:   key,
+				Value: []byte(ts),
+			}); err != nil {
+				return err
+			}
+
+			item, err := cli.Get(key)
+			if err != nil {
+				return err
+			}
+			if string(item.Value) != ts {
+				return errors.New("value mismatch: memcache probably failed to store the value. failing the probe") //nolint:err113
 			}
 		}
 
