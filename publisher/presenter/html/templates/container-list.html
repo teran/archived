@@ -1,11 +1,14 @@
 {{ $namespace := .Namespace }}
 {{ template "header" . }}
+<div class="container">
         <a href="..">..</a><br>
 {{- range $container := .Containers }}
         <a href="/{{ $namespace }}/{{ $container.Name }}/">{{ $container.Name }}/</a><br>
 {{- else }}
         <p>No containers found</p>
 {{- end }}
+</div>
 
-{{ template "pagination" . }}
+{{ template "pagination" .Pagination }}
+
 {{ template "footer" }}

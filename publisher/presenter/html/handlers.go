@@ -29,19 +29,33 @@ type Handlers interface {
 	Register(e *echo.Echo)
 }
 
+type Theme string
+
+const (
+	ThemeDark  Theme = "dark"
+	ThemeLight Theme = "light"
+)
+
+type DisplayConfig struct {
+	DefaultTheme         Theme
+	MaxPagesInPagination uint64
+}
+
 type handlers struct {
 	svc                      service.Publisher
 	staticDir                string
 	templateDir              string
 	preserveSchemeOnRedirect bool
+	dc                       DisplayConfig
 }
 
-func New(svc service.Publisher, templateDir, staticDir string, preserveSchemeOnRedirect bool) Handlers {
+func New(svc service.Publisher, templateDir, staticDir string, preserveSchemeOnRedirect bool, dc DisplayConfig) Handlers {
 	return &handlers{
 		svc:                      svc,
 		staticDir:                staticDir,
 		templateDir:              templateDir,
 		preserveSchemeOnRedirect: preserveSchemeOnRedirect,
+		dc:                       dc,
 	}
 }
 
@@ -52,13 +66,15 @@ func (h *handlers) NamespaceIndex(c echo.Context) error {
 	}
 
 	type data struct {
-		Title      string
-		Namespaces []string
+		Title        string
+		DefaultTheme Theme
+		Namespaces   []string
 	}
 
 	return c.Render(http.StatusOK, "namespace-list.html", &data{
-		Title:      "Namespace index",
-		Namespaces: namespaces,
+		Title:        "Namespace index",
+		DefaultTheme: h.dc.DefaultTheme,
+		Namespaces:   namespaces,
 	})
 }
 
@@ -86,19 +102,19 @@ func (h *handlers) ContainerIndex(c echo.Context) error {
 	}
 
 	type data struct {
-		Title       string
-		CurrentPage uint64
-		PagesCount  uint64
-		Namespace   string
-		Containers  []models.Container
+		Title        string
+		DefaultTheme Theme
+		Pagination   Pagination
+		Namespace    string
+		Containers   []models.Container
 	}
 
 	return c.Render(http.StatusOK, "container-list.html", &data{
-		Title:       fmt.Sprintf("Container index (%s)", namespace),
-		CurrentPage: page,
-		PagesCount:  pagesCount,
-		Namespace:   namespace,
-		Containers:  containers,
+		Title:        fmt.Sprintf("Container index (%s)", namespace),
+		DefaultTheme: h.dc.DefaultTheme,
+		Pagination:   NewPagination(pagesCount, page, h.dc.MaxPagesInPagination, fmt.Sprintf("/%s/", namespace)),
+		Namespace:    namespace,
+		Containers:   containers,
 	})
 }
 
@@ -127,21 +143,21 @@ func (h *handlers) VersionIndex(c echo.Context) error {
 	}
 
 	type data struct {
-		Title       string
-		CurrentPage uint64
-		PagesCount  uint64
-		Namespace   string
-		Container   string
-		Versions    []models.Version
+		Title        string
+		DefaultTheme Theme
+		Pagination   Pagination
+		Namespace    string
+		Container    string
+		Versions     []models.Version
 	}
 
 	return c.Render(http.StatusOK, "version-list.html", &data{
-		Title:       fmt.Sprintf("Version index (%s/%s)", namespace, container),
-		CurrentPage: page,
-		PagesCount:  pagesCount,
-		Namespace:   namespace,
-		Container:   container,
-		Versions:    versions,
+		Title:        fmt.Sprintf("Version index (%s/%s)", namespace, container),
+		DefaultTheme: h.dc.DefaultTheme,
+		Pagination:   NewPagination(pagesCount, page, h.dc.MaxPagesInPagination, fmt.Sprintf("/%s/%s/", namespace, container)),
+		Namespace:    namespace,
+		Container:    container,
+		Versions:     versions,
 	})
 }
 
@@ -171,22 +187,22 @@ func (h *handlers) ObjectIndex(c echo.Context) error {
 	}
 
 	type data struct {
-		Title       string
-		CurrentPage uint64
-		PagesCount  uint64
-		Namespace   string
-		Container   string
-		Version     string
-		Objects     []string
+		Title        string
+		DefaultTheme Theme
+		Pagination   Pagination
+		Namespace    string
+		Container    string
+		Version      string
+		Objects      []string
 	}
 	return c.Render(http.StatusOK, "object-list.html", &data{
-		Title:       fmt.Sprintf("Object index (%s/%s/%s)", namespace, container, version),
-		CurrentPage: page,
-		PagesCount:  pagesCount,
-		Namespace:   namespace,
-		Container:   container,
-		Version:     version,
-		Objects:     objects,
+		Title:        fmt.Sprintf("Object index (%s/%s/%s)", namespace, container, version),
+		DefaultTheme: h.dc.DefaultTheme,
+		Pagination:   NewPagination(pagesCount, page, h.dc.MaxPagesInPagination, fmt.Sprintf("/%s/%s/%s/", namespace, container, version)),
+		Namespace:    namespace,
+		Container:    container,
+		Version:      version,
+		Objects:      objects,
 	})
 }
 

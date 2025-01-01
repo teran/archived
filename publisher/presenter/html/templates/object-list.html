@@ -2,11 +2,15 @@
 {{ $container := .Container }}
 {{ $version := .Version }}
 {{ template "header" . }}
+<div class="container">
         <a href="..">..</a><br>
 {{- range $object := .Objects }}
         <a href="/{{ $namespace }}/{{ $container }}/{{ $version }}/{{ $object }}">{{ $object }}</a><br>
 {{- else }}
         <p>No objects found</p>
 {{- end }}
-{{ template "pagination" . }}
+</div>
+
+{{ template "pagination" .Pagination }}
+
 {{ template "footer" }}

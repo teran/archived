@@ -2,25 +2,83 @@
 
 
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <title>Version index (default/test-container-1)</title>
-    </head>
-    <body>
-        <h1>Version index (default/test-container-1)</h1>
-        <hr>
+<html id="html" lang="en" data-bs-theme="dark">
 
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="/static/bootstrap/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="/static/bootstrap-icons/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/static/archived/styles/index.css">
+    <script src="/static/popperjs/popper.min.js"
+        integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+        crossorigin="anonymous"></script>
+    <script src="/static/bootstrap/js/bootstrap.min.js"
+        integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
+        crossorigin="anonymous"></script>
+    <script src="/static/archived/scripts/index.js"></script>
+    <title>Version index (default/test-container-1)</title>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Version index (default/test-container-1)</h1>
+    </div>
+    <button id="lightSwitch" class="btn position-fixed top-0 end-0 mb-3 me-3 bd-mode-toggle">
+        <i class="bi bi-circle-half"></i>
+    </button>
+    <hr>
+    
+<div class="container">
         <a href="..">..</a><br>
         <a href="/default/test-container-1/20241011121314/">20241011121314/</a><br>
+</div>
 
 
-        <p>
-            <a href="?page=2">&raquo;</a>
-        </p>
+<nav aria-label="pagination" class="pagination pagination-sm">
+    <ul class="pagination">
+        
+        
+        <li class="page-item">
+            <a class="page-link active" href="/default/test-container-1/?page=1">1</a>
+        </li>
+        
+        <li class="page-item">
+            <a class="page-link" href="/default/test-container-1/?page=2">2</a>
+        </li>
+        
+        <li class="page-item">
+            <a class="page-link" href="/default/test-container-1/?page=3">3</a>
+        </li>
+        
+        <li class="page-item">
+            <a class="page-link" href="/default/test-container-1/?page=4">4</a>
+        </li>
+        
+        <li class="page-item">
+            <a class="page-link" href="/default/test-container-1/?page=5">5</a>
+        </li>
+        
+        <li class="page-item">
+            <a class="page-link" href="/default/test-container-1/?page=6">6</a>
+        </li>
+        
+        
+        <li class="page-item">
+            <a class="page-link" href="/default/test-container-1/?page=7">&raquo;</a>
+        </li>
+        
+    </ul>
+</nav>
 
 
-        <hr>
+
+    <hr>
+    <div class="container">
         Powered by <a href="https://github.com/teran/archived" target="_blank" rel="noopener">archived</a>
-    </body>
+    </div>
+</body>
+
 </html>
 
