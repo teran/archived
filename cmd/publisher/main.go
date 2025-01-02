@@ -62,6 +62,9 @@ type config struct {
 	VersionsPerPage   uint64 `envconfig:"VERSIONS_PER_PAGE" default:"50"`
 	ObjectsPerPage    uint64 `envconfig:"OBJECTS_PER_PAGE" default:"50"`
 	ContainersPerPage uint64 `envconfig:"CONTAINERS_PER_PAGE" default:"50"`
+
+	MaxPagesInPagination uint64              `envconfig:"MAX_PAGES_IN_PAGINATION" default:"5"`
+	DefaultTheme         htmlPresenter.Theme `envconfig:"DEFAULT_THEME" default:"dark"`
 }
 
 func main() {
@@ -126,7 +129,10 @@ func main() {
 
 	publisherSvc := service.NewPublisher(repo, blobRepo, cfg.VersionsPerPage, cfg.ObjectsPerPage, cfg.ContainersPerPage)
 
-	p := htmlPresenter.New(publisherSvc, cfg.HTMLTemplateDir, cfg.StaticDir, cfg.BLOBS3PreserveSchemeOnRedirect)
+	p := htmlPresenter.New(publisherSvc, cfg.HTMLTemplateDir, cfg.StaticDir, cfg.BLOBS3PreserveSchemeOnRedirect, htmlPresenter.DisplayConfig{
+		DefaultTheme:         cfg.DefaultTheme,
+		MaxPagesInPagination: cfg.MaxPagesInPagination,
+	})
 	p.Register(e)
 
 	g.Go(func() error {

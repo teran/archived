@@ -1,12 +1,15 @@
 {{ $namespace := .Namespace }}
 {{ $container := .Container }}
 {{ template "header" . }}
+<div class="container">
         <a href="..">..</a><br>
 {{- range $version := .Versions }}
         <a href="/{{ $namespace }}/{{ $container }}/{{ $version.Name }}/">{{ $version.Name }}/</a><br>
 {{- else }}
         <p>No versions found</p>
 {{- end }}
+</div>
 
-{{ template "pagination" . }}
+{{ template "pagination" .Pagination }}
+
 {{ template "footer" }}

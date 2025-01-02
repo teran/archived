@@ -1,18 +1,43 @@
 
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <title>Namespace index</title>
-    </head>
-    <body>
-        <h1>Namespace index</h1>
-        <hr>
+<html id="html" lang="en" data-bs-theme="dark">
 
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="/static/bootstrap/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="/static/bootstrap-icons/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/static/archived/styles/index.css">
+    <script src="/static/popperjs/popper.min.js"
+        integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+        crossorigin="anonymous"></script>
+    <script src="/static/bootstrap/js/bootstrap.min.js"
+        integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
+        crossorigin="anonymous"></script>
+    <script src="/static/archived/scripts/index.js"></script>
+    <title>Namespace index</title>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Namespace index</h1>
+    </div>
+    <button id="lightSwitch" class="btn position-fixed top-0 end-0 mb-3 me-3 bd-mode-toggle">
+        <i class="bi bi-circle-half"></i>
+    </button>
+    <hr>
+    
+<div class="container">
         <a href="/default/">default/</a><br>
         <a href="/test-namespace-1/">test-namespace-1/</a><br>
+</div>
 
-        <hr>
+    <hr>
+    <div class="container">
         Powered by <a href="https://github.com/teran/archived" target="_blank" rel="noopener">archived</a>
-    </body>
+    </div>
+</body>
+
 </html>
 

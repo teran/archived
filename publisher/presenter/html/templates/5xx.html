@@ -1,14 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <title>{{ .Message }}</title>
-    </head>
-    <body>
+
+<head>
+    <title>{{ .Message }}</title>
+</head>
+
+<body>
+    <div class="container">
         <h1>{{ .Code }} {{ .Message }}</h1>
         <p>
             Something went wrong.....
         </p>
-        <hr>
+    </div>
+    <hr>
+    <div class="container">
         Powered by <a href="https://github.com/teran/archived" target="_blank" rel="noopener">archived</a>
-    </body>
+    </div>
+</body>
+
 </html>

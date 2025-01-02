@@ -173,7 +173,10 @@ func (s *handlersTestSuite) SetupTest() {
 
 	s.serviceMock = service.NewMock()
 
-	s.handlers = New(s.serviceMock, "templates", "static", true)
+	s.handlers = New(s.serviceMock, "templates", "static", true, DisplayConfig{
+		DefaultTheme:         ThemeDark,
+		MaxPagesInPagination: 5,
+	})
 	s.handlers.Register(e)
 
 	s.srv = httptest.NewServer(e)

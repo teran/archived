@@ -3,14 +3,45 @@ FROM alpine:3.20.3 AS certificates
 RUN apk add --update --no-cache \
   ca-certificates=20240705-r0
 
-FROM scratch
+FROM index.docker.io/library/node:22.12.0 AS depsbuilder
+
+RUN mkdir /src
+WORKDIR /src
+RUN npm install \
+  bootstrap@5.3.3 \
+  bootstrap-icons@1.11.3
+
+FROM index.docker.io/library/node:22.12.0 AS tsbuilder
+
+RUN mkdir /src
+WORKDIR /src
+RUN npm install -g \
+  typescript@5.7.2
+COPY publisher/presenter/html/static/scripts /src/scripts
+RUN tsc scripts/index.ts --strict --removeComments --outDir /build
+
+FROM ubuntu:24.04
+
+RUN mkdir -p \
+  /static/archived/scripts \
+  /static/archived/styles
+
 
 COPY dockerfiles/rootfs/etc/passwd /etc/passwd
 COPY dockerfiles/rootfs/etc/group /etc/group
 
-COPY --from=certificates /etc/ssl/cert.pem /etc/ssl/cert.pem
+COPY --from=certificates --chown=root:root --chmod=0644 /etc/ssl/cert.pem /etc/ssl/cert.pem
 COPY --chmod=0755 --chown=root:root dist/archived-publisher_linux_amd64_v3/archived-publisher /archived-publisher
-COPY --chmod=0644 --chown=root:root publisher/presenter/html/templates /templates
+COPY --chmod=0755 --chown=root:root publisher/presenter/html/templates /templates
+COPY --chmod=0755 --chown=root:root publisher/presenter/html/static /static/archived
+
+COPY --from=tsbuilder --chown=root:root --chmod=0644 /build /static/archived/scripts
+
+COPY --from=depsbuilder --chown=root:root /src/node_modules/bootstrap/dist /static/bootstrap
+COPY --from=depsbuilder --chown=root:root /src/node_modules/@popperjs/core/dist/umd /static/popperjs
+COPY --from=depsbuilder --chown=root:root /src/node_modules/bootstrap-icons/bootstrap-icons.svg /static/bootstrap-icons/bootstrap-icons.svg
+COPY --from=depsbuilder --chown=root:root /src/node_modules/bootstrap-icons/font /static/bootstrap-icons/font
+COPY --from=depsbuilder --chown=root:root /src/node_modules/bootstrap-icons/icons /static/bootstrap-icons/icons
 
 ENV HTML_TEMPLATE_DIR=/templates
 ENV STATIC_DIR=/static

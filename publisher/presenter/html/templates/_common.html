@@ -1,30 +1,62 @@
 {{ define "header" }}
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <title>{{ .Title }}</title>
-    </head>
-    <body>
-        <h1>{{ .Title }}</h1>
-        <hr>
-{{ end }}
+<html id="html" lang="en" data-bs-theme="{{ .DefaultTheme }}">
 
-{{ define "footer" }}
-        <hr>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="/static/bootstrap/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="/static/bootstrap-icons/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/static/archived/styles/index.css">
+    <script src="/static/popperjs/popper.min.js"
+        integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+        crossorigin="anonymous"></script>
+    <script src="/static/bootstrap/js/bootstrap.min.js"
+        integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
+        crossorigin="anonymous"></script>
+    <script src="/static/archived/scripts/index.js"></script>
+    <title>{{ .Title }}</title>
+</head>
+
+<body>
+    <div class="container">
+        <h1>{{ .Title }}</h1>
+    </div>
+    <button id="lightSwitch" class="btn position-fixed top-0 end-0 mb-3 me-3 bd-mode-toggle">
+        <i class="bi bi-circle-half"></i>
+    </button>
+    <hr>
+    {{ end }}
+
+    {{ define "footer" }}
+    <hr>
+    <div class="container">
         Powered by <a href="https://github.com/teran/archived" target="_blank" rel="noopener">archived</a>
-    </body>
+    </div>
+</body>
+
 </html>
 {{ end }}
 
 {{ define "pagination" }}
-        <p>
-{{- $current := .CurrentPage }}
-{{- $total := .PagesCount }}
-{{- if gt $current 1 }}
-            <a href="?page={{ sub $current 1 }}">&laquo;</a>
-{{- end }}
-{{- if lt $current $total }}
-            <a href="?page={{ add1 $current }}">&raquo;</a>
-{{- end }}
-        </p>
+<nav aria-label="pagination" class="pagination pagination-sm">
+    <ul class="pagination">
+        {{ if .HasPrevious }}
+        <li class="page-item">
+            <a class="page-link" href="{{ .PreviousPageURL }}">&laquo;</a>
+        </li>
+        {{ end }}
+        {{ range $page := .Pages }}
+        <li class="page-item">
+            <a class="page-link{{ if $page.IsCurrent }} active{{ end }}" href="{{ $page.URL }}">{{ $page.Number }}</a>
+        </li>
+        {{ end }}
+        {{ if .HasNext }}
+        <li class="page-item">
+            <a class="page-link" href="{{ .NextPageURL }}">&raquo;</a>
+        </li>
+        {{ end }}
+    </ul>
+</nav>
 {{ end }}
