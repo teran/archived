@@ -371,7 +371,12 @@ func (s *service) createObject(ctx context.Context, namespaceName, containerName
 			"url":    url,
 		}).Info("uploading BLOB ...")
 
-		if err := uploadBlob(ctx, url, object.Contents, object.Size); err != nil {
+		rd, err := object.Contents(ctx)
+		if err != nil {
+			return err
+		}
+
+		if err := uploadBlob(ctx, url, rd, object.Size); err != nil {
 			return err
 		}
 	}

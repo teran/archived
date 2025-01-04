@@ -114,8 +114,10 @@ func (l *local) Process(ctx context.Context, handler func(ctx context.Context, o
 		defer fp.Close()
 
 		if err := handler(ctx, source.Object{
-			Path:     shortPath,
-			Contents: fp,
+			Path: shortPath,
+			Contents: func(ctx context.Context) (io.Reader, error) {
+				return fp, nil
+			},
 			SHA256:   checksum,
 			Size:     uint64(size),
 			MimeType: mimeType,
