@@ -105,6 +105,7 @@ func (r *repository) Process(ctx context.Context, handler source.ObjectHandler) 
 
 					for _, filename := range []string{
 						fmt.Sprintf("dists/%s/%s/binary-%s/Packages.gz", suite, component, architecture),
+						fmt.Sprintf("dists/%s/%s/Contents-%s.gz", suite, component, architecture),
 						fmt.Sprintf("dists/%s/%s/binary-%s/by-hash/SHA256/%s", suite, component, architecture, checksum),
 					} {
 						if err := handler(ctx, source.Object{
