@@ -7,7 +7,7 @@ import (
 
 type Object struct {
 	Path     string
-	Contents io.Reader
+	Contents func(ctx context.Context) (io.Reader, error)
 	SHA256   string
 	Size     uint64
 	MimeType string

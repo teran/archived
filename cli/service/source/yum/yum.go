@@ -92,8 +92,10 @@ func (r *repository) Process(ctx context.Context, handler func(ctx context.Conte
 
 		log.Tracef("handler(%s, %s, %d)", k, checksum, size)
 		if err := handler(ctx, source.Object{
-			Path:     k,
-			Contents: bytes.NewReader(v),
+			Path: k,
+			Contents: func(ctx context.Context) (io.Reader, error) {
+				return bytes.NewReader(v), nil
+			},
 			SHA256:   checksum,
 			Size:     uint64(size),
 			MimeType: mimeType,
@@ -160,14 +162,9 @@ func (r *repository) Process(ctx context.Context, handler func(ctx context.Conte
 			}
 			mimeType := mimetype.Detect(data)
 
-			fp, err = lb.Reader(ctx)
-			if err != nil {
-				return errors.Wrap(err, "error getting object reader")
-			}
-
 			if err := handler(ctx, source.Object{
 				Path:     name,
-				Contents: fp,
+				Contents: lb.Reader,
 				SHA256:   checksum,
 				Size:     size,
 				MimeType: mimeType.String(),
