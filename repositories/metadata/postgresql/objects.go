@@ -102,7 +102,9 @@ func (r *repository) CreateObject(ctx context.Context, namespace, container, ver
 			okID,
 			blobID,
 			objectTimestamp,
-		))
+		).
+		Suffix("ON CONFLICT (version_id, key_id) DO NOTHING"),
+	)
 	if err != nil {
 		return mapSQLErrors(err)
 	}

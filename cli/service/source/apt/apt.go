@@ -52,13 +52,44 @@ func (r *repository) Process(ctx context.Context, handler source.ObjectHandler) 
 			"suite": suite,
 		}).Trace("processing suite ...")
 
+		for _, filename := range []string{
+			fmt.Sprintf("dists/%s/ChangeLog", suite),
+			fmt.Sprintf("dists/%s/InRelease", suite),
+			fmt.Sprintf("dists/%s/Release", suite),
+			fmt.Sprintf("dists/%s/Release.gpg", suite),
+		} {
+			data, err := getFile(ctx, fmt.Sprintf("%s/%s", r.repoURL, filename))
+			if err != nil {
+				return err
+			}
+
+			checksum, err := sha256FromBytes(data)
+			if err != nil {
+				return err
+			}
+
+			if err := handler(ctx, source.Object{
+				Path: filename,
+				Contents: func(ctx context.Context) (io.Reader, error) {
+					return bytes.NewReader(data), nil
+				},
+				SHA256:   checksum,
+				Size:     uint64(len(data)),
+				MimeType: http.DetectContentType(data),
+			}); err != nil {
+				return err
+			}
+		}
+
 		for _, component := range r.components {
 			for _, architecture := range r.architectures {
 				if err := func(component, architecture string) error {
 					log.WithFields(log.Fields{
+						"url":          r.repoURL,
+						"suite":        suite,
 						"component":    component,
 						"architecture": architecture,
-					}).Debug("processing repository ...")
+					}).Info("processing repository ...")
 
 					url := fmt.Sprintf("%s/dists/%s/%s/binary-%s/Packages.gz", r.repoURL, suite, component, architecture)
 					pkgs := Packages{}
@@ -72,20 +103,24 @@ func (r *repository) Process(ctx context.Context, handler source.ObjectHandler) 
 						return err
 					}
 
-					if err := handler(ctx, source.Object{
-						Path: fmt.Sprintf("dists/%s/%s/binary-%s/Packages.gz", suite, component, architecture),
-						Contents: func(ctx context.Context) (io.Reader, error) {
-							return bytes.NewReader(data), nil
-						},
-						SHA256:   checksum,
-						Size:     uint64(len(data)),
-						MimeType: http.DetectContentType(data),
-					}); err != nil {
-						return err
+					for _, filename := range []string{
+						fmt.Sprintf("dists/%s/%s/binary-%s/Packages.gz", suite, component, architecture),
+						fmt.Sprintf("dists/%s/%s/binary-%s/by-hash/SHA256/%s", suite, component, architecture, checksum),
+					} {
+						if err := handler(ctx, source.Object{
+							Path: filename,
+							Contents: func(ctx context.Context) (io.Reader, error) {
+								return bytes.NewReader(data), nil
+							},
+							SHA256:   checksum,
+							Size:     uint64(len(data)),
+							MimeType: http.DetectContentType(data),
+						}); err != nil {
+							return err
+						}
 					}
 
 					for _, filename := range []string{
-						fmt.Sprintf("dists/%s/InRelease", suite),
 						fmt.Sprintf("dists/%s/%s/binary-%s/Release", suite, component, architecture),
 						fmt.Sprintf("dists/%s/%s/binary-%s/Release.gpg", suite, component, architecture),
 						fmt.Sprintf("dists/%s/%s/binary-%s/InRelease", suite, component, architecture),
