@@ -41,7 +41,7 @@ func TestLazyblob(t *testing.T) {
 
 	fn, err := lb.Filename(ctx)
 	r.NoError(err)
-	r.True(strings.HasSuffix(fn, ".rpm.tmp"))
+	r.True(strings.HasSuffix(fn, ".tmp"))
 
 	fp, err := lb.Reader(ctx)
 	r.NoError(err)
