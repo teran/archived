@@ -81,7 +81,7 @@ func (l *lazyblob) download(ctx context.Context) error {
 		return errors.Wrap(err, "error creating directory structure")
 	}
 
-	l.tempFile, err = os.CreateTemp(l.tempDir, "package_*.rpm.tmp")
+	l.tempFile, err = os.CreateTemp(l.tempDir, "package_*.tmp")
 	if err != nil {
 		return errors.Wrap(err, "error creating temporary file")
 	}
