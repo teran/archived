@@ -2,19 +2,13 @@ package apt
 
 import (
 	"bytes"
-	"compress/gzip"
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/ulikunitz/xz"
-	debian "pault.ag/go/debian/control"
 
 	"github.com/teran/archived/cli/lazyblob"
 	"github.com/teran/archived/cli/service/source"
@@ -182,86 +176,4 @@ func (r *repository) Process(ctx context.Context, handler source.ObjectHandler) 
 	}
 
 	return nil
-}
-
-func fetchMetadata[T any](ctx context.Context, url string, v T) ([]byte, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	c := &http.Client{}
-	resp, err := c.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	var rd io.Reader
-	switch filepath.Ext(url) {
-	case ".gz":
-		rd, err = gzip.NewReader(bytes.NewReader(data))
-		if err != nil {
-			return nil, err
-		}
-	case ".xz":
-		rd, err = xz.NewReader(bytes.NewReader(data))
-		if err != nil {
-			return nil, err
-		}
-	default:
-		rd = resp.Body
-	}
-
-	if err := debian.Unmarshal(v, rd); err != nil {
-		return nil, err
-	}
-
-	return data, nil
-}
-
-func sha256FromBytes(in []byte) (string, error) {
-	hasher := sha256.New()
-	n, err := hasher.Write(in)
-	if err != nil {
-		return "", err
-	}
-
-	if n != len(in) {
-		return "", io.ErrShortWrite
-	}
-
-	return hex.EncodeToString(hasher.Sum(nil)), nil
-}
-
-func detectMimeTypeByFilename(path string) string {
-	switch filepath.Ext(path) {
-	case ".deb":
-		return "application/vnd.debian.binary-package"
-	case ".gz":
-		return "application/x-gzip"
-	default:
-		return "application/octet-stream"
-	}
-}
-
-func getFile(ctx context.Context, url string) ([]byte, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	c := &http.Client{}
-	resp, err := c.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	return io.ReadAll(resp.Body)
 }
