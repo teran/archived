@@ -1,7 +1,7 @@
 FROM alpine:3.20.3 AS certificates
 
 RUN apk add --update --no-cache \
-  ca-certificates=20241121-r0
+  ca-certificates=20241121-r1
 
 FROM index.docker.io/library/node:22.12.0 AS depsbuilder
 
@@ -20,7 +20,7 @@ RUN npm install -g \
 COPY publisher/presenter/html/static/scripts /src/scripts
 RUN tsc scripts/index.ts --strict --removeComments --outDir /build
 
-FROM ubuntu:24.04
+FROM alpine:3.20.3 AS assets
 
 RUN mkdir -p \
   /static/archived/scripts \
@@ -42,6 +42,13 @@ COPY --from=depsbuilder --chown=root:root /src/node_modules/@popperjs/core/dist/
 COPY --from=depsbuilder --chown=root:root /src/node_modules/bootstrap-icons/bootstrap-icons.svg /static/bootstrap-icons/bootstrap-icons.svg
 COPY --from=depsbuilder --chown=root:root /src/node_modules/bootstrap-icons/font /static/bootstrap-icons/font
 COPY --from=depsbuilder --chown=root:root /src/node_modules/bootstrap-icons/icons /static/bootstrap-icons/icons
+
+FROM scratch
+
+COPY dockerfiles/rootfs/etc/passwd /etc/passwd
+COPY dockerfiles/rootfs/etc/group /etc/group
+COPY --from=assets --chown=root:root --chmod=0755 /static/archived/scripts /static/archived/scripts
+COPY --from=assets --chown=root:root --chmod=0755 /static/archived/styles /static/archived/styles
 
 ENV HTML_TEMPLATE_DIR=/templates
 ENV STATIC_DIR=/static
