@@ -8,13 +8,18 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/teran/archived/cli/lazyblob"
 	"github.com/teran/archived/cli/service/source"
 )
 
-var _ source.Source = (*repository)(nil)
+var (
+	_ source.Source = (*repository)(nil)
+
+	ErrChecksumMismatch = errors.New("checksum mismatch")
+)
 
 type repository struct {
 	repoURL       string
@@ -41,10 +46,21 @@ func (r *repository) Process(ctx context.Context, handler source.ObjectHandler) 
 		"repository_url": r.repoURL,
 	}).Info("running creating version from APT repository ...")
 
+	type metadataBlob struct {
+		path     string
+		contents []byte
+		sha256   string
+		size     uint64
+	}
+
 	for _, suite := range r.suites {
 		log.WithFields(log.Fields{
 			"suite": suite,
-		}).Trace("processing suite ...")
+		}).Info("processing suite ...")
+
+		log.WithFields(log.Fields{
+			"suite": suite,
+		}).Debug("processing Release file ...")
 
 		for _, filename := range []string{
 			fmt.Sprintf("dists/%s/ChangeLog", suite),
