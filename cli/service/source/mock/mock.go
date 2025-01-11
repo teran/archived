@@ -17,7 +17,7 @@ func New() *Mock {
 	return &Mock{}
 }
 
-func (m *Mock) Process(ctx context.Context, handler func(ctx context.Context, obj source.Object) error) error {
+func (m *Mock) Process(ctx context.Context, handler source.ObjectHandler) error {
 	args := m.Called()
 	return args.Error(0)
 }

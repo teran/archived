@@ -13,6 +13,8 @@ type Object struct {
 	MimeType string
 }
 
+type ObjectHandler func(ctx context.Context, obj Object) error
+
 type Source interface {
-	Process(ctx context.Context, handler func(ctx context.Context, obj Object) error) error
+	Process(ctx context.Context, handler ObjectHandler) error
 }
