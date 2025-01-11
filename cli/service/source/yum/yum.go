@@ -51,7 +51,7 @@ func New(repoURL string, rpmGPGKeyURL, rpmGPGKeySHA256 *string) source.Source {
 	}
 }
 
-func (r *repository) Process(ctx context.Context, handler func(ctx context.Context, obj source.Object) error) error {
+func (r *repository) Process(ctx context.Context, handler source.ObjectHandler) error {
 	log.WithFields(log.Fields{
 		"repository_url": r.repoURL,
 	}).Info("running creating version from YUM repository ...")
