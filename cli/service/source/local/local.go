@@ -42,7 +42,7 @@ func New(dir string, c cache.CacheRepository) source.Source {
 	}
 }
 
-func (l *local) Process(ctx context.Context, handler func(ctx context.Context, obj source.Object) error) error {
+func (l *local) Process(ctx context.Context, handler source.ObjectHandler) error {
 	log.WithFields(log.Fields{
 		"source_type": sourceType,
 		"directory":   l.dir,
