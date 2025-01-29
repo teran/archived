@@ -46,13 +46,6 @@ func (r *repository) Process(ctx context.Context, handler source.ObjectHandler) 
 		"repository_url": r.repoURL,
 	}).Info("running creating version from APT repository ...")
 
-	type metadataBlob struct {
-		path     string
-		contents []byte
-		sha256   string
-		size     uint64
-	}
-
 	for _, suite := range r.suites {
 		log.WithFields(log.Fields{
 			"suite": suite,
