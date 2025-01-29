@@ -29,6 +29,11 @@ type metadataFile struct {
 
 type metadata map[string]metadataFile
 
+const (
+	gzipExtension = ".gz"
+	xzExtension   = ".xz"
+)
+
 func (m metadata) getSuiteRelease(suite string) ([]byte, error) {
 	for _, fn := range []string{
 		fmt.Sprintf("dists/%s/Release", suite),
@@ -46,7 +51,7 @@ func getUncompressedReader(filename string, in []byte) ([]byte, error) {
 	switch filepath.Ext(filename) {
 	case "":
 		return in, nil
-	case ".gz":
+	case gzipExtension:
 		rd, err := gzip.NewReader(bytes.NewReader(in))
 		if err != nil {
 			return nil, errors.Wrap(err, "error constructing gzip reader")
@@ -59,7 +64,7 @@ func getUncompressedReader(filename string, in []byte) ([]byte, error) {
 		}
 
 		return data, nil
-	case ".xz":
+	case xzExtension:
 		rd, err := xz.NewReader(bytes.NewReader(in))
 		if err != nil {
 			return nil, errors.Wrap(err, "error constructing xz reader")
