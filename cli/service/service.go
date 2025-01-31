@@ -348,7 +348,7 @@ func (s *service) createObject(ctx context.Context, namespaceName, containerName
 		"sha256":    object.SHA256,
 		"length":    object.Size,
 		"mime_type": object.MimeType,
-	}).Info("creating object ...")
+	}).Debug("creating object ...")
 
 	resp, err := s.cli.CreateObject(ctx, &v1proto.CreateObjectRequest{
 		Namespace: namespaceName,
