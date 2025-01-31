@@ -8,10 +8,10 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/ProtonMail/go-crypto/openpgp"
-	"github.com/gabriel-vasile/mimetype"
 	"github.com/pkg/errors"
 	"github.com/sassoftware/go-rpmutils"
 	log "github.com/sirupsen/logrus"
@@ -137,37 +137,28 @@ func (r *repository) Process(ctx context.Context, handler source.ObjectHandler) 
 				}
 			}
 
-			fp, err := lb.Reader(ctx)
-			if err != nil {
-				return errors.Wrap(err, "error getting object reader")
-			}
+			if len(gpgKeyring) > 0 {
+				fp, err := lb.Reader(ctx)
+				if err != nil {
+					return errors.Wrap(err, "error getting object reader")
+				}
 
-			_, sigs, err := rpmutils.Verify(fp, gpgKeyring)
-			if err != nil {
-				return errors.Wrapf(err, "error verifying package signature: %s", name)
-			}
+				_, sigs, err := rpmutils.Verify(fp, gpgKeyring)
+				if err != nil {
+					return errors.Wrapf(err, "error verifying package signature: %s", name)
+				}
 
-			if len(sigs) == 0 {
-				log.Warnf("package `%s` does not contain signature", name)
+				if len(sigs) == 0 {
+					log.Warnf("package `%s` does not contain signature but verification is requested", name)
+				}
 			}
-
-			fp, err = lb.Reader(ctx)
-			if err != nil {
-				return errors.Wrap(err, "error getting object reader")
-			}
-
-			data := make([]byte, 512)
-			if _, err := fp.Read(data); err != nil {
-				return errors.Wrap(err, "error reading data for MIME type detection")
-			}
-			mimeType := mimetype.Detect(data)
 
 			if err := handler(ctx, source.Object{
 				Path:     name,
 				Contents: lb.Reader,
 				SHA256:   checksum,
 				Size:     size,
-				MimeType: mimeType.String(),
+				MimeType: detectMimeType(name),
 			}); err != nil {
 				return errors.Wrap(err, "error calling object handler")
 			}
@@ -185,4 +176,18 @@ func (r *repository) Process(ctx context.Context, handler source.ObjectHandler) 
 		}
 	}
 	return nil
+}
+
+func detectMimeType(filename string) string {
+	switch path.Ext(filename) {
+	case ".gz":
+		return "application/gzip"
+	case ".xz":
+		return "application/x-xz"
+	case ".xml":
+		return "application/xml"
+	case ".rpm":
+		return "application/x-rpm"
+	}
+	return "application/octet-stream"
 }
