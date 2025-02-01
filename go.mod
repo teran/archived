@@ -29,10 +29,12 @@ require (
 	github.com/teran/go-ptr v1.1.0
 	github.com/teran/go-random v0.0.1
 	github.com/teran/go-time v0.0.2
+	github.com/ulikunitz/xz v0.5.12
 	go.opentelemetry.io/otel/trace v1.34.0
 	golang.org/x/sync v0.10.0
 	google.golang.org/grpc v1.70.0
 	google.golang.org/protobuf v1.36.1
+	pault.ag/go/debian v0.18.0
 )
 
 require (
@@ -88,7 +90,6 @@ require (
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/spf13/cast v1.7.1 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
-	github.com/ulikunitz/xz v0.5.12 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/xhit/go-str2duration/v2 v2.1.0 // indirect
@@ -105,4 +106,5 @@ require (
 	golang.org/x/time v0.8.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241230172942-26aa7a208def // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	pault.ag/go/topsort v0.1.1 // indirect
 )

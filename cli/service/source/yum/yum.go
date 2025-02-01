@@ -158,7 +158,7 @@ func (r *repository) Process(ctx context.Context, handler source.ObjectHandler) 
 				Contents: lb.Reader,
 				SHA256:   checksum,
 				Size:     size,
-				MimeType: detectMimeType(name),
+				MimeType: detectMimeTypeByFilename(name),
 			}); err != nil {
 				return errors.Wrap(err, "error calling object handler")
 			}
@@ -178,7 +178,7 @@ func (r *repository) Process(ctx context.Context, handler source.ObjectHandler) 
 	return nil
 }
 
-func detectMimeType(filename string) string {
+func detectMimeTypeByFilename(filename string) string {
 	switch path.Ext(filename) {
 	case ".gz":
 		return "application/gzip"
