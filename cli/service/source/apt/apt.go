@@ -31,7 +31,7 @@ type repository struct {
 func New(repoURL string, suites, components, architectures []string) source.Source {
 	log.WithFields(log.Fields{
 		"url": repoURL,
-	}).Trace("initializing YUM source ...")
+	}).Trace("initializing APT source ...")
 
 	return &repository{
 		repoURL:       repoURL,
