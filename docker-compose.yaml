@@ -36,6 +36,8 @@ services:
     build:
       context: .
       dockerfile: dockerfiles/Dockerfile.migrator
+      args:
+        ALPINE_IMAGE: ${IMAGE_PREFIX:-}index.docker.io/library/alpine:3.20.3
     image: ${IMAGE_PREFIX:-}ghcr.io/teran/archived/migrator:latest
     environment:
       LOG_LEVEL: trace
@@ -47,6 +49,9 @@ services:
     build:
       context: .
       dockerfile: dockerfiles/Dockerfile.publisher
+      args:
+        ALPINE_IMAGE: ${IMAGE_PREFIX:-}index.docker.io/library/alpine:3.20.3
+        ARG NODE_IMAGE: ${IMAGE_PREFIX:-}index.docker.io/library/node:22.12.0
     image: ${IMAGE_PREFIX:-}ghcr.io/teran/archived/publisher:latest
     environment:
       LOG_LEVEL: trace
@@ -67,6 +72,8 @@ services:
     build:
       context: .
       dockerfile: dockerfiles/Dockerfile.manager
+      args:
+        ALPINE_IMAGE: ${IMAGE_PREFIX:-}index.docker.io/library/alpine:3.20.3
     image: ${IMAGE_PREFIX:-}ghcr.io/teran/archived/manager:latest
     environment:
       LOG_LEVEL: trace
