@@ -369,7 +369,7 @@ func (s *service) createObject(ctx context.Context, namespaceName, containerName
 			"sha256": object.SHA256,
 			"length": object.Size,
 			"url":    url,
-		}).Info("uploading BLOB ...")
+		}).Debug("uploading BLOB ...")
 
 		rd, err := object.Contents(ctx)
 		if err != nil {
