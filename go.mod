@@ -11,7 +11,7 @@ require (
 	github.com/bradfitz/gomemcache v0.0.0-20230905024940-24af94b03874
 	github.com/gabriel-vasile/mimetype v1.4.8
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
-	github.com/golang-migrate/migrate/v4 v4.18.1
+	github.com/golang-migrate/migrate/v4 v4.18.2
 	github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus v1.0.1
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.2.0
 	github.com/kelseyhightower/envconfig v1.4.0
@@ -32,7 +32,6 @@ require (
 	go.opentelemetry.io/otel/trace v1.34.0
 	golang.org/x/sync v0.10.0
 	google.golang.org/grpc v1.70.0
-	google.golang.org/protobuf v1.36.1
 )
 
 require (
@@ -104,5 +103,6 @@ require (
 	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/time v0.8.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241230172942-26aa7a208def // indirect
+	google.golang.org/protobuf v1.36.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
