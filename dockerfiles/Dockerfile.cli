@@ -1,4 +1,4 @@
-ARG ALPINE_IMAGE=index.docker.io/library/alpine:3.20.3
+ARG ALPINE_IMAGE=${IMAGE_PREFIX}index.docker.io/library/alpine:3.20.3
 
 # hadolint ignore=DL3006
 FROM ${ALPINE_IMAGE} AS certificates
