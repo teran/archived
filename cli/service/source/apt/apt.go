@@ -98,44 +98,23 @@ func (r *repository) Process(ctx context.Context, handler source.ObjectHandler) 
 						"architecture": architecture,
 					}).Info("processing repository ...")
 
-					url := fmt.Sprintf("%s/dists/%s/%s/binary-%s/Packages.gz", r.repoURL, suite, component, architecture)
-					pkgs := Packages{}
-					data, err := fetchMetadata(ctx, url, &pkgs)
-					if err != nil {
-						return err
-					}
-
-					checksum, err := sha256FromBytes(data)
-					if err != nil {
-						return err
-					}
-
 					for _, filename := range []string{
-						fmt.Sprintf("dists/%s/%s/binary-%s/Packages.gz", suite, component, architecture),
-						fmt.Sprintf("dists/%s/%s/Contents-%s.gz", suite, component, architecture),
-						fmt.Sprintf("dists/%s/%s/binary-%s/by-hash/SHA256/%s", suite, component, architecture, checksum),
+						"Packages",
+						"Packages.gz",
 					} {
-						if err := handler(ctx, source.Object{
-							Path: filename,
-							Contents: func(ctx context.Context) (io.Reader, error) {
-								return bytes.NewReader(data), nil
-							},
-							SHA256:   checksum,
-							Size:     uint64(len(data)),
-							MimeType: http.DetectContentType(data),
-						}); err != nil {
-							return err
-						}
-					}
-
-					for _, filename := range []string{
-						fmt.Sprintf("dists/%s/%s/binary-%s/Release", suite, component, architecture),
-						fmt.Sprintf("dists/%s/%s/binary-%s/Release.gpg", suite, component, architecture),
-						fmt.Sprintf("dists/%s/%s/binary-%s/InRelease", suite, component, architecture),
-					} {
-						data, err := getFile(ctx, fmt.Sprintf("%s/%s", r.repoURL, filename))
+						url := fmt.Sprintf("%s/dists/%s/%s/binary-%s/%s", r.repoURL, suite, component, architecture, filename)
+						pkgs := Packages{}
+						data, err := fetchMetadata(ctx, url, &pkgs)
 						if err != nil {
-							return err
+							log.WithFields(log.Fields{
+								"error":        err.Error(),
+								"repository":   r.repoURL,
+								"suite":        suite,
+								"component":    component,
+								"architecture": architecture,
+								"filename":     filename,
+							}).Warn("error fetching metadata file")
+							continue
 						}
 
 						checksum, err := sha256FromBytes(data)
@@ -143,41 +122,79 @@ func (r *repository) Process(ctx context.Context, handler source.ObjectHandler) 
 							return err
 						}
 
-						if err := handler(ctx, source.Object{
-							Path: filename,
-							Contents: func(ctx context.Context) (io.Reader, error) {
-								return bytes.NewReader(data), nil
-							},
-							SHA256:   checksum,
-							Size:     uint64(len(data)),
-							MimeType: http.DetectContentType(data),
-						}); err != nil {
-							return err
-						}
-					}
-
-					for _, pkg := range pkgs {
-						if err := func(pkg Package) error {
-							lb := lazyblob.New(r.repoURL+"/"+pkg.Filename, os.TempDir(), uint64(pkg.Size))
-							defer func() {
-								if err := lb.Close(); err != nil {
-									log.Warnf("error removing scratch data: %s", err)
-								}
-							}()
-
+						for _, filename := range []string{
+							fmt.Sprintf("dists/%s/%s/binary-%s/Packages.gz", suite, component, architecture),
+							fmt.Sprintf("dists/%s/%s/Contents-%s.gz", suite, component, architecture),
+							fmt.Sprintf("dists/%s/%s/binary-%s/by-hash/SHA256/%s", suite, component, architecture, checksum),
+						} {
 							if err := handler(ctx, source.Object{
-								Path:     pkg.Filename,
-								Contents: lb.Reader,
-								SHA256:   pkg.SHA256Sum,
-								Size:     uint64(pkg.Size),
-								MimeType: detectMimeTypeByFilename(pkg.Filename),
+								Path: filename,
+								Contents: func(ctx context.Context) (io.Reader, error) {
+									return bytes.NewReader(data), nil
+								},
+								SHA256:   checksum,
+								Size:     uint64(len(data)),
+								MimeType: http.DetectContentType(data),
 							}); err != nil {
 								return err
 							}
+						}
 
-							return nil
-						}(pkg); err != nil {
-							return err
+						for _, filename := range []string{
+							fmt.Sprintf("dists/%s/%s/binary-%s/Release", suite, component, architecture),
+							fmt.Sprintf("dists/%s/%s/binary-%s/Release.gpg", suite, component, architecture),
+							fmt.Sprintf("dists/%s/%s/binary-%s/InRelease", suite, component, architecture),
+						} {
+							data, err := getFile(ctx, fmt.Sprintf("%s/%s", r.repoURL, filename))
+							if err != nil {
+								log.WithFields(log.Fields{
+									"error":    err.Error(),
+									"filename": filename,
+								}).Warn("error getting file")
+								continue
+							}
+
+							checksum, err := sha256FromBytes(data)
+							if err != nil {
+								return err
+							}
+
+							if err := handler(ctx, source.Object{
+								Path: filename,
+								Contents: func(ctx context.Context) (io.Reader, error) {
+									return bytes.NewReader(data), nil
+								},
+								SHA256:   checksum,
+								Size:     uint64(len(data)),
+								MimeType: http.DetectContentType(data),
+							}); err != nil {
+								return err
+							}
+						}
+
+						for _, pkg := range pkgs {
+							if err := func(pkg Package) error {
+								lb := lazyblob.New(r.repoURL+"/"+pkg.Filename, os.TempDir(), uint64(pkg.Size))
+								defer func() {
+									if err := lb.Close(); err != nil {
+										log.Warnf("error removing scratch data: %s", err)
+									}
+								}()
+
+								if err := handler(ctx, source.Object{
+									Path:     pkg.Filename,
+									Contents: lb.Reader,
+									SHA256:   pkg.SHA256Sum,
+									Size:     uint64(pkg.Size),
+									MimeType: detectMimeTypeByFilename(pkg.Filename),
+								}); err != nil {
+									return err
+								}
+
+								return nil
+							}(pkg); err != nil {
+								return err
+							}
 						}
 					}
 					return nil
