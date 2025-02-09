@@ -16,6 +16,8 @@ import (
 	debian "pault.ag/go/debian/control"
 )
 
+var errFileNotFound = errors.New("file not found")
+
 func fetchMetadata[T any](ctx context.Context, url string, v T) ([]byte, error) {
 	rawData, err := getFile(ctx, url)
 	if err != nil {
@@ -89,6 +91,11 @@ func getFile(ctx context.Context, url string) ([]byte, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case http.StatusNotFound:
+		return nil, errFileNotFound
+	}
 
 	return io.ReadAll(resp.Body)
 }
