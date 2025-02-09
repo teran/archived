@@ -63,7 +63,11 @@ func (r *repository) Process(ctx context.Context, handler source.ObjectHandler) 
 		} {
 			data, err := getFile(ctx, fmt.Sprintf("%s/%s", r.repoURL, filename))
 			if err != nil {
-				return err
+				log.WithFields(log.Fields{
+					"error":    err.Error(),
+					"filename": filename,
+				}).Warn("error getting file")
+				continue
 			}
 
 			checksum, err := sha256FromBytes(data)
