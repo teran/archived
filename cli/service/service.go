@@ -373,11 +373,11 @@ func (s *service) createObject(ctx context.Context, namespaceName, containerName
 
 		rd, err := object.Contents(ctx)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "error getting contents reader")
 		}
 
 		if err := uploadBlob(ctx, url, rd, object.Size); err != nil {
-			return err
+			return errors.Wrap(err, "error uploading BLOB")
 		}
 	}
 	return nil
@@ -390,26 +390,25 @@ func uploadBlob(ctx context.Context, url string, rd io.Reader, size uint64) erro
 	}
 
 	req.Header.Set("Content-Type", "multipart/form-data")
-	if req.ContentLength == 0 || req.ContentLength == -1 {
-		log.WithFields(log.Fields{
-			"url":    url,
-			"length": size,
-		}).Tracef("Setting Content-Length ...")
+	// if req.ContentLength <= 0 {
+	// 	log.WithFields(log.Fields{
+	// 		"url":    url,
+	// 		"length": size,
+	// 	}).Tracef("Setting Content-Length since it's not set properly ...")
 
-		req.ContentLength = int64(size)
-	}
+	// 	req.ContentLength = int64(size)
+	// }
 
 	log.WithFields(log.Fields{
+		"url":    url,
 		"length": req.ContentLength,
 	}).Tracef("running HTTP PUT request ...")
 
 	uploadResp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return errors.Wrap(err, "error uploading file")
+		return errors.Wrap(err, "error uploading object")
 	}
 	defer func() { _ = uploadResp.Body.Close() }()
-
-	log.Debugf("upload HTTP response code: %s", uploadResp.Status)
 
 	if uploadResp.StatusCode > 299 {
 		return errors.Errorf("unexpected status code on upload: %s", uploadResp.Status)
