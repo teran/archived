@@ -32,7 +32,7 @@ require (
 	github.com/teran/go-random v0.0.1
 	github.com/teran/go-time v0.0.2
 	go.opentelemetry.io/otel/trace v1.35.0
-	golang.org/x/sync v0.12.0
+	golang.org/x/sync v0.13.0
 	google.golang.org/grpc v1.71.0
 )
 
