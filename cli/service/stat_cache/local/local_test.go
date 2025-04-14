@@ -15,7 +15,7 @@ func (s *localCacheRepositoryTestSuite) TestAll() {
 
 	v, err := s.repo.Get(s.ctx, "local.go", fi)
 	s.Require().NoError(err)
-	s.Require().Equal("", v)
+	s.Require().Empty(v)
 
 	err = s.repo.Put(s.ctx, "local.go", fi, "deadbeef")
 	s.Require().NoError(err)
