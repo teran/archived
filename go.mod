@@ -1,9 +1,6 @@
 module github.com/teran/archived
 
 go 1.23.3
-
-toolchain go1.24.1
-
 require (
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/Masterminds/squirrel v1.5.4
@@ -26,7 +23,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.10.0
 	github.com/teran/appmetrics v0.1.1
-	github.com/teran/go-docker-testsuite v1.0.2
+	github.com/teran/go-docker-testsuite v1.1.0
 	github.com/teran/go-grpctest v0.0.6
 	github.com/teran/go-ptr v1.1.0
 	github.com/teran/go-random v0.0.1
@@ -49,7 +46,7 @@ require (
 	github.com/cloudflare/circl v1.6.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
-	github.com/docker/docker v27.4.0+incompatible // indirect
+	github.com/docker/docker v28.0.4+incompatible // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
@@ -89,6 +86,7 @@ require (
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/spf13/cast v1.7.1 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
+	github.com/teran/go-collection v0.0.5 // indirect
 	github.com/ulikunitz/xz v0.5.12 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
