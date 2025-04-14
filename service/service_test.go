@@ -283,7 +283,7 @@ func (s *serviceTestSuite) TestEnsureBLOBPresenceOrGetUploadURL() {
 
 	url, err := s.svc.EnsureBLOBPresenceOrGetUploadURL(s.ctx, "checksum", 1234, "application/x-rpm")
 	s.Require().NoError(err)
-	s.Require().Equal("", url)
+	s.Require().Empty(url)
 
 	// Blob doesn't exist
 	s.mdRepoMock.On("EnsureBlobKey", "checksum", uint64(1234)).Return(metadata.ErrNotFound).Once()
