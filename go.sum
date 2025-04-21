@@ -204,8 +204,8 @@ github.com/minio/crc64nvme v1.0.1 h1:DHQPrYPdqK7jQG/Ls5CTBZWeex/2FMS3G5XGkycuFrY
 github.com/minio/crc64nvme v1.0.1/go.mod h1:eVfm2fAzLlxMdUGc0EEBGSMmPwmXD5XiNRpnu9J3bvg=
 github.com/minio/md5-simd v1.1.2 h1:Gdi1DZK69+ZVMoNHRXJyNcxrMA4dSxoYHZSQbirFg34=
 github.com/minio/md5-simd v1.1.2/go.mod h1:MzdKDxYpY2BT9XQFocsiZf/NKVtR7nkE4RoEpN+20RM=
-github.com/minio/minio-go/v7 v7.0.89 h1:hx4xV5wwTUfyv8LarhJAwNecnXpoTsj9v3f3q/ZkiJU=
-github.com/minio/minio-go/v7 v7.0.89/go.mod h1:2rFnGAp02p7Dddo1Fq4S2wYOfpF0MUTSeLTRC90I204=
+github.com/minio/minio-go/v7 v7.0.90 h1:TmSj1083wtAD0kEYTx7a5pFsv3iRYMsOJ6A4crjA1lE=
+github.com/minio/minio-go/v7 v7.0.90/go.mod h1:uvMUcGrpgeSAAI6+sD3818508nUyMULw94j2Nxku/Go=
 github.com/mitchellh/copystructure v1.2.0 h1:vpKXTN4ewci03Vljg/q9QvCGUDttBOGBIa15WveJJGw=
 github.com/mitchellh/copystructure v1.2.0/go.mod h1:qLl+cE2AmVv+CoeAwDPye/v+N2HKCj9FbZEVFJRxO9s=
 github.com/mitchellh/reflectwalk v1.0.2 h1:G2LzWKi524PWgd3mLHV8Y5k7s6XUvT0Gef6zxSIeXaQ=
@@ -280,8 +280,8 @@ github.com/teran/echo-grpc-server v0.0.3 h1:RDhL+nLBBlx7fjf30eUBz3Lzx+4Wx6D60l+3
 github.com/teran/echo-grpc-server v0.0.3/go.mod h1:c8tqpRv12y7QAr3SvQJ2DsGejCXtWob4tc7lIH8ntbU=
 github.com/teran/go-collection v0.0.5 h1:fro6H5gD/vjUkwv6vQlq0lXcSQrlTbwxtHqHj6PF0s0=
 github.com/teran/go-collection v0.0.5/go.mod h1:i7n6izOzpSeGvNO4o53hyQX8me/apt1YdYWxcn5Szz8=
-github.com/teran/go-docker-testsuite v1.1.0 h1:EaCzkwklapzHoDCypRJzx5yV8gwsfZhUb0hHzDczJDU=
-github.com/teran/go-docker-testsuite v1.1.0/go.mod h1:3IO3u2zOGHq4vZigP6KaZ52tNOEPPjeptt0qBPyg6Dc=
+github.com/teran/go-docker-testsuite v1.1.1 h1:/MhcbOerBCqulugCvEe1sYp4X8+j/u8/uZlQ4z8C898=
+github.com/teran/go-docker-testsuite v1.1.1/go.mod h1:l2dpqZhcdastnJKBfrOwdpuPPUetHrcq9+8nCo3HLuw=
 github.com/teran/go-grpctest v0.0.6 h1:q34p64c8icQq5TFgLsDa9VM8BThhesN43XTS8PJAh38=
 github.com/teran/go-grpctest v0.0.6/go.mod h1:rNcMrEhPlNH7DFpQbcyl2vFzvfrx4UsxGuf3i/W77d0=
 github.com/teran/go-ptr v1.1.0 h1:c/5SPr+FB4zfmmKVB+KTCNKpgC/zWKBY5JHReL84lKU=
