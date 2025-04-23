@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
+	"github.com/teran/go-collection/types/ptr"
 	grpctest "github.com/teran/go-grpctest"
-	ptr "github.com/teran/go-ptr"
 
 	v1pb "github.com/teran/archived/manager/presenter/grpc/proto/v1"
 	"github.com/teran/archived/models"

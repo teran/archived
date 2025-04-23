@@ -11,7 +11,7 @@ import (
 	echo "github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/stretchr/testify/require"
-	ptr "github.com/teran/go-ptr"
+	"github.com/teran/go-collection/types/ptr"
 
 	"github.com/teran/archived/repositories/blob/mock"
 )

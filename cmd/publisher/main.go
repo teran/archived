@@ -18,8 +18,8 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
-	"github.com/teran/appmetrics"
-	random "github.com/teran/go-random"
+	"github.com/teran/go-collection/applications/metrics"
+	"github.com/teran/go-collection/random"
 	"golang.org/x/sync/errgroup"
 
 	htmlPresenter "github.com/teran/archived/publisher/presenter/html"
@@ -187,7 +187,7 @@ func main() {
 		return nil
 	}
 
-	metrics := appmetrics.New(checkFn, checkFn, checkFn)
+	metrics := metrics.New(checkFn, checkFn, checkFn)
 	metrics.Register(me)
 
 	g.Go(func() error {

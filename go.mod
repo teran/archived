@@ -25,12 +25,9 @@ require (
 	github.com/sassoftware/go-rpmutils v0.4.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.10.0
-	github.com/teran/appmetrics v0.1.2
+	github.com/teran/go-collection v0.1.0
 	github.com/teran/go-docker-testsuite v1.1.1
 	github.com/teran/go-grpctest v0.0.6
-	github.com/teran/go-ptr v1.1.0
-	github.com/teran/go-random v0.0.1
-	github.com/teran/go-time v0.0.2
 	go.opentelemetry.io/otel/trace v1.35.0
 	golang.org/x/sync v0.13.0
 	google.golang.org/grpc v1.71.1
@@ -90,7 +87,6 @@ require (
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/spf13/cast v1.7.1 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
-	github.com/teran/go-collection v0.0.5 // indirect
 	github.com/ulikunitz/xz v0.5.12 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect

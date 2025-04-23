@@ -23,13 +23,13 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
+	"github.com/teran/go-collection/applications/metrics"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/teran/appmetrics"
 	grpcManagePresenter "github.com/teran/archived/manager/presenter/grpc"
 	awsBlobRepo "github.com/teran/archived/repositories/blob/aws"
 	"github.com/teran/archived/repositories/metadata/postgresql"
@@ -163,7 +163,7 @@ func main() {
 		return nil
 	}
 
-	metrics := appmetrics.New(checkFn, checkFn, checkFn)
+	metrics := metrics.New(checkFn, checkFn, checkFn)
 	metrics.Register(me)
 
 	g.Go(func() error {

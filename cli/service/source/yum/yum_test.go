@@ -9,7 +9,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/stretchr/testify/suite"
 	"github.com/teran/archived/cli/service/source"
-	ptr "github.com/teran/go-ptr"
+	"github.com/teran/go-collection/types/ptr"
 )
 
 func (s *yumTestSuite) TestRepo() {

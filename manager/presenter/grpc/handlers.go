@@ -9,10 +9,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	ptr "github.com/teran/go-ptr"
-
 	v1 "github.com/teran/archived/manager/presenter/grpc/proto/v1"
 	"github.com/teran/archived/service"
+	"github.com/teran/go-collection/types/ptr"
 )
 
 var _ v1.ManageServiceServer = (*handlers)(nil)

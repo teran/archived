@@ -8,8 +8,8 @@ import (
 	_ "github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/suite"
+	gtm "github.com/teran/go-collection/time/mock"
 	postgresApp "github.com/teran/go-docker-testsuite/applications/postgres"
-	gtm "github.com/teran/go-time"
 
 	"github.com/teran/archived/repositories/metadata"
 	"github.com/teran/archived/repositories/metadata/postgresql/migrations"

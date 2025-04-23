@@ -13,7 +13,7 @@ import (
 	"github.com/teran/archived/cli/service/source"
 	cache "github.com/teran/archived/cli/service/stat_cache"
 	v1proto "github.com/teran/archived/manager/presenter/grpc/proto/v1"
-	ptr "github.com/teran/go-ptr"
+	"github.com/teran/go-collection/types/ptr"
 )
 
 type Service interface {

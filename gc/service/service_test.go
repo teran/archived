@@ -7,7 +7,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/suite"
-	gtm "github.com/teran/go-time"
+	gtm "github.com/teran/go-collection/time/mock"
 
 	repoMock "github.com/teran/archived/repositories/metadata/mock"
 )
