@@ -28,7 +28,7 @@ func getGPGKey(ctx context.Context, filepath string, checksum *string) (openpgp.
 		if err != nil {
 			return nil, errors.Wrap(err, "error opening public key file")
 		}
-		defer fp.Close()
+		defer func() { _ = fp.Close() }()
 
 		data, err = io.ReadAll(fp)
 		if err != nil {
@@ -44,7 +44,7 @@ func getGPGKey(ctx context.Context, filepath string, checksum *string) (openpgp.
 		if err != nil {
 			return nil, errors.Wrap(err, "error performing HTTP request")
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		data, err = io.ReadAll(resp.Body)
 		if err != nil {

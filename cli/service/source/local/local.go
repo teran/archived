@@ -111,7 +111,7 @@ func (l *local) Process(ctx context.Context, handler source.ObjectHandler) error
 		if err != nil {
 			return errors.Wrap(err, "error opening file")
 		}
-		defer fp.Close()
+		defer func() { _ = fp.Close() }()
 
 		if err := handler(ctx, source.Object{
 			Path: shortPath,
@@ -144,7 +144,7 @@ func checksumFile(filename string) (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "error opening file")
 	}
-	defer fp.Close()
+	defer func() { _ = fp.Close() }()
 
 	h := sha256.New()
 	n, err := io.Copy(h, fp)
@@ -164,7 +164,7 @@ func detectMimeType(filename string) (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "error opening file")
 	}
-	defer fp.Close()
+	defer func() { _ = fp.Close() }()
 
 	buf := make([]byte, 512)
 

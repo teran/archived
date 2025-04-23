@@ -185,7 +185,7 @@ func (r *repository) ListObjects(ctx context.Context, namespace, container, vers
 	if err != nil {
 		return 0, nil, mapSQLErrors(err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	result := []string{}
 	for rows.Next() {

@@ -37,7 +37,7 @@ func TestLazyblob(t *testing.T) {
 	defer srv.Close()
 
 	lb := New(srv.URL+"/first", t.TempDir(), 9)
-	defer lb.Close()
+	defer func() { _ = lb.Close() }()
 
 	fn, err := lb.Filename(ctx)
 	r.NoError(err)
@@ -72,7 +72,7 @@ func TestLazyblobNotFound(t *testing.T) {
 	defer srv.Close()
 
 	lb := New(srv.URL+"/not-found", t.TempDir(), 9)
-	defer lb.Close()
+	defer func() { _ = lb.Close() }()
 
 	_, err := lb.Filename(ctx)
 	r.Error(err)

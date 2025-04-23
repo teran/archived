@@ -446,7 +446,7 @@ func (s *memcacheTestSuite) TearDownTest() {
 }
 
 func (s *memcacheTestSuite) TearDownSuite() {
-	s.memcachedApp.Close(s.ctx)
+	_ = s.memcachedApp.Close(s.ctx)
 }
 
 func TestMemcacheTestSuite(t *testing.T) {

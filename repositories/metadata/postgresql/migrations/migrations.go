@@ -20,7 +20,7 @@ func newMigrator(dsn, migrationsPath string) (*migrate.Migrate, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "error opening database connection")
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	if err := db.Ping(); err != nil {
 		return nil, errors.Wrap(err, "error pinging database")

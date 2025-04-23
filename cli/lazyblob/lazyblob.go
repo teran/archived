@@ -71,7 +71,7 @@ func (l *lazyblob) download(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "error performing HTTP request")
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode > 299 {
 		return errors.Errorf("%s: unexpected HTTP response status: %s", l.url, resp.Status)

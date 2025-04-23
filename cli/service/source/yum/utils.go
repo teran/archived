@@ -18,7 +18,7 @@ func checksumFile(filename string) (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "error opening file")
 	}
-	defer fp.Close()
+	defer func() { _ = fp.Close() }()
 
 	h := sha256.New()
 	n, err := io.Copy(h, fp)

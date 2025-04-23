@@ -118,7 +118,7 @@ func fetchURL(ctx context.Context, url string) ([]byte, string, string, error) {
 	if err != nil {
 		return nil, "", "", err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	data, err := io.ReadAll(resp.Body)
 	return data, resp.Header.Get("Content-Type"), resp.Header.Get("Content-Disposition"), err
@@ -136,7 +136,7 @@ func uploadToURL(ctx context.Context, url string, payload []byte) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return errors.Errorf("status code %d != %d", http.StatusOK, resp.StatusCode)
