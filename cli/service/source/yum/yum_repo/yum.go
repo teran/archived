@@ -61,7 +61,7 @@ func (y *yumRepo) Packages(ctx context.Context) ([]models.Package, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rd.Close()
+	defer func() { _ = rd.Close() }()
 
 	y.mutex.Lock()
 	defer y.mutex.Unlock()
@@ -107,7 +107,7 @@ func (y *yumRepo) fetchRepoMetadata(ctx context.Context, repomd models.RepoMD) e
 		if err != nil {
 			return err
 		}
-		defer rd.Close()
+		defer func() { _ = rd.Close() }()
 
 		data, err := io.ReadAll(rd)
 		if err != nil {
@@ -128,7 +128,7 @@ func (y *yumRepo) fetchPackageIndex(ctx context.Context, href models.RepoMDDataL
 	if err != nil {
 		return nil, err
 	}
-	defer rd.Close()
+	defer func() { _ = rd.Close() }()
 
 	hfn, err := hasherByName(checksum.Type)
 	if err != nil {
@@ -186,7 +186,7 @@ func fetch(ctx context.Context, url string) (io.ReadCloser, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		resp.Body.Close()
+		_ = resp.Body.Close()
 		return nil, ErrFileNotFound
 	}
 

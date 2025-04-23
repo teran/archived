@@ -49,7 +49,7 @@ func (r *repository) CountStats(ctx context.Context) (*models.Stats, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		vc := models.VersionsCount{}
@@ -82,7 +82,7 @@ func (r *repository) CountStats(ctx context.Context) (*models.Stats, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		oc := models.ObjectsCount{}
@@ -128,7 +128,7 @@ func (r *repository) CountStats(ctx context.Context) (*models.Stats, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		brsb := models.BlobsRawSizeBytes{}

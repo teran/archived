@@ -86,7 +86,7 @@ func selectQueryRow(ctx context.Context, db queryRunner, q sq.SelectBuilder) (sq
 
 	start := time.Now()
 	defer func() {
-		since := time.Now().Sub(start)
+		since := time.Since(start)
 
 		queryCountTotal.WithLabelValues("select").Inc()
 		queryTimeTotal.WithLabelValues("select").Add(since.Seconds())
@@ -109,7 +109,7 @@ func selectQuery(ctx context.Context, db queryRunner, q sq.SelectBuilder) (*sql.
 
 	start := time.Now()
 	defer func() {
-		since := time.Now().Sub(start)
+		since := time.Since(start)
 
 		queryCountTotal.WithLabelValues("select").Inc()
 		queryTimeTotal.WithLabelValues("select").Add(since.Seconds())
@@ -132,7 +132,7 @@ func insertQuery(ctx context.Context, db execRunner, q sq.InsertBuilder) (sql.Re
 
 	start := time.Now()
 	defer func() {
-		since := time.Now().Sub(start)
+		since := time.Since(start)
 
 		queryCountTotal.WithLabelValues("insert").Inc()
 		queryTimeTotal.WithLabelValues("insert").Add(since.Seconds())
@@ -155,7 +155,7 @@ func insertQueryRow(ctx context.Context, db queryRunner, q sq.InsertBuilder) (sq
 
 	start := time.Now()
 	defer func() {
-		since := time.Now().Sub(start)
+		since := time.Since(start)
 
 		queryCountTotal.WithLabelValues("insert").Inc()
 		queryTimeTotal.WithLabelValues("insert").Add(since.Seconds())
@@ -178,7 +178,7 @@ func updateQuery(ctx context.Context, db execRunner, q sq.UpdateBuilder) (sql.Re
 
 	start := time.Now()
 	defer func() {
-		since := time.Now().Sub(start)
+		since := time.Since(start)
 
 		queryCountTotal.WithLabelValues("update").Inc()
 		queryTimeTotal.WithLabelValues("update").Add(since.Seconds())
@@ -201,7 +201,7 @@ func deleteQuery(ctx context.Context, db execRunner, q sq.DeleteBuilder) (sql.Re
 
 	start := time.Now()
 	defer func() {
-		since := time.Now().Sub(start)
+		since := time.Since(start)
 
 		queryCountTotal.WithLabelValues("delete").Inc()
 		queryTimeTotal.WithLabelValues("delete").Add(since.Seconds())

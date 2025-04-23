@@ -410,7 +410,7 @@ func (s *manageHandlersTestSuite) SetupTest() {
 
 func (s *manageHandlersTestSuite) TearDownTest() {
 	s.svcMock.AssertExpectations(s.T())
-	s.srv.Close()
+	_ = s.srv.Close()
 	s.cancel()
 }
 

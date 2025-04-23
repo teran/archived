@@ -211,7 +211,7 @@ func (r *repository) listVersionsByContainer(ctx context.Context, namespace, con
 	if err != nil {
 		return 0, nil, mapSQLErrors(err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	result := []models.Version{}
 	for rows.Next() {
@@ -410,7 +410,7 @@ func (r *repository) DeleteExpiredVersionsWithObjects(ctx context.Context, unpub
 	if err != nil {
 		return mapSQLErrors(err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	deleteCandidates := []uint64{}
 	for rows.Next() {
@@ -471,7 +471,7 @@ func (r *repository) DeleteExpiredVersionsWithObjects(ctx context.Context, unpub
 	if err != nil {
 		return mapSQLErrors(err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var keyID uint64

@@ -219,7 +219,7 @@ func (r *repository) ListContainers(ctx context.Context, namespace string) ([]mo
 	if err != nil {
 		return nil, mapSQLErrors(err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	result := []models.Container{}
 	for rows.Next() {
@@ -296,7 +296,7 @@ func (r *repository) ListContainersByPage(ctx context.Context, namespace string,
 	if err != nil {
 		return 0, nil, mapSQLErrors(err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	result := []models.Container{}
 	for rows.Next() {

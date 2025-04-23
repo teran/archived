@@ -47,7 +47,7 @@ func (l *local) Put(ctx context.Context, filename string, info fs.FileInfo, valu
 	if err != nil {
 		return errors.Wrap(err, "error creating cache file")
 	}
-	defer fp.Close()
+	defer func() { _ = fp.Close() }()
 
 	n, err := fp.Write([]byte(value))
 	if err != nil {

@@ -72,7 +72,7 @@ func getMirrors(ctx context.Context, url string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	mirrors := []string{}
 	sc := bufio.NewScanner(resp.Body)

@@ -73,7 +73,7 @@ func (r *repository) ListNamespaces(ctx context.Context) ([]string, error) {
 	if err != nil {
 		return nil, mapSQLErrors(err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	result := []string{}
 	for rows.Next() {
