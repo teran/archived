@@ -19,7 +19,7 @@ import (
 	_ "github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 	"github.com/teran/go-collection/applications/metrics"
-	random "github.com/teran/go-random"
+	"github.com/teran/go-collection/random"
 	"golang.org/x/sync/errgroup"
 
 	htmlPresenter "github.com/teran/archived/publisher/presenter/html"

@@ -282,8 +282,6 @@ github.com/teran/go-docker-testsuite v1.1.1 h1:/MhcbOerBCqulugCvEe1sYp4X8+j/u8/u
 github.com/teran/go-docker-testsuite v1.1.1/go.mod h1:l2dpqZhcdastnJKBfrOwdpuPPUetHrcq9+8nCo3HLuw=
 github.com/teran/go-grpctest v0.0.6 h1:q34p64c8icQq5TFgLsDa9VM8BThhesN43XTS8PJAh38=
 github.com/teran/go-grpctest v0.0.6/go.mod h1:rNcMrEhPlNH7DFpQbcyl2vFzvfrx4UsxGuf3i/W77d0=
-github.com/teran/go-random v0.0.1 h1:WQ3cF7UUQb/Q0oGAKcYeLeUIcMzD4vSs18oU1pkU/Mo=
-github.com/teran/go-random v0.0.1/go.mod h1:t6Ns4GZsg/L9whg4u4EVXAj9k2lJiRHmJ7p1intLO0g=
 github.com/ulikunitz/xz v0.5.12 h1:37Nm15o69RwBkXM0J6A5OlE67RZTfzUxTj8fB3dfcsc=
 github.com/ulikunitz/xz v0.5.12/go.mod h1:nbz6k7qbPmH4IRqmfOplQw/tblSgqTqBwxkY0oWt/14=
 github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6KllzawFIhcdPw=
