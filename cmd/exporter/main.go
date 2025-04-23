@@ -12,9 +12,9 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
+	"github.com/teran/go-collection/applications/metrics"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/teran/appmetrics"
 	"github.com/teran/archived/exporter/service"
 	"github.com/teran/archived/repositories/metadata/postgresql"
 )
@@ -81,7 +81,7 @@ func main() {
 		return nil
 	}
 
-	metrics := appmetrics.New(checkFn, checkFn, checkFn)
+	metrics := metrics.New(checkFn, checkFn, checkFn)
 	metrics.Register(me)
 
 	g.Go(func() error {

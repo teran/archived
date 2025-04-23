@@ -7,7 +7,7 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	log "github.com/sirupsen/logrus"
-	ptr "github.com/teran/go-ptr"
+	"github.com/teran/go-collection/types/ptr"
 
 	"github.com/teran/archived/models"
 	"github.com/teran/archived/repositories/metadata"
