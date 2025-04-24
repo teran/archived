@@ -35,7 +35,7 @@ func fetchMetadata[T any](ctx context.Context, url string, v T) ([]byte, error) 
 		if err != nil {
 			return nil, errors.Wrap(err, "error constructing gzip reader")
 		}
-		defer rd.(*gzip.Reader).Close()
+		defer func() { _ = rd.(*gzip.Reader).Close() }()
 	case ".xz":
 		rd, err = xz.NewReader(bytes.NewReader(rawData))
 		if err != nil {
@@ -90,7 +90,7 @@ func getFile(ctx context.Context, url string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	switch resp.StatusCode {
 	case http.StatusNotFound:
