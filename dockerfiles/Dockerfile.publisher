@@ -1,5 +1,5 @@
-ARG ALPINE_IMAGE=index.docker.io/library/alpine:3.20.3
-ARG NODE_IMAGE=index.docker.io/library/node:22.12.0
+ARG ALPINE_IMAGE=${IMAGE_PREFIX}index.docker.io/library/alpine:3.20.3
+ARG NODE_IMAGE=${IMAGE_PREFIX}index.docker.io/library/node:22.12.0
 
 # hadolint ignore=DL3006
 FROM ${ALPINE_IMAGE} AS certificates
@@ -47,15 +47,14 @@ COPY --from=depsbuilder --chown=root:root /src/node_modules/bootstrap-icons/icon
 
 FROM scratch
 
-COPY dockerfiles/rootfs/etc/passwd /etc/passwd
-COPY dockerfiles/rootfs/etc/group /etc/group
+COPY --chmod=0755 --chown=root:root dockerfiles/rootfs/etc/passwd /etc/passwd
+COPY --chmod=0755 --chown=root:root dockerfiles/rootfs/etc/group /etc/group
 COPY --from=assets --chown=root:root --chmod=0755 /static/archived/scripts /static/archived/scripts
 COPY --from=assets --chown=root:root --chmod=0755 /static/archived/styles /static/archived/styles
 COPY --from=certificates --chown=root:root --chmod=0644 /etc/ssl/cert.pem /etc/ssl/cert.pem
 COPY --chmod=0755 --chown=root:root dist/archived-publisher_linux_amd64_v3/archived-publisher /archived-publisher
 COPY --chmod=0755 --chown=root:root publisher/presenter/html/templates /templates
-COPY --chmod=0755 --chown=root:root publisher/presenter/html/static /static/archived
-
+COPY --chmod=0755 --chown=root:root publisher/presenter/html/static /static
 
 ENV HTML_TEMPLATE_DIR=/templates
 ENV STATIC_DIR=/static
