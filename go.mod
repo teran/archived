@@ -14,7 +14,7 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.9
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/golang-migrate/migrate/v4 v4.18.3
-	github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus v1.0.1
+	github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus v1.1.0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.2
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/labstack/echo-contrib v0.17.4
