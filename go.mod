@@ -29,7 +29,7 @@ require (
 	github.com/teran/go-docker-testsuite v1.1.3
 	github.com/teran/go-grpctest v0.0.6
 	go.opentelemetry.io/otel/trace v1.37.0
-	golang.org/x/sync v0.15.0
+	golang.org/x/sync v0.16.0
 	google.golang.org/grpc v1.73.0
 )
 
