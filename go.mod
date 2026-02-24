@@ -28,9 +28,12 @@ require (
 	github.com/teran/go-collection v0.3.2
 	github.com/teran/go-docker-testsuite v1.1.3
 	github.com/teran/go-grpctest v0.0.6
+	github.com/ulikunitz/xz v0.5.12
 	go.opentelemetry.io/otel/trace v1.37.0
-	golang.org/x/sync v0.16.0
+	golang.org/x/sync v0.15.0
 	google.golang.org/grpc v1.73.0
+	google.golang.org/protobuf v1.36.6
+	pault.ag/go/debian v0.18.0
 )
 
 require (
@@ -85,7 +88,6 @@ require (
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/spf13/cast v1.9.2 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
-	github.com/ulikunitz/xz v0.5.12 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/xhit/go-str2duration/v2 v2.1.0 // indirect
@@ -101,6 +103,6 @@ require (
 	golang.org/x/text v0.26.0 // indirect
 	golang.org/x/time v0.12.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250603155806-513f23925822 // indirect
-	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	pault.ag/go/topsort v0.1.1 // indirect
 )

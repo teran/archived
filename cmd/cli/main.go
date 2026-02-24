@@ -18,6 +18,7 @@ import (
 	"github.com/teran/archived/cli/router"
 	"github.com/teran/archived/cli/service"
 	"github.com/teran/archived/cli/service/source"
+	aptSource "github.com/teran/archived/cli/service/source/apt"
 	localSource "github.com/teran/archived/cli/service/source/local"
 	yumSource "github.com/teran/archived/cli/service/source/yum"
 	"github.com/teran/archived/cli/service/source/yum/yum_repo/mirrorlist"
@@ -110,6 +111,7 @@ var (
 				Bool()
 	versionCreateFromDir = versionCreate.Flag("from-dir", "create version right from directory").
 				String()
+
 	versionCreateFromYumRepo = versionCreate.Flag("from-yum-repo", "create version right from yum repository").
 					String()
 	versionCreateFromYumMirrorlist = versionCreate.Flag("from-yum-mirrorlist", "create version right from yum repository received from mirrorlist").
@@ -118,6 +120,15 @@ var (
 					String()
 	versionCreateFromYumRepoGPGKeyChecksum = versionCreate.Flag("rpm-gpg-key-checksum", "SHA256 checksum for the GPG key provided").
 						String()
+
+	versionCreateFromAptRepo = versionCreate.Flag("from-apt-repo", "create version right from apt repository").
+					String()
+	versionCreateFromAptRepoSuite = versionCreate.Flag("from-apt-repo-suite", "create version with suites").
+					Strings()
+	versionCreateFromAptRepoComponent = versionCreate.Flag("from-apt-repo-component", "create version with components").
+						Strings()
+	versionCreateFromAptRepoArchitecture = versionCreate.Flag("from-apt-repo-architecture", "create version with components").
+						Strings()
 
 	versionDelete          = version.Command("delete", "delete the given version")
 	versionDeleteContainer = versionDelete.Arg("container", "name of the container to delete version of").Required().String()
@@ -231,6 +242,8 @@ func main() {
 
 		yumRepository := ml.URL(mirrorlist.SelectModeRandom)
 		src = yumSource.New(yumRepository, versionCreateFromYumRepoGPGKey, versionCreateFromYumRepoGPGKeyChecksum)
+	case *versionCreateFromAptRepo != "":
+		src = aptSource.New(*versionCreateFromAptRepo, *versionCreateFromAptRepoSuite, *versionCreateFromAptRepoComponent, *versionCreateFromAptRepoArchitecture)
 	}
 
 	r.Register(namespaceCreate.FullCommand(), cliSvc.CreateNamespace(*namespaceCreateName))
