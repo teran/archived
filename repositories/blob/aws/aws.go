@@ -6,8 +6,8 @@ import (
 	"path"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/pkg/errors"
 
 	"github.com/teran/archived/repositories/blob"
@@ -16,44 +16,45 @@ import (
 var _ blob.Repository = (*s3driver)(nil)
 
 type s3driver struct {
-	cli    *s3.S3
-	bucket string
-	ttl    time.Duration
+	cli     *s3.Client
+	presign *s3.PresignClient
+	bucket  string
+	ttl     time.Duration
 }
 
-func New(cli *s3.S3, bucket string, ttl time.Duration) blob.Repository {
+func New(cli *s3.Client, bucket string, ttl time.Duration) blob.Repository {
 	return &s3driver{
-		cli:    cli,
-		bucket: bucket,
-		ttl:    ttl,
+		cli:     cli,
+		presign: s3.NewPresignClient(cli),
+		bucket:  bucket,
+		ttl:     ttl,
 	}
 }
 
 func (s *s3driver) PutBlobURL(ctx context.Context, key string) (string, error) {
-	req, _ := s.cli.PutObjectRequest(&s3.PutObjectInput{
+	result, err := s.presign.PresignPutObject(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(key),
-	})
+	}, s3.WithPresignExpires(s.ttl))
 
-	url, err := req.Presign(s.ttl)
 	if err != nil {
 		return "", errors.Wrap(err, "error signing URL")
 	}
-	return url, nil
+	return result.URL, nil
 }
 
 func (s *s3driver) GetBlobURL(ctx context.Context, key, mimeType, filename string) (string, error) {
-	req, _ := s.cli.GetObjectRequest(&s3.GetObjectInput{
+	disposition := `attachment; filename="` + url.QueryEscape(path.Base(filename)) + `"`
+
+	result, err := s.presign.PresignGetObject(ctx, &s3.GetObjectInput{
 		Bucket:                     aws.String(s.bucket),
 		Key:                        aws.String(key),
 		ResponseContentType:        aws.String(mimeType),
-		ResponseContentDisposition: aws.String("attachment; filename=" + url.QueryEscape(path.Base(filename))),
-	})
+		ResponseContentDisposition: aws.String(disposition),
+	}, s3.WithPresignExpires(s.ttl))
 
-	url, err := req.Presign(s.ttl)
 	if err != nil {
 		return "", errors.Wrap(err, "error signing URL")
 	}
-
-	return url, nil
+	return result.URL, nil
 }
