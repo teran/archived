@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	s3config "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	memcacheCli "github.com/bradfitz/gomemcache/memcache"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/labstack/echo-contrib/echoprometheus"
@@ -112,20 +112,29 @@ func main() {
 		repo = memcache.New(cli, repo, cfg.MemcacheTTL, "publisher")
 	}
 
-	awsSession, err := session.NewSession(&aws.Config{
-		Endpoint:         aws.String(cfg.BLOBS3Endpoint),
-		Region:           aws.String(cfg.BLOBS3Region),
-		DisableSSL:       aws.Bool(cfg.BLOBS3DisableSSL),
-		S3ForcePathStyle: aws.Bool(cfg.BLOBS3ForcePathStyle),
-		Credentials: credentials.NewStaticCredentials(
-			cfg.BLOBS3AccessKeyID, cfg.BLOBS3SecretKey, "",
+	ctx := context.TODO()
+
+	s3cfg, err := s3config.LoadDefaultConfig(ctx,
+		s3config.WithRegion(cfg.BLOBS3Region),
+		s3config.WithCredentialsProvider(
+			credentials.NewStaticCredentialsProvider(
+				cfg.BLOBS3AccessKeyID,
+				cfg.BLOBS3SecretKey,
+				"",
+			),
 		),
-	})
+	)
 	if err != nil {
 		panic(err)
 	}
 
-	blobRepo := awsBlobRepo.New(s3.New(awsSession), cfg.BLOBS3Bucket, cfg.BLOBS3PresignedLinkTTL)
+	s3client := s3.NewFromConfig(s3cfg, func(o *s3.Options) {
+		o.BaseEndpoint = aws.String(cfg.BLOBS3Endpoint)
+		o.UsePathStyle = cfg.BLOBS3ForcePathStyle
+		o.EndpointOptions.DisableHTTPS = cfg.BLOBS3DisableSSL
+	})
+
+	blobRepo := awsBlobRepo.New(s3client, cfg.BLOBS3Bucket, cfg.BLOBS3PresignedLinkTTL)
 
 	publisherSvc := service.NewPublisher(repo, blobRepo, cfg.VersionsPerPage, cfg.ObjectsPerPage, cfg.ContainersPerPage)
 

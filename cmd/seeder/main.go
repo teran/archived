@@ -13,10 +13,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	s3config "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -75,23 +75,31 @@ func main() {
 	}
 
 	postgresqlRepo := postgresql.New(db)
-	awsSession, err := session.NewSession(&aws.Config{
-		Endpoint:         aws.String(cfg.BLOBS3Endpoint),
-		Region:           aws.String(cfg.BLOBS3Region),
-		DisableSSL:       aws.Bool(cfg.BLOBS3DisableSSL),
-		S3ForcePathStyle: aws.Bool(cfg.BLOBS3ForcePathStyle),
-		Credentials: credentials.NewStaticCredentials(
-			cfg.BLOBS3AccessKeyID, cfg.BLOBS3SecretKey, "",
+
+	ctx := context.TODO()
+
+	s3cfg, err := s3config.LoadDefaultConfig(ctx,
+		s3config.WithRegion(cfg.BLOBS3Region),
+		s3config.WithCredentialsProvider(
+			credentials.NewStaticCredentialsProvider(
+				cfg.BLOBS3AccessKeyID,
+				cfg.BLOBS3SecretKey,
+				"",
+			),
 		),
-	})
+	)
 	if err != nil {
 		panic(err)
 	}
 
-	s3client := s3.New(awsSession)
+	s3client := s3.NewFromConfig(s3cfg, func(o *s3.Options) {
+		o.BaseEndpoint = aws.String(cfg.BLOBS3Endpoint)
+		o.UsePathStyle = cfg.BLOBS3ForcePathStyle
+		o.EndpointOptions.DisableHTTPS = cfg.BLOBS3DisableSSL
+	})
 
 	if cfg.BLOBS3CreateBucket {
-		_, err := s3client.CreateBucket(&s3.CreateBucketInput{
+		_, err := s3client.CreateBucket(ctx, &s3.CreateBucketInput{
 			Bucket: aws.String(cfg.BLOBS3Bucket),
 		})
 		if err != nil {
@@ -100,8 +108,6 @@ func main() {
 	}
 	blobRepo := awsBlobRepo.New(s3client, cfg.BLOBS3Bucket, cfg.BLOBS3PresignedLinkTTL)
 	managerSvc := service.NewManager(postgresqlRepo, blobRepo)
-
-	ctx := context.TODO()
 
 	for i := 0; i <= cfg.CreateNamespaces; i++ {
 		namespace := fmt.Sprintf("namespace-%06d", i)

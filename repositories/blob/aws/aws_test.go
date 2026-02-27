@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/suite"
 	"github.com/teran/archived/repositories/blob"
@@ -31,7 +31,7 @@ func (s *repoTestSuite) TestAll() {
 	data, mimeType, disposition, err := fetchURL(s.ctx, url)
 	s.Require().NoError(err)
 	s.Require().Equal("application/json", mimeType)
-	s.Require().Equal("attachment; filename=test-file.txt", disposition)
+	s.Require().Equal(`attachment; filename="test-file.txt"`, disposition)
 	s.Require().Equal("test data", string(data))
 }
 
@@ -40,7 +40,7 @@ type repoTestSuite struct {
 	suite.Suite
 
 	ctx    context.Context
-	cli    *s3.S3
+	cli    *s3.Client
 	driver blob.Repository
 	minio  minio.Minio
 }
@@ -58,20 +58,25 @@ func (s *repoTestSuite) SetupTest() {
 	endpoint, err := s.minio.GetEndpointURL()
 	s.Require().NoError(err)
 
-	sess, err := session.NewSession(&aws.Config{
-		Endpoint:         aws.String(endpoint),
-		Region:           aws.String("default"),
-		DisableSSL:       aws.Bool(true),
-		S3ForcePathStyle: aws.Bool(true),
-		Credentials: credentials.NewStaticCredentials(
-			minio.MinioAccessKey, minio.MinioAccessKeySecret, "",
+	cfg, err := config.LoadDefaultConfig(s.T().Context(),
+		config.WithRegion("default"),
+		config.WithCredentialsProvider(
+			credentials.NewStaticCredentialsProvider(
+				minio.MinioAccessKey,
+				minio.MinioAccessKeySecret,
+				"",
+			),
 		),
-	})
+	)
 	s.Require().NoError(err)
 
-	s.cli = s3.New(sess)
+	s.cli = s3.NewFromConfig(cfg, func(o *s3.Options) {
+		o.BaseEndpoint = aws.String("http://" + endpoint)
+		o.UsePathStyle = true
+		o.EndpointOptions.DisableHTTPS = true
+	})
 
-	_, err = s.cli.CreateBucket(&s3.CreateBucketInput{
+	_, err = s.cli.CreateBucket(s.T().Context(), &s3.CreateBucketInput{
 		Bucket: aws.String("test-bucket"),
 	})
 	s.Require().NoError(err)
@@ -80,20 +85,20 @@ func (s *repoTestSuite) SetupTest() {
 }
 
 func (s *repoTestSuite) TearDownTest() {
-	out, err := s.cli.ListObjects(&s3.ListObjectsInput{
+	out, err := s.cli.ListObjects(s.T().Context(), &s3.ListObjectsInput{
 		Bucket: aws.String("test-bucket"),
 	})
 	s.Require().NoError(err)
 
 	for _, obj := range out.Contents {
-		_, err := s.cli.DeleteObject(&s3.DeleteObjectInput{
+		_, err := s.cli.DeleteObject(s.T().Context(), &s3.DeleteObjectInput{
 			Bucket: aws.String("test-bucket"),
 			Key:    obj.Key,
 		})
 		s.Require().NoError(err)
 	}
 
-	_, err = s.cli.DeleteBucket(&s3.DeleteBucketInput{
+	_, err = s.cli.DeleteBucket(s.T().Context(), &s3.DeleteBucketInput{
 		Bucket: aws.String("test-bucket"),
 	})
 	s.Require().NoError(err)
