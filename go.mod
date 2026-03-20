@@ -34,7 +34,7 @@ require (
 	github.com/ulikunitz/xz v0.5.14
 	go.opentelemetry.io/otel/trace v1.39.0
 	golang.org/x/sync v0.19.0
-	google.golang.org/grpc v1.79.1
+	google.golang.org/grpc v1.79.3
 	pault.ag/go/debian v0.18.0
 )
 
