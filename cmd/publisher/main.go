@@ -82,7 +82,27 @@ func main() {
 	g, _ := errgroup.WithContext(context.Background())
 
 	e := echo.New()
-	e.Use(middleware.Logger())
+	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+		LogURI:      true,
+		LogStatus:   true,
+		LogError:    true,
+		HandleError: true,
+		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
+			if v.Error == nil {
+				log.WithFields(log.Fields{
+					"URI":    v.URI,
+					"status": v.Status,
+				}).Info("request")
+			} else {
+				log.WithFields(log.Fields{
+					"URI":    v.URI,
+					"status": v.Status,
+					"error":  v.Error,
+				}).Error("request error")
+			}
+			return nil
+		},
+	}))
 	e.Use(echoprometheus.NewMiddleware("publisher"))
 	e.Use(middleware.Recover())
 
@@ -154,7 +174,27 @@ func main() {
 	})
 
 	me := echo.New()
-	me.Use(middleware.Logger())
+	me.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+		LogURI:      true,
+		LogStatus:   true,
+		LogError:    true,
+		HandleError: true,
+		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
+			if v.Error == nil {
+				log.WithFields(log.Fields{
+					"URI":    v.URI,
+					"status": v.Status,
+				}).Info("request")
+			} else {
+				log.WithFields(log.Fields{
+					"URI":    v.URI,
+					"status": v.Status,
+					"error":  v.Error,
+				}).Error("request error")
+			}
+			return nil
+		},
+	}))
 	me.Use(echoprometheus.NewMiddleware("publisher_metrics"))
 	me.Use(middleware.Recover())
 
