@@ -107,7 +107,6 @@ func (s *yumTestSuite) SetupTest() {
 	s.ctx = context.Background()
 
 	e := echo.New()
-	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Static("/", "testdata/")
 

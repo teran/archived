@@ -30,7 +30,6 @@ func TestGetGPGKey(t *testing.T) {
 	m.On("StaticFile", "/").Return(http.StatusOK, "text/plain", data).Twice()
 
 	e := echo.New()
-	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.GET("/*", m.StaticFile)
 

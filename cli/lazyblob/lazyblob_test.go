@@ -29,7 +29,6 @@ func TestLazyblob(t *testing.T) {
 	m.On("StaticFile", "/first").Return(http.StatusOK, "text/plain", []byte("test data")).Once()
 
 	e := echo.New()
-	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.GET("/*", m.StaticFile)
 
@@ -64,7 +63,6 @@ func TestLazyblobNotFound(t *testing.T) {
 	m.On("StaticFile", "/not-found").Return(http.StatusNotFound, "text/plain", []byte("not found")).Twice()
 
 	e := echo.New()
-	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.GET("/*", m.StaticFile)
 

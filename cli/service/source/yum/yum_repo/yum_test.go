@@ -24,7 +24,6 @@ func TestPackages(t *testing.T) {
 	r := require.New(t)
 
 	e := echo.New()
-	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Static("/", "testdata/repo")
 
@@ -403,7 +402,6 @@ func TestMetadataSHA256(t *testing.T) {
 	r := require.New(t)
 
 	e := echo.New()
-	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Static("/", "testdata/repo")
 
@@ -469,7 +467,6 @@ func TestMetadataSHA1(t *testing.T) {
 	r := require.New(t)
 
 	e := echo.New()
-	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Static("/", "testdata/repo-sha1")
 
