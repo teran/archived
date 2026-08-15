@@ -32,7 +32,7 @@ require (
 	github.com/ulikunitz/xz v0.5.15
 	go.opentelemetry.io/otel/trace v1.44.0
 	golang.org/x/sync v0.22.0
-	google.golang.org/grpc v1.82.0
+	google.golang.org/grpc v1.82.1
 	pault.ag/go/debian v0.21.0
 )
 
