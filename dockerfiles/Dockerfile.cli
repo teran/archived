@@ -4,7 +4,7 @@ ARG ALPINE_IMAGE=${IMAGE_PREFIX}index.docker.io/library/alpine:3.20.3
 FROM ${ALPINE_IMAGE} AS certificates
 
 RUN apk add --update --no-cache \
-  ca-certificates
+  ca-certificates=20260413-r0
 
 FROM scratch
 
