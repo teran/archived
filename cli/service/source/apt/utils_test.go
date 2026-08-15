@@ -20,7 +20,6 @@ func TestFetchMetadataPlain(t *testing.T) {
 	r := require.New(t)
 
 	e := echo.New()
-	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.GET("/Release", func(c echo.Context) error {
 		return c.File("testdata/Release")
@@ -135,7 +134,6 @@ func TestGetFle(t *testing.T) {
 	r := require.New(t)
 
 	e := echo.New()
-	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.GET("/file", func(c echo.Context) error {
 		return c.Blob(http.StatusOK, "application/octet-stream", []byte("test file"))

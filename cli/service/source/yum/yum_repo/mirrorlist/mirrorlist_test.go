@@ -21,7 +21,6 @@ func TestGetMirrors(t *testing.T) {
 	r := require.New(t)
 
 	e := echo.New()
-	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.GET("/mirrorlist", mirrorlistHandler)
 
@@ -46,7 +45,6 @@ func TestEmptyMirrorlist(t *testing.T) {
 	r := require.New(t)
 
 	e := echo.New()
-	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.GET("/empty", emptyMirrorlistHandler)
 

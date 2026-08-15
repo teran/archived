@@ -168,7 +168,6 @@ func (s *handlersTestSuite) SetupTest() {
 	s.ctx = context.TODO()
 
 	e := echo.New()
-	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
 	s.serviceMock = service.NewMock()
