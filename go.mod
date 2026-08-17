@@ -27,7 +27,7 @@ require (
 	github.com/sirupsen/logrus v1.9.4
 	github.com/stretchr/testify v1.11.1
 	github.com/teran/go-collection v0.5.0
-	github.com/teran/go-docker-testsuite v1.3.0
+	github.com/teran/go-docker-testsuite v1.3.1
 	github.com/teran/go-grpctest v0.0.6
 	github.com/ulikunitz/xz v0.5.15
 	go.opentelemetry.io/otel/trace v1.44.0

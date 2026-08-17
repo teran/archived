@@ -317,8 +317,8 @@ github.com/teran/echo-grpc-server v0.0.4 h1:tMHVi4nX3XJ0ktoDNTTsfQEGT9hB6miGeOjl
 github.com/teran/echo-grpc-server v0.0.4/go.mod h1:8nvZquvu0ks0VrXHbexVjJsci3wXyY4UpWip4iGREBU=
 github.com/teran/go-collection v0.5.0 h1:vBrG+N/5ue5ZbJ6Y4xxWv3AS3Q62M36wURduGPLIc0k=
 github.com/teran/go-collection v0.5.0/go.mod h1:lMiVLHv78d4JoaKjm9nVB+/gGLS6amXVH0RNATw6MYA=
-github.com/teran/go-docker-testsuite v1.3.0 h1:EDAAOd13T00qqIv9iETauR7VUoUvvQzcvqOyYqb64eU=
-github.com/teran/go-docker-testsuite v1.3.0/go.mod h1:NEHpP/sXhkPUmKAjcfAH4/9SODPmFoaNZeW2XomHAG4=
+github.com/teran/go-docker-testsuite v1.3.1 h1:OKYiFE9FiNlf+0VO5lT/5YZNBjuDhdCGcRtlvQXuRSE=
+github.com/teran/go-docker-testsuite v1.3.1/go.mod h1:+Z/tBMrYcgdpTweWuf4kxPCGmZJIe8KhTefT3M9C34k=
 github.com/teran/go-grpctest v0.0.6 h1:q34p64c8icQq5TFgLsDa9VM8BThhesN43XTS8PJAh38=
 github.com/teran/go-grpctest v0.0.6/go.mod h1:rNcMrEhPlNH7DFpQbcyl2vFzvfrx4UsxGuf3i/W77d0=
 github.com/tinylib/msgp v1.6.1 h1:ESRv8eL3u+DNHUoSAAQRE50Hm162zqAnBoGv9PzScPY=
